@@ -3,7 +3,7 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
-project ("Spectre3D")
+project ("Spectre")
 
 set(CXX_STANDARD "-std=c++17")
 if (WIN32)
@@ -19,6 +19,5 @@ endif()
 
 
 # 包含子项目。
-add_subdirectory ("Spectre")
+add_subdirectory ("SpectreCore")
 add_subdirectory ("Sample")
-
