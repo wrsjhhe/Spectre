@@ -1,9 +1,7 @@
 #include "Spectre.h"
+#include <iostream>
 
-int Spectre::add(int a, int b)
+void Spectre::call(const char* str)
 {
-
-	c = a + b;
-	return c;
-
+	std::cout << str << std::endl;
 }
