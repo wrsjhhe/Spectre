@@ -5,9 +5,10 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("Spectre")
 
-set(CXX_STANDARD "-std=c++17")
 if (WIN32)
     set(CXX_STANDARD "/std:c++17")
+else()
+    set(CXX_STANDARD "-std=c++17")
 endif()
 
 if (MSVC)
