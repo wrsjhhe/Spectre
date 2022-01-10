@@ -4,6 +4,6 @@
         namespace Name                     \
         {
 
-#define SPECTRE_END_NAMESPACE }
+#define SPECTRE_END_NAMESPACE(Name) }
 
 #define SPECTRE_USING_NAMESPACE(Name) using namespace Name;

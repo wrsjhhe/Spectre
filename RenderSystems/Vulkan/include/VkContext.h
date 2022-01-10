@@ -6,7 +6,8 @@ SPECTRE_BEGIN_NAMESPACE(RenderSystem)
 
 class VkContext
 {
-
+private:
+	VkInstance							m_Instance;
 };
 
 SPECTRE_END_NAMESPACE

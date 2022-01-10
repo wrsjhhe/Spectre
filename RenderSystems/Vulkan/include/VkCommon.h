@@ -21,5 +21,5 @@ SPECTRE_BEGIN_NAMESPACE(RenderSystem)
 bool IsDepthOnlyFormat(VkFormat format);
 
 
-SPECTRE_END_NAMESPACE //Spectre
-SPECTRE_END_NAMESPACE //RenderSystem
+SPECTRE_END_NAMESPACE(RenderSystem) //Spectre
+SPECTRE_END_NAMESPACE(Spectre)//RenderSystem
