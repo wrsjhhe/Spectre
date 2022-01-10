@@ -19,6 +19,7 @@ endif()
 
 
 # 包含子项目。
+add_subdirectory ("SpectreCommon")
 add_subdirectory ("RenderSystems")
 add_subdirectory ("SpectreCore")
 add_subdirectory ("Sample")

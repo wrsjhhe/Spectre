@@ -1,23 +1,23 @@
-Ôªøcmake_minimum_required (VERSION 3.8)
-project ("SpectreCore")
+cmake_minimum_required (VERSION 3.8)
+project ("SpectreCommon")
 
 # ==================================================================================================
-# È°πÁõÆÂ§¥Êñá‰ª∂ËÆæÁΩÆ
+# œÓƒøÕ∑Œƒº˛…Ë÷√
 # ==================================================================================================
-
 set(INC_DIR ./include/)
 include_directories(${INC_DIR})
 
-set(PUBLIC_HDRS ${INC_DIR}Spectre.h)
+set(PUBLIC_HDRS ${INC_DIR}CommonDefinitions.h
+				${INC_DIR}Allocator.h
+				)
 #set(PRIVATE_HDRS )
 
 # ==================================================================================================
-# È°πÁõÆÊ∫êÊñá‰ª∂ËÆæÁΩÆ
+# œÓƒø‘¥Œƒº˛…Ë÷√
 # ==================================================================================================
 set(SRC_DIR ./src/)
 include_directories(${SRC_DIR})
 
-set(SRCS ${SRC_DIR}Spectre.cpp)
+set(SRCS ${SRC_DIR}Allocator.cpp)
 
-
-add_library (SpectreCore STATIC ${PUBLIC_HDRS} ${PRIVATE_HDRS} ${SRCS} )
+add_library (SpectreCommon STATIC ${PUBLIC_HDRS} ${PRIVATE_HDRS} ${SRCS} )
