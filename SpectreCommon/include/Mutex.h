@@ -30,7 +30,7 @@ public:
 	MutexScope(const MutexScope&) = delete;
 	MutexScope& operator=(const MutexScope&) = delete;
 
-	~MutexScope();
+	~MutexScope() noexcept;
 
 private:
 	Mutex m_mutex;

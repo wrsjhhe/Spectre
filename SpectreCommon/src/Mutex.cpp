@@ -81,12 +81,12 @@ void Mutex::Unlock()
 }
 #endif
 
-MutexScope::MutexScope()
+MutexScope::MutexScope() noexcept
 {
 	m_mutex.Lock();
 }
 
-MutexScope::~MutexScope()
+MutexScope::~MutexScope() noexcept
 {
 	m_mutex.Unlock();
 }
