@@ -27,12 +27,14 @@ set(VULKAN_PUBLIC_HDRS ${INC_VULKAN_DIR}VulkanContext.h
 # ==================================================================================================
 set(SRC_VULKAN_DIR ./src/Vulkan/)
 include_directories(${SRC_VULKAN_DIR})
-set(VULKAN_SRCS ${SRC_VULKAN_DIR}VulkanCommon.cpp
-				${SRC_VULKAN_DIR}VulkanInstance.cpp
+set(VULKAN_SRCS 
+${SRC_VULKAN_DIR}VulkanCommon.cpp
+${SRC_VULKAN_DIR}VulkanInstance.cpp
 )
 
-set(VULKAN_PRIVATE_HDRS ${SRC_VULKAN_DIR}VulkanCommon.h
-						${SRC_VULKAN_DIR}VulkanInstance.h
+set(VULKAN_PRIVATE_HDRS
+${SRC_VULKAN_DIR}VulkanCommon.h
+${SRC_VULKAN_DIR}VulkanInstance.h
 )
 
 add_library (RenderSystems STATIC ${VULKAN_PUBLIC_HDRS} ${VULKAN_PRIVATE_HDRS} ${VULKAN_SRCS})
