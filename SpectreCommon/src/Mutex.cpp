@@ -81,8 +81,7 @@ void Mutex::Unlock()
 }
 #endif
 
-MutexScope::MutexScope(Mutex& _mutex)
-	: m_mutex(_mutex)
+MutexScope::MutexScope()
 {
 	m_mutex.Lock();
 }

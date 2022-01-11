@@ -25,18 +25,14 @@ private:
 
 class MutexScope
 {
-	MutexScope() = delete;
+public:
+	MutexScope() noexcept;
 	MutexScope(const MutexScope&) = delete;
 	MutexScope& operator=(const MutexScope&) = delete;
 
-public:
-	///
-	MutexScope(Mutex& _mutex);
-
-	///
 	~MutexScope();
 
 private:
-	Mutex& m_mutex;
+	Mutex m_mutex;
 };
 END_NAMESPACE_COMMON
