@@ -25,7 +25,7 @@ private:
 
 class MutexScope
 {
-	constexpr MutexScope() noexcept = default;
+	MutexScope() = delete;
 	MutexScope(const MutexScope&) = delete;
 	MutexScope& operator=(const MutexScope&) = delete;
 
