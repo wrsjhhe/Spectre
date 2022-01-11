@@ -9,6 +9,8 @@ include_directories(${INC_DIR})
 
 set(PUBLIC_HDRS ${INC_DIR}CommonDefinitions.h
 				${INC_DIR}Allocator.h
+				${INC_DIR}Platform.h
+				${INC_DIR}Mutex.h
 				)
 #set(PRIVATE_HDRS )
 
@@ -18,6 +20,7 @@ set(PUBLIC_HDRS ${INC_DIR}CommonDefinitions.h
 set(SRC_DIR ./src/)
 include_directories(${SRC_DIR})
 
-set(SRCS ${SRC_DIR}Allocator.cpp)
+set(SRCS ${SRC_DIR}Allocator.cpp
+		 ${SRC_DIR}Mutex.cpp)
 
 add_library (SpectreCommon STATIC ${PUBLIC_HDRS} ${PRIVATE_HDRS} ${SRCS} )

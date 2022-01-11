@@ -13,20 +13,27 @@ include_directories(${SPECTRE_COMMON_DIR})
 # ==================================================================================================
 # 项目头文件设置
 # ==================================================================================================
-set(INTERFACEE_DIR ./include/)
-set(INC_VULKAN_DIR ./Vulkan/include/)
+set(INTERFACEE_DIR ./interface/)
+set(INC_VULKAN_DIR ./include/Vulkan/)
 
 include_directories(${INTERFACEE_DIR})
 include_directories(${INC_VULKAN_DIR})
 
-set(PUBLIC_HDRS ${INC_VULKAN_DIR}VulkanInstance.h)
+set(VULKAN_PUBLIC_HDRS ${INC_VULKAN_DIR}VulkanContext.h
+)
 
 # ==================================================================================================
 # 项目源文件设置
 # ==================================================================================================
-set(SRC_VULKAN_DIR ./Vulkan/src/)
-set(VULKAN_SRCS ${SRC_VULKAN_DIR}VkCommon.cpp)
+set(SRC_VULKAN_DIR ./src/Vulkan/)
+include_directories(${SRC_VULKAN_DIR})
+set(VULKAN_SRCS ${SRC_VULKAN_DIR}VulkanCommon.cpp
+				${SRC_VULKAN_DIR}VulkanInstance.cpp
+)
 
+set(VULKAN_PRIVATE_HDRS ${SRC_VULKAN_DIR}VulkanCommon.h
+						${SRC_VULKAN_DIR}VulkanInstance.h
+)
 
-add_library (RenderSystems STATIC ${PUBLIC_HDRS} ${VULKAN_SRCS})
+add_library (RenderSystems STATIC ${VULKAN_PUBLIC_HDRS} ${VULKAN_PRIVATE_HDRS} ${VULKAN_SRCS})
 target_link_libraries(RenderSystems PRIVATE SpectreCommon)

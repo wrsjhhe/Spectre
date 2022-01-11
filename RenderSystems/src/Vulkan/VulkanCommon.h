@@ -3,16 +3,14 @@
 #include "CommonDefinitions.h"
 #include <stdint.h>
 #include "vulkan.h"
-
+#include "CommonDefinitions.h"
 #if defined(NDEBUG)
 #define VK_ENABLE_VALIDATION 0
 #else
 #define VK_ENABLE_VALIDATION 1
 #endif
 
-SPECTRE_BEGIN_NAMESPACE(Spectre)
-SPECTRE_BEGIN_NAMESPACE(RenderSystem)
-
+BEGIN_NAMESPACE_RENDERSYSTEMS
 /// <summary>
 /// 格式是否只支持深度组件
 /// </summary>
@@ -21,5 +19,4 @@ SPECTRE_BEGIN_NAMESPACE(RenderSystem)
 bool IsDepthOnlyFormat(VkFormat format);
 
 
-SPECTRE_END_NAMESPACE(RenderSystem) //Spectre
-SPECTRE_END_NAMESPACE(Spectre)//RenderSystem
+END_NAMESPACE_RENDERSYSTEMS
