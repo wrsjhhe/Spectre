@@ -11,6 +11,7 @@ set(PUBLIC_HDRS ${INC_DIR}CommonDefinitions.h
 				${INC_DIR}Allocator.h
 				${INC_DIR}Platform.h
 				${INC_DIR}Mutex.h
+				${INC_DIR}FormotString.h
 				)
 #set(PRIVATE_HDRS )
 

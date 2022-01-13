@@ -23,15 +23,21 @@ public:
 	VulkanInstance(VulkanInstance&&) = delete;
 	VulkanInstance& operator = (const VulkanInstance&) = delete;
 	VulkanInstance& operator = (VulkanInstance&&) = delete;
+	~VulkanInstance();
 
+	bool IsExtensionEnabled(const char* ExtensionName)const;
 private:
 	explicit VulkanInstance(const CreateInfo& CI);
-
-	bool IsExtensionAvailable(const std::vector<VkExtensionProperties>& extensions, const char* ExtensionName) const;
 private:
-	VkInstance						m_VkInstance = VK_NULL_HANDLE;
-	VkAllocationCallbacks* const	m_pVkAllocator;
+	bool							   m_DebugUtilsEnabled = false;
 
+	VkInstance						   m_vkInstance = VK_NULL_HANDLE;
+	VkAllocationCallbacks* const	   m_pVkAllocator;
+	std::vector<const char*>           m_EnabledExtensions;
+	std::vector<VkPhysicalDevice>      m_PhysicalDevices;
+
+	VkDebugUtilsMessengerEXT debug_utils_messenger{ VK_NULL_HANDLE };
+	VkDebugReportCallbackEXT debug_report_callback{ VK_NULL_HANDLE };
 };
 
 END_NAMESPACE_RENDERSYSTEMS

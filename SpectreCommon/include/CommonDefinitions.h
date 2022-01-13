@@ -1,5 +1,7 @@
 #pragma once
 
+#define SPECTRE_ENGINE_VERSION 10000
+
 #define BEGIN_NAMESPACE(Name) \
         namespace Name                     \
         {
