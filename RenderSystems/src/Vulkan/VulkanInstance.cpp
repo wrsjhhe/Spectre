@@ -96,6 +96,8 @@ VulkanInstance::VulkanInstance(const CreateInfo& CI):
     res = vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, available_instance_extensions.data());
     VK_CHECK(res, "Failed to enumerate extensions");
 
+
+    // Todo... if headless,use VK_EXT_HEADLESS_SURFACE_EXTENSION_NAME
     std::vector<const char*> instanceExtensions =
     {
         VK_KHR_SURFACE_EXTENSION_NAME,
@@ -195,7 +197,7 @@ VulkanInstance::VulkanInstance(const CreateInfo& CI):
     appInfo.pApplicationName = nullptr;
     appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.pEngineName = "Spectre Engine";
-    appInfo.engineVersion = SPECTRE_ENGINE_VERSION; // Developer-supplied version number of the engine used to create the application.
+    appInfo.engineVersion = SPECTRE_ENGINE_VERSION; 
     appInfo.apiVersion = ApiVersion;
 
     VkInstanceCreateInfo InstanceCreateInfo{};
@@ -250,7 +252,6 @@ VulkanInstance::VulkanInstance(const CreateInfo& CI):
         }
     }
 
-        // Enumerate physical devices
     {
         // 遍历物理设备
         uint32_t PhysicalDeviceCount = 0;
@@ -259,7 +260,6 @@ VulkanInstance::VulkanInstance(const CreateInfo& CI):
     /*    if (PhysicalDeviceCount == 0)
             LOG_ERROR_AND_THROW("No physical devices found on the system");*/
 
-        // Enumerate devices
         m_PhysicalDevices.resize(PhysicalDeviceCount);
         res = vkEnumeratePhysicalDevices(m_vkInstance, &PhysicalDeviceCount, m_PhysicalDevices.data());
         VK_CHECK(res, "Failed to enumerate physical devices");
