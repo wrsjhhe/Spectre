@@ -16,6 +16,7 @@ public:
     static LogManager* GetInstance();
 public:
     void Init(const std::string& loggerName, const std::string& filePath, const size_t size);
+    void Debug(const std::string& strMsg);
     void Info(const std::string& strMsg);
     void Error(const std::string& strMsg);
     void Warn(const std::string& strMsg);

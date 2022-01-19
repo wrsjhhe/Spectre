@@ -2,6 +2,9 @@
 
 #include "LogManager.h"
 
+#define LOG_DEBUG(msg)\
+LogManager::GetInstance()->Debug(msg);
+
 #define LOG_INFO(msg)\
 LogManager::GetInstance()->Info(msg);
 

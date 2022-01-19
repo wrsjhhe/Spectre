@@ -24,6 +24,19 @@ void LogManager::Init(const std::string& loggerName, const std::string& filePath
     m_logger->set_level(spdlog::level::debug);
 }
 
+void LogManager::Debug(const std::string& strMsg)
+{
+    if (nullptr == m_logger)
+    {
+        CreateDefaultLogger();
+    }
+
+    if (nullptr != m_logger)
+    {
+        m_logger->debug(strMsg);
+    }
+}
+
 void LogManager::Info(const std::string& strMsg)
 {
     if (nullptr == m_logger)
