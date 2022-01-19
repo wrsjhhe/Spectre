@@ -7,11 +7,16 @@ project ("SpectreCommon")
 set(INC_DIR ./include/)
 include_directories(${INC_DIR})
 
+set(SPDLOG_DIR ../ThirdParty/spdlog/include)
+include_directories(${SPDLOG_DIR})
+
 set(PUBLIC_HDRS ${INC_DIR}CommonDefinitions.h
 				${INC_DIR}Allocator.h
 				${INC_DIR}Platform.h
 				${INC_DIR}Mutex.h
 				${INC_DIR}FormotString.h
+				${INC_DIR}LogManager.h
+				${INC_DIR}Macro.h
 				)
 #set(PRIVATE_HDRS )
 
@@ -22,6 +27,15 @@ set(SRC_DIR ./src/)
 include_directories(${SRC_DIR})
 
 set(SRCS ${SRC_DIR}Allocator.cpp
-		 ${SRC_DIR}Mutex.cpp)
+		 ${SRC_DIR}Mutex.cpp
+		 ${SRC_DIR}LogManager.cpp)
 
-add_library (SpectreCommon STATIC ${PUBLIC_HDRS} ${PRIVATE_HDRS} ${SRCS} )
+message("Generated with config types: ${CMAKE_CONFIGURATION_TYPES}")
+IF (${CMAKE_CONFIGURATION_TYPES} MATCHES "Release")
+	link_directories(../ThirdParty/spdlog/lib/x64/release)
+ELSE()
+	link_directories(../ThirdParty/spdlog/lib/x64/debug)
+ENDIF()
+
+add_library (SpectreCommon STATIC ${PUBLIC_HDRS} ${PRIVATE_HDRS} ${SRCS})
+target_link_libraries(SpectreCommon PRIVATE spdlog)
