@@ -3,6 +3,12 @@
 #include <string>
 #include <memory>
 
+#ifndef ROOT_PATH_SIZE
+#	define ROOT_PATH_SIZE 0
+#endif
+
+#define __FILENAME__ (static_cast<const char *>(__FILE__) + ROOT_PATH_SIZE)
+
 namespace spdlog
 {
     class logger;
@@ -29,4 +35,17 @@ private:
     std::shared_ptr<spdlog::logger> m_logger;
 };
 
+#define LOG_DEBUG(msg)\
+LogManager::GetInstance()->Debug(msg);
+
+#define LOG_INFO(msg)\
+LogManager::GetInstance()->Info(msg);
+
+#define LOG_WARN(msg)\
+LogManager::GetInstance()->Warn(msg);
+
+#define LOG_ERROR(msg)\
+LogManager::GetInstance()->Error(msg);
+
 END_NAMESPACE_COMMON
+

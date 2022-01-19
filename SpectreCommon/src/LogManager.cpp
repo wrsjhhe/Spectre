@@ -59,7 +59,7 @@ void LogManager::Error(const std::string& strMsg)
 
     if (nullptr != m_logger)
     {
-        m_logger->error(strMsg);
+        m_logger->error("[{}:{}] {}", __FILENAME__, __LINE__, fmt::format(strMsg));
     }
 }
 
