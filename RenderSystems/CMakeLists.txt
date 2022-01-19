@@ -29,11 +29,15 @@ set(SRC_VULKAN_DIR ./src/Vulkan/)
 set(VULKAN_SRCS 
 ${SRC_VULKAN_DIR}VulkanCommon.cpp
 ${SRC_VULKAN_DIR}VulkanInstance.cpp
+${SRC_VULKAN_DIR}VulkanPhysicalDevice.cpp
+${SRC_VULKAN_DIR}VulkanLogicalDevice.cpp
 )
 
 set(VULKAN_PRIVATE_HDRS
 ${INC_VULKAN_DIR}VulkanCommon.h
 ${INC_VULKAN_DIR}VulkanInstance.h
+${INC_VULKAN_DIR}VulkanPhysicalDevice.h
+${INC_VULKAN_DIR}VulkanLogicalDevice.h
 )
 
 add_library (RenderSystems STATIC ${VULKAN_PUBLIC_HDRS} ${VULKAN_PRIVATE_HDRS} ${VULKAN_SRCS})

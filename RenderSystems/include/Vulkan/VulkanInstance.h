@@ -1,12 +1,10 @@
 #pragma once
+#include <vector>
 #include <memory>
-
 
 BEGIN_NAMESPACE_RENDERSYSTEMS
 
-static const uint32_t  s_VkVersion = VK_API_VERSION_1_0;
-
-class VulkanInstance : public std::enable_shared_from_this<VkInstance>
+class VulkanInstance
 {
 public:
 	struct CreateInfo
@@ -18,6 +16,7 @@ public:
 		const char* const*     ppInstanceExtensionNames = nullptr;
 		VkAllocationCallbacks* pVkAllocator = nullptr;
 	};
+	static std::shared_ptr<VulkanInstance> Create(const CreateInfo& CI);
 public:
 	VulkanInstance(const VulkanInstance&) = delete;
 	VulkanInstance(VulkanInstance&&) = delete;
@@ -26,13 +25,15 @@ public:
 	~VulkanInstance();
 
 	bool IsExtensionEnabled(const char* ExtensionName)const;
+
+	const std::vector<VkPhysicalDevice>& GetVkPhysicalDevices() const { return m_PhysicalDevices; }
 private:
 	explicit VulkanInstance(const CreateInfo& CI);
 private:
 	bool							   m_DebugUtilsEnabled = false;
 
-	VkInstance						   m_vkInstance = VK_NULL_HANDLE;
-	VkAllocationCallbacks* const	   m_pVkAllocator;
+	VkInstance						   m_VkInstance = VK_NULL_HANDLE;
+	VkAllocationCallbacks* const	   m_PVkAllocator;
 	std::vector<const char*>           m_EnabledExtensions;
 	std::vector<VkPhysicalDevice>      m_PhysicalDevices;
 

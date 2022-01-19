@@ -1,5 +1,4 @@
 #include <stdexcept>
-#include <vector>
 #include "VulkanCommon.h"
 #include "VulkanInstance.h"
 
@@ -72,9 +71,14 @@ static bool IsLayerAvailable(const std::vector<VkLayerProperties> layers, const 
 }
 
 
+std::shared_ptr<VulkanInstance> VulkanInstance::Create(const CreateInfo& CI)
+{
+	auto Instance = new VulkanInstance{ CI };
+	return std::shared_ptr<VulkanInstance>{Instance};
+}
 
 VulkanInstance::VulkanInstance(const CreateInfo& CI):
-	m_pVkAllocator{ CI.pVkAllocator }
+	m_PVkAllocator{ CI.pVkAllocator }
 {
 
     //获取所有vulkan可用层
@@ -150,7 +154,7 @@ VulkanInstance::VulkanInstance(const CreateInfo& CI):
     }
 
     auto ApiVersion = CI.ApiVersion;
-    if (vkEnumerateInstanceVersion != nullptr && ApiVersion > VK_API_VERSION_1_0)
+    if (vkEnumerateInstanceVersion != nullptr && ApiVersion > g_VkVersion)
     {
         uint32_t MaxApiVersion = 0;
         vkEnumerateInstanceVersion(&MaxApiVersion);
@@ -159,7 +163,7 @@ VulkanInstance::VulkanInstance(const CreateInfo& CI):
     else
     {
         // Only Vulkan 1.0 is supported.
-        ApiVersion = VK_API_VERSION_1_0;
+        ApiVersion = g_VkVersion;
     }
 
     std::vector<const char*> InstanceLayers;
@@ -232,19 +236,19 @@ VulkanInstance::VulkanInstance(const CreateInfo& CI):
     }
 
 
-    res = vkCreateInstance(&InstanceCreateInfo, m_pVkAllocator, &m_vkInstance);
+    res = vkCreateInstance(&InstanceCreateInfo, m_PVkAllocator, &m_VkInstance);
     //CHECK_VK_ERROR_AND_THROW(res, "Failed to create Vulkan instance");
 
     if (CI.EnableValidation)
     {
         if (debug_utils)
         {
-            res = vkCreateDebugUtilsMessengerEXT(m_vkInstance, &debug_utils_create_info, nullptr, &debug_utils_messenger);
+            res = vkCreateDebugUtilsMessengerEXT(m_VkInstance, &debug_utils_create_info, nullptr, &debug_utils_messenger);
             VK_CHECK(res, "Could not create debug utils messenger");
         }
         else
         {
-            res = vkCreateDebugReportCallbackEXT(m_vkInstance, &debug_report_create_info, nullptr, &debug_report_callback);
+            res = vkCreateDebugReportCallbackEXT(m_VkInstance, &debug_report_create_info, nullptr, &debug_report_callback);
             if (res != VK_SUCCESS)
             {
                 VK_CHECK(res, "Could not create debug report callback");
@@ -255,13 +259,13 @@ VulkanInstance::VulkanInstance(const CreateInfo& CI):
     {
         // 遍历物理设备
         uint32_t PhysicalDeviceCount = 0;
-        res = vkEnumeratePhysicalDevices(m_vkInstance, &PhysicalDeviceCount, nullptr);
+        res = vkEnumeratePhysicalDevices(m_VkInstance, &PhysicalDeviceCount, nullptr);
         VK_CHECK(res, "Failed to get physical device count");
     /*    if (PhysicalDeviceCount == 0)
             LOG_ERROR_AND_THROW("No physical devices found on the system");*/
 
         m_PhysicalDevices.resize(PhysicalDeviceCount);
-        res = vkEnumeratePhysicalDevices(m_vkInstance, &PhysicalDeviceCount, m_PhysicalDevices.data());
+        res = vkEnumeratePhysicalDevices(m_VkInstance, &PhysicalDeviceCount, m_PhysicalDevices.data());
         VK_CHECK(res, "Failed to enumerate physical devices");
     }
 }
@@ -270,13 +274,13 @@ VulkanInstance::~VulkanInstance()
 {
     if (debug_utils_messenger != VK_NULL_HANDLE)
     {
-        vkDestroyDebugUtilsMessengerEXT(m_vkInstance, debug_utils_messenger, nullptr);
+        vkDestroyDebugUtilsMessengerEXT(m_VkInstance, debug_utils_messenger, nullptr);
     }
     if (debug_report_callback != VK_NULL_HANDLE)
     {
-        vkDestroyDebugReportCallbackEXT(m_vkInstance, debug_report_callback, nullptr);
+        vkDestroyDebugReportCallbackEXT(m_VkInstance, debug_report_callback, nullptr);
     }
-    vkDestroyInstance(m_vkInstance, m_pVkAllocator);
+    vkDestroyInstance(m_VkInstance, m_PVkAllocator);
 }
 
 
