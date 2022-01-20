@@ -1,0 +1,10 @@
+#pragma once
+
+BEGIN_NAMESPACE_RENDERSYSTEMS
+
+class VulkanSwapChain
+{
+
+};
+
+END_NAMESPACE_RENDERSYSTEMS

@@ -19,7 +19,7 @@ set(INC_VULKAN_DIR ./include/Vulkan/)
 include_directories(${INTERFACEE_DIR})
 include_directories(${INC_VULKAN_DIR})
 
-set(VULKAN_PUBLIC_HDRS ${INC_VULKAN_DIR}VulkanContext.h
+set(VULKAN_PUBLIC_HDRS ${INC_VULKAN_DIR}RenderSystemVK.h
 )
 
 # ==================================================================================================
@@ -31,6 +31,7 @@ ${SRC_VULKAN_DIR}VulkanCommon.cpp
 ${SRC_VULKAN_DIR}VulkanInstance.cpp
 ${SRC_VULKAN_DIR}VulkanPhysicalDevice.cpp
 ${SRC_VULKAN_DIR}VulkanLogicalDevice.cpp
+${SRC_VULKAN_DIR}RenderSystemVK.cpp
 )
 
 set(VULKAN_PRIVATE_HDRS
