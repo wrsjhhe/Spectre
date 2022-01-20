@@ -2,7 +2,7 @@
 #include "CommonDefinitions.h"
 #include <sstream>
 
-BEGIN_NAMESPACE_COMMON
+BEGIN_NAMESPACE_SPECTRE
 
 template <typename SSType>
 void FormatStrSS(SSType& ss)
@@ -30,4 +30,4 @@ std::string FormatString(const RestArgsType&... Args)
     return ss.str();
 }
 
-END_NAMESPACE_COMMON
+END_NAMESPACE_SPECTRE

@@ -3,7 +3,7 @@
 #include "VulkanLogicalDevice.h"
 
 USING_NAMESPACE(Spectre)
-USING_NAMESPACE(RenderSystems)
+
 
 std::shared_ptr<VulkanLogicalDevice> VulkanLogicalDevice::Create(const VulkanPhysicalDevice& PhysicalDevice,
 	const VkDeviceCreateInfo& DeviceCI, 

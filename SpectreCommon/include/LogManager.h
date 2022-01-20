@@ -14,7 +14,7 @@ namespace spdlog
     class logger;
 }
 
-BEGIN_NAMESPACE_COMMON
+BEGIN_NAMESPACE_SPECTRE
 
 class LogManager
 {
@@ -47,5 +47,5 @@ LogManager::GetInstance()->Warn(msg);
 #define LOG_ERROR(msg)\
 LogManager::GetInstance()->Error(msg);
 
-END_NAMESPACE_COMMON
+END_NAMESPACE_SPECTRE
 

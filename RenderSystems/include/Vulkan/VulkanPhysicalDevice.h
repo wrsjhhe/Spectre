@@ -1,6 +1,6 @@
 #pragma once
 #include "VulkanInstance.h"
-BEGIN_NAMESPACE_RENDERSYSTEMS
+BEGIN_NAMESPACE_SPECTRE
 
 class VulkanPhysicalDevice
 {
@@ -73,4 +73,4 @@ private:
 	std::vector<VkQueueFamilyProperties> m_QueueFamilyProperties;
 };
 
-END_NAMESPACE_RENDERSYSTEMS
+END_NAMESPACE_SPECTRE

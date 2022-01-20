@@ -7,7 +7,7 @@
 #	include <pthread.h>
 #endif
 
-USING_NAMESPACE(Spectre::Common)
+USING_NAMESPACE(Spectre)
 
 #if SPE_PLATFORM_WINDOWS
 Mutex::Mutex() noexcept

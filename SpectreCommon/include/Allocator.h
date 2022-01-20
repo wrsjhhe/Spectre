@@ -13,7 +13,7 @@
 #define HEAP_Free( _ptr)    Spectre::Common::free(_ptr)
 
 
-BEGIN_NAMESPACE_COMMON
+BEGIN_NAMESPACE_SPECTRE
 
 inline void* aligned_alloc(size_t size, size_t align) noexcept 
 {
@@ -53,4 +53,4 @@ void free(void* p) noexcept
     aligned_free(p);
 }
 
-END_NAMESPACE_COMMON
+END_NAMESPACE_SPECTRE

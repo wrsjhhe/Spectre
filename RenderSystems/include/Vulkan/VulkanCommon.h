@@ -27,7 +27,7 @@ const uint32_t  g_VkVersion = VK_API_VERSION_1_2;
 	{																	 \
 		if (x)															 \
 		{																 \
-			Common::LogManager::GetInstance()->Error(msg);				 \
+			LOG_ERROR(msg);												 \
 			abort();													 \
 		}																 \
 	} while (0);														 \

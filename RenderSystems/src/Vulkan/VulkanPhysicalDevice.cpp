@@ -5,7 +5,7 @@
 
 
 USING_NAMESPACE(Spectre)
-USING_NAMESPACE(RenderSystems)
+
 
 
 bool IsExtensionSupported(const std::vector<VkExtensionProperties>& supportedExtensions,const char* extensionName)

@@ -2,7 +2,7 @@
 #include <vector>
 #include <memory>
 
-BEGIN_NAMESPACE_RENDERSYSTEMS
+BEGIN_NAMESPACE_SPECTRE
 
 class VulkanInstance
 {
@@ -41,4 +41,4 @@ private:
 	VkDebugReportCallbackEXT debug_report_callback{ VK_NULL_HANDLE };
 };
 
-END_NAMESPACE_RENDERSYSTEMS
+END_NAMESPACE_SPECTRE

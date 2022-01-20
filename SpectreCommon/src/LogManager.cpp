@@ -4,7 +4,7 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-USING_NAMESPACE(Spectre::Common)
+USING_NAMESPACE(Spectre)
 
 LogManager* LogManager::GetInstance()
 {

@@ -5,7 +5,7 @@
 
 
 
-BEGIN_NAMESPACE_COMMON
+BEGIN_NAMESPACE_SPECTRE
 
 class Mutex
 {
@@ -35,4 +35,4 @@ public:
 private:
 	Mutex m_mutex;
 };
-END_NAMESPACE_COMMON
+END_NAMESPACE_SPECTRE

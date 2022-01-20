@@ -3,7 +3,7 @@
 #include "includes.h"
 #include "LogManager.h"
 
-USING_NAMESPACE(Spectre::Common)
+USING_NAMESPACE(Spectre)
 
 TEST(TestLog, test1)
 {

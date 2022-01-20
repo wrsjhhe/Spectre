@@ -1,7 +1,7 @@
 #pragma once
 #include "VulkanPhysicalDevice.h"
 
-BEGIN_NAMESPACE_RENDERSYSTEMS
+BEGIN_NAMESPACE_SPECTRE
 
 class VulkanLogicalDevice
 {
@@ -36,4 +36,4 @@ private:
 	std::vector<VkAccessFlags>         m_SupportedAccessMask;
 };
 
-END_NAMESPACE_RENDERSYSTEMS
+END_NAMESPACE_SPECTRE

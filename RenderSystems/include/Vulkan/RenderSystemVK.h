@@ -1,6 +1,6 @@
 #pragma once
 
-BEGIN_NAMESPACE_RENDERSYSTEMS
+BEGIN_NAMESPACE_SPECTRE
 
 class RenderSystemVK
 {
@@ -11,4 +11,4 @@ private:
 	VkInstance	m_Instance;
 };
 
-END_NAMESPACE_RENDERSYSTEMS
+END_NAMESPACE_SPECTRE

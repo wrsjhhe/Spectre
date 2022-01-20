@@ -3,7 +3,7 @@
 #include "VulkanInstance.h"
 
 USING_NAMESPACE(Spectre)
-USING_NAMESPACE(RenderSystems)
+
 
 static constexpr const char* ValidationLayerNames[] =
 {
