@@ -7,8 +7,9 @@ USING_NAMESPACE(Spectre)
 
 TEST(TestLog, test1)
 {
-    LOG_DEBUG("hello world");
-    LOG_INFO("hello world");
-    LOG_WARN("hello world");
-    LOG_ERROR("hello world");
+    LOG_DEBUG("debug message");
+    LOG_INFO("info message");
+    LOG_WARN("warn message");
+    LOG_ERROR("error message");
+    EXP_CHECK(0, "exp check faild");
 }

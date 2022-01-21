@@ -2,7 +2,7 @@
 #include "CommonDefinitions.h"
 #include <string>
 #include <memory>
-
+#include <exception>
 #ifndef ROOT_PATH_SIZE
 #	define ROOT_PATH_SIZE 0
 #endif
@@ -50,10 +50,10 @@ LogManager::GetInstance()->Error(msg);
 #define EXP_CHECK(x,msg)												 \
 	do																	 \
 	{																	 \
-		if (x)															 \
+		if (!(x))														 \
 		{																 \
-			LOG_ERROR(msg);												 \
-			abort();													 \
+			LOG_ERROR("[{}:{}] {}", __FILENAME__, __LINE__, fmt::format(msg));	\
+			throw std::exception("exp check faild");					 \
 		}																 \
 	} while (0);														 \
 
