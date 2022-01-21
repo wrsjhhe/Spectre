@@ -47,5 +47,15 @@ LogManager::GetInstance()->Warn(msg);
 #define LOG_ERROR(msg)\
 LogManager::GetInstance()->Error(msg);
 
+#define EXP_CHECK(x,msg)												 \
+	do																	 \
+	{																	 \
+		if (x)															 \
+		{																 \
+			LOG_ERROR(msg);												 \
+			abort();													 \
+		}																 \
+	} while (0);														 \
+
 END_NAMESPACE_SPECTRE
 
