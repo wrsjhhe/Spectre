@@ -2,17 +2,13 @@
 #include "CommonDefinitions.h"
 #include <string>
 #include <memory>
+#include <spdlog/spdlog.h>
 #include <exception>
 #ifndef ROOT_PATH_SIZE
 #	define ROOT_PATH_SIZE 0
 #endif
 
 #define __FILENAME__ (static_cast<const char *>(__FILE__) + ROOT_PATH_SIZE)
-
-namespace spdlog
-{
-    class logger;
-}
 
 BEGIN_NAMESPACE_SPECTRE
 
@@ -26,6 +22,62 @@ public:
     void Info(const std::string& strMsg);
     void Error(const std::string& strMsg);
     void Warn(const std::string& strMsg);
+
+    template<typename... Args>
+    void DebugArgs(const std::string& fmt, Args &&... args)
+    {
+        if (nullptr == m_logger)
+        {
+            CreateDefaultLogger();
+        }
+
+        if (nullptr != m_logger)
+        {
+            m_logger->debug(fmt, std::forward<Args>(args)...);
+        }
+    }
+
+    template<typename... Args>
+    void InfoArgs(const std::string& fmt, Args &&... args)
+    {
+        if (nullptr == m_logger)
+        {
+            CreateDefaultLogger();
+        }
+
+        if (nullptr != m_logger)
+        {
+            m_logger->info(fmt, std::forward<Args>(args)...);
+        }
+    }
+
+    template<typename... Args>
+    void ErrorArgs(const std::string& fmt, Args &&... args)
+    {
+        if (nullptr == m_logger)
+        {
+            CreateDefaultLogger();
+        }
+
+        if (nullptr != m_logger)
+        {
+            m_logger->error(fmt, std::forward<Args>(args)...);
+        }
+    }
+
+    template<typename... Args>
+    void WarnArgs(const std::string& fmt, Args &&... args)
+    {
+        if (nullptr == m_logger)
+        {
+            CreateDefaultLogger();
+        }
+
+        if (nullptr != m_logger)
+        {
+            m_logger->warn(fmt, std::forward<Args>(args)...);
+        }
+    }
 private:
     LogManager() = default;
     LogManager(const LogManager& rhs) = delete;
