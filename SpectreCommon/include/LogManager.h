@@ -2,8 +2,9 @@
 #include "CommonDefinitions.h"
 #include <string>
 #include <memory>
-#include <spdlog/spdlog.h>
 #include <exception>
+#include <spdlog/spdlog.h>
+
 #ifndef ROOT_PATH_SIZE
 #	define ROOT_PATH_SIZE 0
 #endif
@@ -99,12 +100,24 @@ LogManager::GetInstance()->Warn(msg);
 #define LOG_ERROR(msg)\
 LogManager::GetInstance()->Error(msg);
 
+#define LOG_DEBUG_FMT(fmt, ...)\
+LogManager::GetInstance()->DebugArgs(fmt, __VA_ARGS__);
+
+#define LOG_INFO_FMT(fmt, ...)\
+LogManager::GetInstance()->InfoArgs(fmt, __VA_ARGS__);
+
+#define LOG_WARN_FMT(fmt, ...)\
+LogManager::GetInstance()->WarnArgs(fmt, __VA_ARGS__);
+
+#define LOG_ERROR_FMT(fmt, ...)\
+LogManager::GetInstance()->ErrorArgs(fmt, __VA_ARGS__);
+
 #define EXP_CHECK(x,msg)												 \
 	do																	 \
 	{																	 \
 		if (!(x))														 \
 		{																 \
-			LOG_ERROR("[{}:{}] {}", __FILENAME__, __LINE__, fmt::format(msg));	\
+			LOG_ERROR_FMT("[{}:{}] {}", __FILENAME__, __LINE__, fmt::format(msg));	\
 			throw std::exception("exp check faild");					 \
 		}																 \
 	} while (0);														 \
