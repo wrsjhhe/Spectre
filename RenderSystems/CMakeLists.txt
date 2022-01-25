@@ -4,7 +4,7 @@ project ("RenderSystems")
 # ==================================================================================================
 # 外部引用头文件目录设置
 # ==================================================================================================
-set(VULKANSDK_DIR ../ThirdParty/VulkanSDK/)
+set(VULKANSDK_DIR ../ThirdParty/VulkanSDK/include)
 include_directories(${VULKANSDK_DIR})
 
 set(SPECTRE_COMMON_DIR ../SpectreCommon/include/)
@@ -44,5 +44,7 @@ ${INC_VULKAN_DIR}VulkanPhysicalDevice.h
 ${INC_VULKAN_DIR}VulkanLogicalDevice.h
 )
 
+
 add_library (RenderSystems STATIC ${VULKAN_PUBLIC_HDRS} ${VULKAN_PRIVATE_HDRS} ${VULKAN_SRCS})
 target_link_libraries(RenderSystems PRIVATE SpectreCommon)
+target_link_libraries(RenderSystems PRIVATE vulkan-1)
