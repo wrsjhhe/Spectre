@@ -226,13 +226,13 @@ VulkanInstance::VulkanInstance(const CreateInfo& CI):
 
             InstanceCreateInfo.pNext = &debug_utils_create_info;
         }
-        else
-        {
-            debug_report_create_info.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
-            debug_report_create_info.pfnCallback = debug_callback;
+        //else
+        //{
+        //    debug_report_create_info.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
+        //    debug_report_create_info.pfnCallback = debug_callback;
 
-            InstanceCreateInfo.pNext = &debug_report_create_info;
-        }
+        //    InstanceCreateInfo.pNext = &debug_report_create_info;
+        //}
     }
 
 
@@ -240,19 +240,14 @@ VulkanInstance::VulkanInstance(const CreateInfo& CI):
     //CHECK_VK_ERROR_AND_THROW(res, "Failed to create Vulkan instance");
 
     if (CI.EnableValidation)
-    {
+	{
+        PFN_vkCreateDebugUtilsMessengerEXT CreateDebugMessageCallback = VK_NULL_HANDLE;
+        CreateDebugMessageCallback = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_VkInstance, "vkCreateDebugUtilsMessengerEXT");
+
         if (debug_utils)
         {
-            res = vkCreateDebugUtilsMessengerEXT(m_VkInstance, &debug_utils_create_info, nullptr, &debug_utils_messenger);
+            res = CreateDebugMessageCallback(m_VkInstance, &debug_utils_create_info, nullptr, &debug_utils_messenger);
             VK_CHECK(res, "Could not create debug utils messenger");
-        }
-        else
-        {
-            res = vkCreateDebugReportCallbackEXT(m_VkInstance, &debug_report_create_info, nullptr, &debug_report_callback);
-            if (res != VK_SUCCESS)
-            {
-                VK_CHECK(res, "Could not create debug report callback");
-            }
         }
     }
 
@@ -273,13 +268,12 @@ VulkanInstance::VulkanInstance(const CreateInfo& CI):
 VulkanInstance::~VulkanInstance()
 {
     if (debug_utils_messenger != VK_NULL_HANDLE)
-    {
-        vkDestroyDebugUtilsMessengerEXT(m_VkInstance, debug_utils_messenger, nullptr);
+	{
+		PFN_vkDestroyDebugUtilsMessengerEXT destroyMsgCallback = 
+            (PFN_vkDestroyDebugUtilsMessengerEXT)(void*)vkGetInstanceProcAddr(m_VkInstance, "vkDestroyDebugUtilsMessengerEXT");
+		destroyMsgCallback(m_VkInstance, debug_utils_messenger, nullptr);
     }
-    if (debug_report_callback != VK_NULL_HANDLE)
-    {
-        vkDestroyDebugReportCallbackEXT(m_VkInstance, debug_report_callback, nullptr);
-    }
+
     vkDestroyInstance(m_VkInstance, m_PVkAllocator);
 }
 

@@ -38,7 +38,7 @@ private:
 	std::vector<VkPhysicalDevice>      m_PhysicalDevices;
 
 	VkDebugUtilsMessengerEXT debug_utils_messenger{ VK_NULL_HANDLE };
-	VkDebugReportCallbackEXT debug_report_callback{ VK_NULL_HANDLE };
+	//VkDebugReportCallbackEXT debug_report_callback{ VK_NULL_HANDLE };
 };
 
 END_NAMESPACE_SPECTRE

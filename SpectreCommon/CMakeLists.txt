@@ -29,12 +29,6 @@ set(SRCS ${SRC_DIR}Allocator.cpp
 		 ${SRC_DIR}Mutex.cpp
 		 ${SRC_DIR}LogManager.cpp)
 
-message("Generated with config types: ${CMAKE_CONFIGURATION_TYPES}")
-IF (${CMAKE_CONFIGURATION_TYPES} MATCHES "Release")
-	link_directories(../ThirdParty/spdlog/lib/x64/release)
-ELSE()
-	link_directories(../ThirdParty/spdlog/lib/x64/debug)
-ENDIF()
 
 add_library (SpectreCommon STATIC ${PUBLIC_HDRS} ${PRIVATE_HDRS} ${SRCS})
 target_link_libraries(SpectreCommon PRIVATE spdlog)

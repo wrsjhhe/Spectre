@@ -22,7 +22,7 @@ VulkanLogicalDevice::VulkanLogicalDevice(const VulkanPhysicalDevice& PhysicalDev
 	m_EnabledExtFeatures{ EnabledExtFeatures }
 {
 	auto res = vkCreateDevice(PhysicalDevice.GetVkDeviceHandle(), &DeviceCI, vkAllocator, &m_VkDevice);
-	VK_CHECK(res == VK_SUCCESS, "Failed to create logical device");
+	VK_CHECK(res, "Failed to create logical device");
 
 	auto GraphicsStages =
 		VK_PIPELINE_STAGE_VERTEX_SHADER_BIT |

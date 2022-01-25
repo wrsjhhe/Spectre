@@ -1,14 +1,14 @@
 #pragma once
 
-BEGIN_NAMESPACE_SPECTRE
-
-class RenderSystemVK
+namespace Spectre
 {
-public:
+	class RenderSystemVK
+	{
+	public:
+		void Init();
 
+	private:
 
-private:
-	VkInstance	m_Instance;
-};
+	};
 
-END_NAMESPACE_SPECTRE
+}
