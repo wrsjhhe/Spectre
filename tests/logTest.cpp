@@ -15,5 +15,5 @@ TEST(TestLog, test1)
     LOG_INFO_FMT("[{}:{}]", __FILE__, __LINE__);
     LOG_WARN_FMT("[{}:{}]", __FILE__, __LINE__);
     LOG_ERROR_FMT("[{}:{}]", __FILE__, __LINE__);
-    EXP_CHECK(0, "exp check faild");
+    //EXP_CHECK(0, "exp check faild");
 }
