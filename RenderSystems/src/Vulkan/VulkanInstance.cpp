@@ -17,37 +17,15 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debug_utils_messenger_callback(VkDebugUtilsMessag
     // Log debug messge
     if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
     {
-        //LOGW("{} - {}: {}", callback_data->messageIdNumber, callback_data->pMessageIdName, callback_data->pMessage);
+        LOG_WARN_FMT("{} - {}: {}", callback_data->messageIdNumber, callback_data->pMessageIdName, callback_data->pMessage);
     }
     else if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
-    {
-        //LOGE("{} - {}: {}", callback_data->messageIdNumber, callback_data->pMessageIdName, callback_data->pMessage);
+	{
+		LOG_ERROR_FMT("{} - {}: {}", callback_data->messageIdNumber, callback_data->pMessageIdName, callback_data->pMessage);
     }
     return VK_FALSE;
 }
 
-static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT /*type*/,
-    uint64_t /*object*/, size_t /*location*/, int32_t /*message_code*/,
-    const char* layer_prefix, const char* message, void* /*user_data*/)
-{
-    if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT)
-    {
-        //LOGE("{}: {}", layer_prefix, message);
-    }
-    else if (flags & VK_DEBUG_REPORT_WARNING_BIT_EXT)
-    {
-        //LOGW("{}: {}", layer_prefix, message);
-    }
-    else if (flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT)
-    {
-        //LOGW("{}: {}", layer_prefix, message);
-    }
-    else
-    {
-        //LOGI("{}: {}", layer_prefix, message);
-    }
-    return VK_FALSE;
-}
 
 static bool IsExtensionAvailable(const std::vector<VkExtensionProperties>& extensions, const char* ExtensionName)
 {
@@ -146,11 +124,6 @@ VulkanInstance::VulkanInstance(const CreateInfo& CI):
             instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
             debug_utils = true;
         }
-        else
-        {
-            instanceExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
-            //LOG_WARNING_MESSAGE("Extension ", VK_EXT_DEBUG_UTILS_EXTENSION_NAME, " is not available.");
-        }
     }
 
     auto ApiVersion = CI.ApiVersion;
@@ -215,7 +188,6 @@ VulkanInstance::VulkanInstance(const CreateInfo& CI):
 
     //∆Ù∂Ø—È÷§≤„
     VkDebugUtilsMessengerCreateInfoEXT debug_utils_create_info = { VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT };
-    VkDebugReportCallbackCreateInfoEXT debug_report_create_info = { VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT };
     if (CI.EnableValidation)
     {
         if (debug_utils)
@@ -226,33 +198,21 @@ VulkanInstance::VulkanInstance(const CreateInfo& CI):
 
             InstanceCreateInfo.pNext = &debug_utils_create_info;
         }
-        else
-        {
-            debug_report_create_info.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
-            debug_report_create_info.pfnCallback = debug_callback;
-
-            InstanceCreateInfo.pNext = &debug_report_create_info;
-        }
     }
 
 
     res = vkCreateInstance(&InstanceCreateInfo, m_PVkAllocator, &m_VkInstance);
-    //CHECK_VK_ERROR_AND_THROW(res, "Failed to create Vulkan instance");
+    VK_CHECK(res, "Failed to create Vulkan instance");
 
     if (CI.EnableValidation)
-    {
+	{
+        PFN_vkCreateDebugUtilsMessengerEXT CreateDebugMessageCallback = VK_NULL_HANDLE;
+        CreateDebugMessageCallback = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_VkInstance, "vkCreateDebugUtilsMessengerEXT");
+
         if (debug_utils)
         {
-            res = vkCreateDebugUtilsMessengerEXT(m_VkInstance, &debug_utils_create_info, nullptr, &debug_utils_messenger);
+            res = CreateDebugMessageCallback(m_VkInstance, &debug_utils_create_info, nullptr, &debug_utils_messenger);
             VK_CHECK(res, "Could not create debug utils messenger");
-        }
-        else
-        {
-            res = vkCreateDebugReportCallbackEXT(m_VkInstance, &debug_report_create_info, nullptr, &debug_report_callback);
-            if (res != VK_SUCCESS)
-            {
-                VK_CHECK(res, "Could not create debug report callback");
-            }
         }
     }
 
@@ -261,8 +221,7 @@ VulkanInstance::VulkanInstance(const CreateInfo& CI):
         uint32_t PhysicalDeviceCount = 0;
         res = vkEnumeratePhysicalDevices(m_VkInstance, &PhysicalDeviceCount, nullptr);
         VK_CHECK(res, "Failed to get physical device count");
-    /*    if (PhysicalDeviceCount == 0)
-            LOG_ERROR_AND_THROW("No physical devices found on the system");*/
+        EXP_CHECK(PhysicalDeviceCount != 0, "No physical devices found on the system")
 
         m_PhysicalDevices.resize(PhysicalDeviceCount);
         res = vkEnumeratePhysicalDevices(m_VkInstance, &PhysicalDeviceCount, m_PhysicalDevices.data());
@@ -273,13 +232,12 @@ VulkanInstance::VulkanInstance(const CreateInfo& CI):
 VulkanInstance::~VulkanInstance()
 {
     if (debug_utils_messenger != VK_NULL_HANDLE)
-    {
-        vkDestroyDebugUtilsMessengerEXT(m_VkInstance, debug_utils_messenger, nullptr);
+	{
+		PFN_vkDestroyDebugUtilsMessengerEXT destroyMsgCallback = 
+            (PFN_vkDestroyDebugUtilsMessengerEXT)(void*)vkGetInstanceProcAddr(m_VkInstance, "vkDestroyDebugUtilsMessengerEXT");
+		destroyMsgCallback(m_VkInstance, debug_utils_messenger, nullptr);
     }
-    if (debug_report_callback != VK_NULL_HANDLE)
-    {
-        vkDestroyDebugReportCallbackEXT(m_VkInstance, debug_report_callback, nullptr);
-    }
+
     vkDestroyInstance(m_VkInstance, m_PVkAllocator);
 }
 

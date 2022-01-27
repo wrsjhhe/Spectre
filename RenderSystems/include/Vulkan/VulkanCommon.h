@@ -22,7 +22,7 @@
 const uint32_t  g_VkVersion = VK_API_VERSION_1_2;
 
 
-#define VK_CHECK(x,msg)	EXP_CHECK(x,msg)
+#define VK_CHECK(x,msg)	EXP_CHECK(x == VK_SUCCESS,msg)
 
 
 constexpr VkPipelineStageFlags VK_PIPELINE_STAGE_ALL_SHADERS =

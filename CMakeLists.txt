@@ -18,10 +18,15 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_STANDARD} -fstrict-aliasing -Wno-unknown-pragmas -Wno-unused-function")
 endif()
 
-
+IF (${CMAKE_CONFIGURATION_TYPES} MATCHES "Release")
+	link_directories(./ThirdParty/spdlog/lib/x64/release)
+ELSE()
+	link_directories(./ThirdParty/spdlog/lib/x64/debug)
+ENDIF()
+link_directories(./ThirdParty/VulkanSDK/lib)
 # 包含子项目。
 add_subdirectory ("SpectreCommon")
 add_subdirectory ("RenderSystems")
-add_subdirectory ("SpectreCore")
+#add_subdirectory ("SpectreCore")
 add_subdirectory ("Sample")
-add_subdirectory ("tests")
+#add_subdirectory ("tests")

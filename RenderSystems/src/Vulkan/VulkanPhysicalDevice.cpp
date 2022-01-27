@@ -48,7 +48,7 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const Vulk
 	{
 		supportedExtensions.resize(ExtensionCount);
 		auto res = vkEnumerateDeviceExtensionProperties(m_VkPhysicalDevice, nullptr, &ExtensionCount, supportedExtensions.data());
-		VK_CHECK(res == VK_SUCCESS,"Failed get device extension properties");
+		VK_CHECK(res,"Failed get device extension properties");
 	}
 
 	ExtensionFeatures extFeatures = {};
