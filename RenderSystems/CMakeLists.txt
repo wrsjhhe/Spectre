@@ -33,7 +33,7 @@ set(VULKAN_SRCS
 ${SRC_VULKAN_DIR}VulkanCommon.cpp
 ${SRC_VULKAN_DIR}VulkanInstance.cpp
 ${SRC_VULKAN_DIR}VulkanPhysicalDevice.cpp
-${SRC_VULKAN_DIR}VulkanLogicalDevice.cpp
+"src/Vulkan/VulkanDevice.cpp"
 ${SRC_VULKAN_DIR}RenderSystemVK.cpp
 )
 
@@ -41,7 +41,7 @@ set(VULKAN_PRIVATE_HDRS
 ${INC_VULKAN_DIR}VulkanCommon.h
 ${INC_VULKAN_DIR}VulkanInstance.h
 ${INC_VULKAN_DIR}VulkanPhysicalDevice.h
-${INC_VULKAN_DIR}VulkanLogicalDevice.h
+"include/Vulkan/VulkanDevice.h"
 )
 
 
