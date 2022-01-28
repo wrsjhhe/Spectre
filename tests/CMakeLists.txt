@@ -5,7 +5,8 @@ project (unitTest)
 set(INC_SPECTRECommon_DIR ../SpectreCommon/include/)
 
 include_directories (${INC_SPECTRECommon_DIR}
-    ../ThirdParty/googletest/googletest/include)
+    ../ThirdParty/googletest/googletest/include
+    ../ThirdParty/DirectXMath/Inc)
 
 set(SPDLOG_DIR ../ThirdParty/spdlog/include)
 include_directories(${SPDLOG_DIR})
@@ -19,6 +20,7 @@ ELSE()
 ENDIF()
 
 set(SRCS ${SRC_DIR}logTest.cpp
+         ${SRC_DIR}mathTest.cpp
 		 ${SRC_DIR}main.cpp)
 
 add_executable (unitTest ${SRCS})
