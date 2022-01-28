@@ -1,5 +1,6 @@
 #include "VulkanCommon.h"
 #include "VulkanInstance.h"
+#include "VulkanPhysicalDevice.h"
 #include "RenderSystemVK.h"
 
 
@@ -13,5 +14,7 @@ void RenderSystemVK::Init()
 #endif
 
 	std::shared_ptr<VulkanInstance> instance = VulkanInstance::Create(instanceCI);
+	VkPhysicalDevice vkPhysicalDevice = instance->GetVkPhysicalDevices().at(0);
 
+	std::unique_ptr<VulkanPhysicalDevice> physicalDevice = VulkanPhysicalDevice::Create(vkPhysicalDevice, *instance);
 }

@@ -26,7 +26,7 @@ std::unique_ptr<VulkanPhysicalDevice> VulkanPhysicalDevice::Create(VkPhysicalDev
 VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const VulkanInstance& instance):
 	m_VkPhysicalDevice(vkDevice)
 {
-	VK_CHECK(m_VkPhysicalDevice != VK_NULL_HANDLE,"Physical device is null")
+	EXP_CHECK(m_VkPhysicalDevice != VK_NULL_HANDLE,"Physical device is null")
 
 	VkPhysicalDeviceProperties properties = {};
 	VkPhysicalDeviceFeatures   features = {};
@@ -298,8 +298,8 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const Vulk
 
 		// Initialize device extension features by current physical device features.
 		// Some flags may not be supported by hardware.
-		vkGetPhysicalDeviceFeatures2KHR(m_VkPhysicalDevice, &Feats2);
-		vkGetPhysicalDeviceProperties2KHR(m_VkPhysicalDevice, &Props2);
+		vkGetPhysicalDeviceFeatures2(m_VkPhysicalDevice, &Feats2);
+		vkGetPhysicalDeviceProperties2(m_VkPhysicalDevice, &Props2);
 
 
 		// Check texture formats

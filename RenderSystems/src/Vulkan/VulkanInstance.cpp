@@ -185,7 +185,8 @@ VulkanInstance::VulkanInstance(const CreateInfo& CI):
     InstanceCreateInfo.ppEnabledExtensionNames = instanceExtensions.empty() ? nullptr : instanceExtensions.data();
     InstanceCreateInfo.enabledLayerCount = static_cast<uint32_t>(InstanceLayers.size());
     InstanceCreateInfo.ppEnabledLayerNames = InstanceLayers.empty() ? nullptr : InstanceLayers.data();
-
+    
+    m_EnabledExtensions = std::move(instanceExtensions);
     //∆Ù∂Ø—È÷§≤„
     VkDebugUtilsMessengerCreateInfoEXT debug_utils_create_info = { VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT };
     if (CI.EnableValidation)
