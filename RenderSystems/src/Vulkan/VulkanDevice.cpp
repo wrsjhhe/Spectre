@@ -5,23 +5,25 @@
 USING_NAMESPACE(Spectre)
 
 
-std::shared_ptr<VulkanLogicalDevice> VulkanLogicalDevice::Create(const VulkanPhysicalDevice& PhysicalDevice,
+std::shared_ptr<VulkanDevice> VulkanDevice::Create(const VulkanPhysicalDevice& PhysicalDevice,
 	const VkDeviceCreateInfo& DeviceCI, 
 	const ExtensionFeatures& EnabledExtFeatures, 
 	const VkAllocationCallbacks* vkAllocator)
 {
-	auto* LogicalDevice = new VulkanLogicalDevice{ PhysicalDevice, DeviceCI, EnabledExtFeatures, vkAllocator };
-	return std::shared_ptr<VulkanLogicalDevice>{LogicalDevice};
+	auto* LogicalDevice = new VulkanDevice{ PhysicalDevice, DeviceCI, EnabledExtFeatures, vkAllocator };
+	return std::shared_ptr<VulkanDevice>{LogicalDevice};
 }
-VulkanLogicalDevice::VulkanLogicalDevice(const VulkanPhysicalDevice& PhysicalDevice, 
+
+VulkanDevice::VulkanDevice(const VulkanPhysicalDevice& PhysicalDevice, 
 	const VkDeviceCreateInfo& DeviceCI, 
 	const ExtensionFeatures& EnabledExtFeatures, 
 	const VkAllocationCallbacks* vkAllocator):
+	m_VulkanPhysicalDevice(PhysicalDevice),
 	m_VkAllocator{ vkAllocator },
 	m_EnabledFeatures{ *DeviceCI.pEnabledFeatures },
 	m_EnabledExtFeatures{ EnabledExtFeatures }
 {
-	auto res = vkCreateDevice(PhysicalDevice.GetVkDeviceHandle(), &DeviceCI, vkAllocator, &m_VkDevice);
+	auto res = vkCreateDevice(m_VulkanPhysicalDevice.GetVkPhysicalDevice(), &DeviceCI, vkAllocator, &m_VkDevice);
 	VK_CHECK(res, "Failed to create logical device");
 
 	auto GraphicsStages =
@@ -77,12 +79,12 @@ VulkanLogicalDevice::VulkanLogicalDevice(const VulkanPhysicalDevice& PhysicalDev
 		GraphicsAccessMask |= VK_ACCESS_FRAGMENT_DENSITY_MAP_READ_BIT_EXT;
 	}
 
-	const auto QueueCount = PhysicalDevice.GetQueueProperties().size();
+	const auto QueueCount = m_VulkanPhysicalDevice.GetQueueProperties().size();
 	m_SupportedStagesMask.resize(QueueCount, 0);
 	m_SupportedAccessMask.resize(QueueCount, 0);
 	for (size_t q = 0; q < QueueCount; ++q)
 	{
-		const auto& Queue = PhysicalDevice.GetQueueProperties()[q];
+		const auto& Queue = m_VulkanPhysicalDevice.GetQueueProperties()[q];
 		auto& StageMask = m_SupportedStagesMask[q];
 		auto& AccessMask = m_SupportedAccessMask[q];
 
@@ -103,3 +105,20 @@ VulkanLogicalDevice::VulkanLogicalDevice(const VulkanPhysicalDevice& PhysicalDev
 		}
 	}
 }
+
+VulkanDevice::~VulkanDevice()
+{
+	vkDestroyDevice(m_VkDevice, m_VkAllocator);
+}
+
+VkQueue VulkanDevice::GetQueue(uint32_t queueFamilyIndex, uint32_t queueIndex)
+{
+	VkQueue vkQueue = VK_NULL_HANDLE;
+	vkGetDeviceQueue(m_VkDevice,
+		queueFamilyIndex, // Index of the queue family to which the queue belongs
+		0,                // Index within this queue family of the queue to retrieve
+		&vkQueue);
+	EXP_CHECK(vkQueue != VK_NULL_HANDLE,"Can not find queue");
+	return vkQueue;
+}
+

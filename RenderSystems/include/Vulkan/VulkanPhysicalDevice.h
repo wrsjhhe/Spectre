@@ -59,18 +59,25 @@ public:
 	VulkanPhysicalDevice& operator = (const VulkanPhysicalDevice&) = delete;
 	VulkanPhysicalDevice& operator = (VulkanPhysicalDevice&&) = delete;
 
-	VkPhysicalDevice GetVkDeviceHandle() const { return m_VkPhysicalDevice; }
+	VkPhysicalDevice GetVkPhysicalDevice() const { return m_VkPhysicalDevice; }
 	const std::vector<VkQueueFamilyProperties>& GetQueueProperties() const { return m_QueueFamilyProperties; }
 	uint32_t GetMemoryTypeIndex(uint32_t  memoryTypeBitsRequirement,
 		VkMemoryPropertyFlags requiredProperties) const;
+	uint32_t FindQueueFamily(VkQueueFlags QueueFlags) const;
 
+	const VkPhysicalDeviceProperties& GetProperties() const { return m_Properties; }
+	const VkPhysicalDeviceFeatures& GetFeatures() const { return m_Features; }
+	bool IsExtensionSupported(const char* ExtensionName) const;
 private:
 	VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const VulkanInstance& Instance);
 
 private:
 	const VkPhysicalDevice               m_VkPhysicalDevice;
+	VkPhysicalDeviceProperties           m_Properties = {};
+	VkPhysicalDeviceFeatures             m_Features = {};
 	VkPhysicalDeviceMemoryProperties     m_MemoryProperties = {};
 	std::vector<VkQueueFamilyProperties> m_QueueFamilyProperties;
+	std::vector<VkExtensionProperties>   m_SupportedExtensions;
 };
 
 END_NAMESPACE_SPECTRE

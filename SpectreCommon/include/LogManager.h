@@ -4,7 +4,7 @@
 #include <memory>
 #include <exception>
 #include <spdlog/spdlog.h>
-
+#include "FormotString.h"
 #ifndef ROOT_PATH_SIZE
 #	define ROOT_PATH_SIZE 0
 #endif
@@ -89,16 +89,16 @@ private:
 };
 
 #define LOG_DEBUG(msg)\
-LogManager::GetInstance()->Debug(msg);
+LogManager::GetInstance()->Debug(FormatString(msg));
 
 #define LOG_INFO(msg)\
-LogManager::GetInstance()->Info(msg);
+LogManager::GetInstance()->Info(FormatString(msg));
 
 #define LOG_WARN(msg)\
-LogManager::GetInstance()->Warn(msg);
+LogManager::GetInstance()->Warn(FormatString(msg));
 
 #define LOG_ERROR(msg)\
-LogManager::GetInstance()->Error(msg);
+LogManager::GetInstance()->Error(FormatString(msg));
 
 #define LOG_DEBUG_FMT(fmt, ...)\
 LogManager::GetInstance()->DebugArgs(fmt, __VA_ARGS__);

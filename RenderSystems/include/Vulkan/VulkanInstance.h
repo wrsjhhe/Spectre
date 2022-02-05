@@ -4,7 +4,7 @@
 
 BEGIN_NAMESPACE_SPECTRE
 
-class VulkanInstance
+class VulkanInstance : public std::enable_shared_from_this<VulkanInstance>
 {
 public:
 	struct CreateInfo
@@ -24,16 +24,29 @@ public:
 	VulkanInstance& operator = (VulkanInstance&&) = delete;
 	~VulkanInstance();
 
+	std::shared_ptr<VulkanInstance> GetSharedPtr()
+	{
+		return shared_from_this();
+	}
+
+	std::shared_ptr<const VulkanInstance> GetSharedPtr() const
+	{
+		return shared_from_this();
+	}
+
 	bool IsExtensionEnabled(const char* ExtensionName)const;
 
 	const std::vector<VkPhysicalDevice>& GetVkPhysicalDevices() const { return m_PhysicalDevices; }
+	VkAllocationCallbacks* GetVkAllocator() const { return m_pVkAllocator; }
+	VkInstance             GetVkInstance()  const { return m_VkInstance; }
+
 private:
 	explicit VulkanInstance(const CreateInfo& CI);
 private:
 	bool							   m_DebugUtilsEnabled = false;
 
 	VkInstance						   m_VkInstance = VK_NULL_HANDLE;
-	VkAllocationCallbacks* const	   m_PVkAllocator;
+	VkAllocationCallbacks* const	   m_pVkAllocator;
 	std::vector<const char*>           m_EnabledExtensions;
 	std::vector<VkPhysicalDevice>      m_PhysicalDevices;
 

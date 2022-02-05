@@ -56,7 +56,7 @@ std::shared_ptr<VulkanInstance> VulkanInstance::Create(const CreateInfo& CI)
 }
 
 VulkanInstance::VulkanInstance(const CreateInfo& CI):
-	m_PVkAllocator{ CI.pVkAllocator }
+    m_pVkAllocator{ CI.pVkAllocator }
 {
 
     //获取所有vulkan可用层
@@ -161,10 +161,10 @@ VulkanInstance::VulkanInstance(const CreateInfo& CI):
         {
             const char* pLayerName = ValidationLayerNames[i];
             uint32_t LayerVer = ~0u; // Prevent warning if the layer is not found
-            if (IsLayerAvailable(layers,pLayerName, LayerVer))
+            if (IsLayerAvailable(layers, pLayerName, LayerVer))
                 InstanceLayers.push_back(pLayerName);
-            //else
-                //LOG_WARNING_MESSAGE("Failed to find '", pLayerName, "' layer. Validation will be disabled");
+            else
+                LOG_WARN("Failed to find '", pLayerName, "' layer. Validation will be disabled");
         }
     }
 
@@ -187,34 +187,25 @@ VulkanInstance::VulkanInstance(const CreateInfo& CI):
     InstanceCreateInfo.ppEnabledLayerNames = InstanceLayers.empty() ? nullptr : InstanceLayers.data();
     
     m_EnabledExtensions = std::move(instanceExtensions);
-    //启动验证层
-    VkDebugUtilsMessengerCreateInfoEXT debug_utils_create_info = { VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT };
-    if (CI.EnableValidation)
-    {
-        if (debug_utils)
-        {
-            debug_utils_create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT;
-            debug_utils_create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-            debug_utils_create_info.pfnUserCallback = debug_utils_messenger_callback;
-
-            InstanceCreateInfo.pNext = &debug_utils_create_info;
-        }
-    }
 
 
-    res = vkCreateInstance(&InstanceCreateInfo, m_PVkAllocator, &m_VkInstance);
+
+    res = vkCreateInstance(&InstanceCreateInfo, m_pVkAllocator, &m_VkInstance);
     VK_CHECK(res, "Failed to create Vulkan instance");
 
-    if (CI.EnableValidation)
-	{
-        PFN_vkCreateDebugUtilsMessengerEXT CreateDebugMessageCallback = VK_NULL_HANDLE;
-        CreateDebugMessageCallback = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_VkInstance, "vkCreateDebugUtilsMessengerEXT");
+    //启动验证层
+    if (debug_utils)
+    {
+		VkDebugUtilsMessengerCreateInfoEXT debug_utils_create_info = { VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT };
+		debug_utils_create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT;
+		debug_utils_create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+		debug_utils_create_info.pfnUserCallback = debug_utils_messenger_callback;
 
-        if (debug_utils)
-        {
-            res = CreateDebugMessageCallback(m_VkInstance, &debug_utils_create_info, nullptr, &debug_utils_messenger);
-            VK_CHECK(res, "Could not create debug utils messenger");
-        }
+		PFN_vkCreateDebugUtilsMessengerEXT CreateDebugMessageCallback = VK_NULL_HANDLE;
+		CreateDebugMessageCallback = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_VkInstance, "vkCreateDebugUtilsMessengerEXT");
+
+		res = CreateDebugMessageCallback(m_VkInstance, &debug_utils_create_info, nullptr, &debug_utils_messenger);
+		VK_CHECK(res, "Could not create debug utils messenger");
     }
 
     {
@@ -239,7 +230,7 @@ VulkanInstance::~VulkanInstance()
 		destroyMsgCallback(m_VkInstance, debug_utils_messenger, nullptr);
     }
 
-    vkDestroyInstance(m_VkInstance, m_PVkAllocator);
+    vkDestroyInstance(m_VkInstance, m_pVkAllocator);
 }
 
 

@@ -7,16 +7,6 @@
 USING_NAMESPACE(Spectre)
 
 
-
-bool IsExtensionSupported(const std::vector<VkExtensionProperties>& supportedExtensions,const char* extensionName)
-{
-	for (const auto& Extension : supportedExtensions)
-		if (strcmp(Extension.extensionName, extensionName) == 0)
-			return true;
-
-	return false;
-}
-
 std::unique_ptr<VulkanPhysicalDevice> VulkanPhysicalDevice::Create(VkPhysicalDevice vkDevice, const VulkanInstance& Instance)
 {
 	auto* PhysicalDevice = new VulkanPhysicalDevice{ vkDevice, Instance };
@@ -28,11 +18,8 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const Vulk
 {
 	EXP_CHECK(m_VkPhysicalDevice != VK_NULL_HANDLE,"Physical device is null")
 
-	VkPhysicalDeviceProperties properties = {};
-	VkPhysicalDeviceFeatures   features = {};
-
-	vkGetPhysicalDeviceProperties(m_VkPhysicalDevice, &properties);
-	vkGetPhysicalDeviceFeatures(m_VkPhysicalDevice, &features);
+	vkGetPhysicalDeviceProperties(m_VkPhysicalDevice, &m_Properties);
+	vkGetPhysicalDeviceFeatures(m_VkPhysicalDevice, &m_Features);
 	vkGetPhysicalDeviceMemoryProperties(m_VkPhysicalDevice, &m_MemoryProperties);
 	uint32_t QueueFamilyCount = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(m_VkPhysicalDevice, &QueueFamilyCount, nullptr);
@@ -42,12 +29,11 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const Vulk
 
 	// 获取显卡支持的扩展
 	uint32_t ExtensionCount = 0;
-	std::vector<VkExtensionProperties>   supportedExtensions;
 	vkEnumerateDeviceExtensionProperties(m_VkPhysicalDevice, nullptr, &ExtensionCount, nullptr);
 	if (ExtensionCount > 0)
 	{
-		supportedExtensions.resize(ExtensionCount);
-		auto res = vkEnumerateDeviceExtensionProperties(m_VkPhysicalDevice, nullptr, &ExtensionCount, supportedExtensions.data());
+		m_SupportedExtensions.resize(ExtensionCount);
+		auto res = vkEnumerateDeviceExtensionProperties(m_VkPhysicalDevice, nullptr, &ExtensionCount, m_SupportedExtensions.data());
 		VK_CHECK(res,"Failed get device extension properties");
 	}
 
@@ -63,7 +49,7 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const Vulk
 		Props2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
 		void** NextProp = &Props2.pNext;
 
-		if (IsExtensionSupported(supportedExtensions,VK_KHR_SHADER_FLOAT16_INT8_EXTENSION_NAME))
+		if (IsExtensionSupported(VK_KHR_SHADER_FLOAT16_INT8_EXTENSION_NAME))
 		{
 			*NextFeat = &extFeatures.ShaderFloat16Int8;
 			NextFeat = &extFeatures.ShaderFloat16Int8.pNext;
@@ -72,9 +58,9 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const Vulk
 		}
 
 		// VK_KHR_16bit_storage and VK_KHR_8bit_storage extensions require VK_KHR_storage_buffer_storage_class extension.
-		if (IsExtensionSupported(supportedExtensions, VK_KHR_STORAGE_BUFFER_STORAGE_CLASS_EXTENSION_NAME))
+		if (IsExtensionSupported(VK_KHR_STORAGE_BUFFER_STORAGE_CLASS_EXTENSION_NAME))
 		{
-			if (IsExtensionSupported(supportedExtensions, VK_KHR_16BIT_STORAGE_EXTENSION_NAME))
+			if (IsExtensionSupported(VK_KHR_16BIT_STORAGE_EXTENSION_NAME))
 			{
 				*NextFeat = &extFeatures.Storage16Bit;
 				NextFeat = &extFeatures.Storage16Bit.pNext;
@@ -82,7 +68,7 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const Vulk
 				extFeatures.Storage16Bit.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES;
 			}
 
-			if (IsExtensionSupported(supportedExtensions, VK_KHR_8BIT_STORAGE_EXTENSION_NAME))
+			if (IsExtensionSupported(VK_KHR_8BIT_STORAGE_EXTENSION_NAME))
 			{
 				*NextFeat = &extFeatures.Storage8Bit;
 				NextFeat = &extFeatures.Storage8Bit.pNext;
@@ -92,7 +78,7 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const Vulk
 		}
 
 		// Get mesh shader features and properties.
-		if (IsExtensionSupported(supportedExtensions, VK_NV_MESH_SHADER_EXTENSION_NAME))
+		if (IsExtensionSupported(VK_NV_MESH_SHADER_EXTENSION_NAME))
 		{
 			*NextFeat = &extFeatures.MeshShader;
 			NextFeat = &extFeatures.MeshShader.pNext;
@@ -106,7 +92,7 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const Vulk
 		}
 
 		// Get acceleration structure features and properties.
-		if (IsExtensionSupported(supportedExtensions, VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME))
+		if (IsExtensionSupported(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME))
 		{
 			*NextFeat = &extFeatures.AccelStruct;
 			NextFeat = &extFeatures.AccelStruct.pNext;
@@ -120,7 +106,7 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const Vulk
 		}
 
 		// Get ray tracing pipeline features and properties.
-		if (IsExtensionSupported(supportedExtensions, VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME))
+		if (IsExtensionSupported(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME))
 		{
 			*NextFeat = &extFeatures.RayTracingPipeline;
 			NextFeat = &extFeatures.RayTracingPipeline.pNext;
@@ -134,7 +120,7 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const Vulk
 		}
 
 		// Get inline ray tracing features.
-		if (IsExtensionSupported(supportedExtensions, VK_KHR_RAY_QUERY_EXTENSION_NAME))
+		if (IsExtensionSupported(VK_KHR_RAY_QUERY_EXTENSION_NAME))
 		{
 			*NextFeat = &extFeatures.RayQuery;
 			NextFeat = &extFeatures.RayQuery.pNext;
@@ -143,7 +129,7 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const Vulk
 		}
 
 		// Additional extension that is required for ray tracing.
-		if (IsExtensionSupported(supportedExtensions, VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME))
+		if (IsExtensionSupported(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME))
 		{
 			*NextFeat = &extFeatures.BufferDeviceAddress;
 			NextFeat = &extFeatures.BufferDeviceAddress.pNext;
@@ -152,7 +138,7 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const Vulk
 		}
 
 		// Additional extension that is required for ray tracing.
-		if (IsExtensionSupported(supportedExtensions, VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME))
+		if (IsExtensionSupported(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME))
 		{
 			*NextFeat = &extFeatures.DescriptorIndexing;
 			NextFeat = &extFeatures.DescriptorIndexing.pNext;
@@ -166,7 +152,7 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const Vulk
 		}
 
 		// Additional extension that is required for ray tracing shader.
-		if (IsExtensionSupported(supportedExtensions, VK_KHR_SPIRV_1_4_EXTENSION_NAME))
+		if (IsExtensionSupported(VK_KHR_SPIRV_1_4_EXTENSION_NAME))
 			extFeatures.Spirv14 = true;
 
 		// Some features require SPIRV 1.4 or 1.5 which was added to the Vulkan 1.2 core.
@@ -177,7 +163,7 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const Vulk
 		}
 
 		// Extension required for MoltenVk
-		if (IsExtensionSupported(supportedExtensions, VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME))
+		if (IsExtensionSupported(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME))
 		{
 			*NextFeat = &extFeatures.PortabilitySubset;
 			NextFeat = &extFeatures.PortabilitySubset.pNext;
@@ -201,7 +187,7 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const Vulk
 			extProperties.Subgroup.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_PROPERTIES;
 		}
 
-		if (IsExtensionSupported(supportedExtensions, VK_EXT_VERTEX_ATTRIBUTE_DIVISOR_EXTENSION_NAME))
+		if (IsExtensionSupported(VK_EXT_VERTEX_ATTRIBUTE_DIVISOR_EXTENSION_NAME))
 		{
 			*NextFeat = &extFeatures.VertexAttributeDivisor;
 			NextFeat = &extFeatures.VertexAttributeDivisor.pNext;
@@ -214,7 +200,7 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const Vulk
 			extProperties.VertexAttributeDivisor.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VERTEX_ATTRIBUTE_DIVISOR_PROPERTIES_EXT;
 		}
 
-		if (IsExtensionSupported(supportedExtensions, VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME))
+		if (IsExtensionSupported(VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME))
 		{
 			*NextFeat = &extFeatures.TimelineSemaphore;
 			NextFeat = &extFeatures.TimelineSemaphore.pNext;
@@ -227,7 +213,7 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const Vulk
 			extProperties.TimelineSemaphore.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_PROPERTIES;
 		}
 
-		if (IsExtensionSupported(supportedExtensions, VK_KHR_MULTIVIEW_EXTENSION_NAME))
+		if (IsExtensionSupported(VK_KHR_MULTIVIEW_EXTENSION_NAME))
 		{
 			*NextFeat = &extFeatures.Multiview;
 			NextFeat = &extFeatures.Multiview.pNext;
@@ -240,12 +226,12 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const Vulk
 			extProperties.Multiview.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES_KHR;
 		}
 
-		if (IsExtensionSupported(supportedExtensions, VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME))
+		if (IsExtensionSupported(VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME))
 		{
 			extFeatures.RenderPass2 = true;
 		}
 
-		if (IsExtensionSupported(supportedExtensions, VK_KHR_FRAGMENT_SHADING_RATE_EXTENSION_NAME))
+		if (IsExtensionSupported(VK_KHR_FRAGMENT_SHADING_RATE_EXTENSION_NAME))
 		{
 			*NextFeat = &extFeatures.ShadingRate;
 			NextFeat = &extFeatures.ShadingRate.pNext;
@@ -258,7 +244,7 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const Vulk
 			extProperties.ShadingRate.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_PROPERTIES_KHR;
 		}
 
-		if (IsExtensionSupported(supportedExtensions, VK_EXT_FRAGMENT_DENSITY_MAP_EXTENSION_NAME))
+		if (IsExtensionSupported(VK_EXT_FRAGMENT_DENSITY_MAP_EXTENSION_NAME))
 		{
 			*NextFeat = &extFeatures.FragmentDensityMap;
 			NextFeat = &extFeatures.FragmentDensityMap.pNext;
@@ -271,7 +257,7 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const Vulk
 			extProperties.FragmentDensityMap.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_PROPERTIES_EXT;
 		}
 
-		if (IsExtensionSupported(supportedExtensions, VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME))
+		if (IsExtensionSupported(VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME))
 		{
 			*NextFeat = &extFeatures.HostQueryReset;
 			NextFeat = &extFeatures.HostQueryReset.pNext;
@@ -279,12 +265,12 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const Vulk
 			extFeatures.HostQueryReset.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES;
 		}
 
-		if (IsExtensionSupported(supportedExtensions, VK_KHR_DRAW_INDIRECT_COUNT_EXTENSION_NAME))
+		if (IsExtensionSupported(VK_KHR_DRAW_INDIRECT_COUNT_EXTENSION_NAME))
 		{
 			extFeatures.DrawIndirectCount = true;
 		}
 
-		if (IsExtensionSupported(supportedExtensions, VK_KHR_MAINTENANCE3_EXTENSION_NAME))
+		if (IsExtensionSupported(VK_KHR_MAINTENANCE3_EXTENSION_NAME))
 		{
 			*NextProp = &extProperties.Maintenance3;
 			NextProp = &extProperties.Maintenance3.pNext;
@@ -350,4 +336,36 @@ uint32_t VulkanPhysicalDevice::GetMemoryTypeIndex(uint32_t memoryTypeBitsRequire
 		}
 	}
 	return InvalidMemoryTypeIndex;
+}
+
+uint32_t VulkanPhysicalDevice::FindQueueFamily(VkQueueFlags QueueFlags) const
+{
+	uint32_t invalidFamilyInd = std::numeric_limits<uint32_t>::max();
+	uint32_t familyInd = invalidFamilyInd;
+
+
+	for (uint32_t i = 0; i < m_QueueFamilyProperties.size(); ++i)
+	{
+		// Try to find a queue for which all requested flags are set
+		const auto& Props = m_QueueFamilyProperties[i];
+		// Check only QueueFlags as VK_QUEUE_TRANSFER_BIT is
+		// optional for graphics and/or compute queues
+		if ((Props.queueFlags & QueueFlags) == QueueFlags)
+		{
+			familyInd = i;
+			break;
+		}
+	}
+
+	EXP_CHECK(familyInd != invalidFamilyInd, "Failed to find suitable queue family");
+
+	return familyInd;
+}
+bool VulkanPhysicalDevice::IsExtensionSupported(const char* ExtensionName) const
+{
+	for (const auto& Extension : m_SupportedExtensions)
+		if (strcmp(Extension.extensionName, ExtensionName) == 0)
+			return true;
+
+	return false;
 }
