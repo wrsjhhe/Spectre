@@ -18,11 +18,12 @@ namespace Spectre
 		void CreateDepthStencil();
 		void CreateRenderPass();
 		void CreateFrameBuffer();
-		//void CreateSemaphores();
-		//void CreateFences();
-		//void CreateVerticesBuffer();
-		//void CreateIndexBuffer();
-		//void CreateUniformBuffer();
+		void CreateSemaphores();
+		void CreateFences();
+		void CreateCommandBuffers();
+		void CreateVerticesBuffer();
+		void CreateIndexBuffer();
+		void CreateUniformBuffer();
 		//void CreateDescriptorPool();
 		//void CreateDescriptorSetLayout();
 	private:
@@ -37,6 +38,12 @@ namespace Spectre
 		VkRenderPass                    m_RenderPass = VK_NULL_HANDLE;
 
 		std::vector<VkFramebuffer>      m_FrameBuffers;
+
+		VkSemaphore                     m_RenderComplete = VK_NULL_HANDLE;
+		std::vector<VkFence>            m_Fences;
+
+		VkCommandPool                   m_CommandPool = VK_NULL_HANDLE;
+		std::vector<VkCommandBuffer>    m_CommandBuffers;
 	};
 
 }

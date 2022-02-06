@@ -10,6 +10,9 @@ include_directories(${INC_DIR})
 set(SPDLOG_DIR ../ThirdParty/spdlog/include)
 include_directories(${SPDLOG_DIR})
 
+set(DIRECTXMATH_DIR ../ThirdParty/DirectXMath/include)
+include_directories(${DIRECTXMATH_DIR})
+
 set(PUBLIC_HDRS ${INC_DIR}CommonDefinitions.h
 				${INC_DIR}Allocator.h
 				${INC_DIR}Platform.h

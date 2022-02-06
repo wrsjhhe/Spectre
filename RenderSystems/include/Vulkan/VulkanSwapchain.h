@@ -33,9 +33,9 @@ public:
 	uint32_t GetWidth() const { return m_Width; }
 	uint32_t GetHeight() const { return m_Height; }
 	VkFormat GetSwapChainFormat() const { return m_VkSwapChainFormat; }
-	const std::vector<VkImage> GetImages() const {return m_VkImages;}
-	const std::vector<VkImageView> GetImageViews() const {return m_VkImageViews;}
-
+	const std::vector<VkImage> GetImages() const { return m_VkImages; }
+	const std::vector<VkImageView> GetImageViews() const { return m_VkImageViews; }
+	uint32_t GetImageCount() const { return m_VkImageViews.size(); }
 private:
 	void CreateSurface();
 

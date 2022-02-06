@@ -9,9 +9,21 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <glfw3.h>
 #include <glfw3native.h>
+#include "Math.h"
 
 USING_NAMESPACE(Spectre)
+struct Vertex
+{
+	float position[3];
+	float color[3];
+};
 
+struct UBOData
+{
+	Matrix4x4 model;
+	Matrix4x4 view;
+	Matrix4x4 projection;
+};
 void RenderSystemVK::Init()
 {
 	VulkanInstance::CreateInfo instanceCI;
@@ -77,6 +89,9 @@ void RenderSystemVK::Init()
 	CreateDepthStencil();
 	CreateRenderPass();
 	CreateFrameBuffer();
+	CreateSemaphores();
+	CreateFences();
+	CreateCommandBuffers();
 }
 
 void Spectre::RenderSystemVK::CreateDepthStencil()
@@ -219,4 +234,79 @@ void Spectre::RenderSystemVK::CreateFrameBuffer()
 		attachments[0] = backbufferViews[i];
 		vkCreateFramebuffer(device, &frameBufferCreateInfo, nullptr, &m_FrameBuffers[i]);
 	}
+}
+
+void Spectre::RenderSystemVK::CreateSemaphores()
+{
+	VkDevice device = m_Device->GetVkDevice();
+	VkSemaphoreCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+	vkCreateSemaphore(device, &createInfo, nullptr, &m_RenderComplete);
+}
+
+void Spectre::RenderSystemVK::CreateFences()
+{
+	VkDevice device = m_Device->GetVkDevice();
+	uint32_t frameCount = m_SwapChain->GetImageCount();
+
+	VkFenceCreateInfo fenceCreateInfo{};
+	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+	m_Fences.resize(frameCount);
+	for (uint32_t i = 0; i < m_Fences.size(); ++i)
+	{
+		vkCreateFence(device, &fenceCreateInfo, nullptr, &m_Fences[i]);
+	}
+}
+
+void Spectre::RenderSystemVK::CreateCommandBuffers()
+{
+	VkDevice device = m_Device->GetVkDevice();
+	
+	VkCommandPoolCreateInfo cmdPoolInfo{};
+	cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	cmdPoolInfo.queueFamilyIndex = m_Device->GetPhysicalDevice().FindQueueFamily(VK_QUEUE_GRAPHICS_BIT);
+	cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+	vkCreateCommandPool(device, &cmdPoolInfo, nullptr, &m_CommandPool);
+
+	VkCommandBufferAllocateInfo cmdBufferInfo{};
+	cmdBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	cmdBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	cmdBufferInfo.commandBufferCount = 1;
+	cmdBufferInfo.commandPool = m_CommandPool;
+
+	m_CommandBuffers.resize(m_SwapChain->GetImageCount());
+	for (uint32_t i = 0; i < m_CommandBuffers.size(); ++i)
+	{
+		vkAllocateCommandBuffers(device, &cmdBufferInfo, &(m_CommandBuffers[i]));
+	}
+}
+
+void Spectre::RenderSystemVK::CreateVerticesBuffer()
+{
+	VkDevice device = m_Device->GetVkDevice();
+
+	// ¶¥µãÊý¾Ý
+	std::vector<Vertex> vertices = {
+		{
+			{  1.0f,  1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }
+		},
+		{
+			{ -1.0f,  1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }
+		},
+		{
+			{  0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }
+		}
+	};
+}
+
+void Spectre::RenderSystemVK::CreateIndexBuffer()
+{
+
+}
+
+void Spectre::RenderSystemVK::CreateUniformBuffer()
+{
+
 }
