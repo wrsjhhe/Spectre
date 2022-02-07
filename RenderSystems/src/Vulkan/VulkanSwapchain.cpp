@@ -2,7 +2,9 @@
 #include "VulkanInstance.h"
 #include "VulkanDevice.h"
 #include "VulkanSwapchain.h"
-
+#include "MathDef.h"
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <glfw3.h>
 USING_NAMESPACE(Spectre)
 
 
@@ -102,7 +104,7 @@ VulkanSwapChain::VulkanSwapChain(std::shared_ptr<const VulkanInstance> vulkanIns
 	m_VkSwapChainFormat = surfaceFormat.format;
 
 	m_VkImageViews.resize(m_VkImages.size());
-
+	m_ImageAcquiredSemaphore.resize(m_VkImages.size());
 	for (uint32_t i = 0; i < m_VkImages.size(); i++) {
 		VkImageViewCreateInfo viewInfo = {};
 		viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -115,11 +117,68 @@ VulkanSwapChain::VulkanSwapChain(std::shared_ptr<const VulkanInstance> vulkanIns
 		viewInfo.subresourceRange.baseArrayLayer = 0;
 		viewInfo.subresourceRange.layerCount = 1;
 
-		VkImageView imageView;
-		if (vkCreateImageView(device, &viewInfo, nullptr, &m_VkImageViews[i]) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create texture image view!");
-		}
+		vkCreateImageView(device, &viewInfo, nullptr, &m_VkImageViews[i]);
+
+		VkSemaphoreCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+		vkCreateSemaphore(device, &createInfo, nullptr, &m_ImageAcquiredSemaphore[i]);
 	}
+}
+
+uint32_t VulkanSwapChain::AcquireImageIndex(VkSemaphore* outSemaphore)
+{
+	uint32_t imageIndex = 0;
+	VkDevice device = m_VulkanDevice->GetVkDevice();
+	const uint32_t prev = m_SemaphoreIndex;
+
+	m_SemaphoreIndex = (m_SemaphoreIndex + 1) % m_ImageAcquiredSemaphore.size();
+	VkResult result = vkAcquireNextImageKHR(device, m_VkSwapChain, MAX_uint64, m_ImageAcquiredSemaphore[m_SemaphoreIndex], VK_NULL_HANDLE, &imageIndex);
+
+	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+		m_SemaphoreIndex = prev;
+		return (int32_t)SwapStatus::OutOfDate;
+	}
+
+	if (result == VK_ERROR_SURFACE_LOST_KHR) {
+		m_SemaphoreIndex = prev;
+		return (int32_t)SwapStatus::SurfaceLost;
+	}
+
+	*outSemaphore = m_ImageAcquiredSemaphore[m_SemaphoreIndex];
+	m_CurrentImageIndex = (uint32_t)imageIndex;
+
+	return m_CurrentImageIndex;
+}
+
+VulkanSwapChain::SwapStatus VulkanSwapChain::Present(VkQueue presentQueue, VkSemaphore* doneSemaphore)
+{
+	if (m_CurrentImageIndex == -1) {
+		return SwapStatus::Healthy;
+	}
+
+	VkPresentInfoKHR createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	createInfo.waitSemaphoreCount = doneSemaphore == nullptr ? 0 : 1;
+	createInfo.pWaitSemaphores = doneSemaphore;
+	createInfo.swapchainCount = 1;
+	createInfo.pSwapchains = &m_VkSwapChain;
+	createInfo.pImageIndices = (uint32_t*)&m_CurrentImageIndex;
+
+	VkResult presentResult = vkQueuePresentKHR(presentQueue, &createInfo);
+
+	if (presentResult == VK_ERROR_OUT_OF_DATE_KHR) {
+		return SwapStatus::OutOfDate;
+	}
+
+	if (presentResult == VK_ERROR_SURFACE_LOST_KHR) {
+		return SwapStatus::SurfaceLost;
+	}
+
+	if (presentResult != VK_SUCCESS && presentResult != VK_SUBOPTIMAL_KHR) {
+		abort();
+	}
+
+	return SwapStatus::Healthy;
 }
 
 void VulkanSwapChain::CreateSurface()
@@ -130,12 +189,23 @@ void VulkanSwapChain::CreateSurface()
 		m_VkSurface = VK_NULL_HANDLE;
 	}
 
-	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
-	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-	surfaceCreateInfo.hinstance = GetModuleHandle(NULL);
-	surfaceCreateInfo.hwnd = (HWND)m_Window.hWnd;
+	//VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
+	//surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+	//surfaceCreateInfo.hinstance = GetModuleHandle(NULL);
+	//surfaceCreateInfo.hwnd = (HWND)m_Window.hWnd;
 
-	VkResult err = vkCreateWin32SurfaceKHR(m_VulkanInstance->GetVkInstance(), &surfaceCreateInfo, nullptr, &m_VkSurface);
+	glfwInit();
+
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
+	auto window = glfwCreateWindow(1400, 900, "Vulkan", nullptr, nullptr);
+
+	glfwSetWindowUserPointer(window, this); VK_PIPELINE_BIND_POINT_GRAPHICS;
+
+	glfwSetWindowUserPointer(window, this);
+
+	VkResult err = glfwCreateWindowSurface(m_VulkanInstance->GetVkInstance(), window, nullptr, &m_VkSurface);
+	//VkResult err = vkCreateWin32SurfaceKHR(m_VulkanInstance->GetVkInstance(), &surfaceCreateInfo, nullptr, &m_VkSurface);
 	VK_CHECK(err,"Failed create surface!")
 }
 
@@ -161,7 +231,7 @@ VkExtent2D VulkanSwapChain::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& cap
 	}
 }
 
-SwapChainSupportDetails VulkanSwapChain::QuerySwapChainSupport(VkPhysicalDevice device)
+VulkanSwapChain::SwapChainSupportDetails VulkanSwapChain::QuerySwapChainSupport(VkPhysicalDevice device)
 {
 	SwapChainSupportDetails details;
 
@@ -186,7 +256,7 @@ SwapChainSupportDetails VulkanSwapChain::QuerySwapChainSupport(VkPhysicalDevice 
 	return details;
 }
 
-QueueFamilyIndices VulkanSwapChain::FindQueueFamilies(VkPhysicalDevice device)
+VulkanSwapChain::QueueFamilyIndices VulkanSwapChain::FindQueueFamilies(VkPhysicalDevice device)
 {
 	QueueFamilyIndices indices;
 

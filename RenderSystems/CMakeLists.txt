@@ -53,6 +53,7 @@ ${INC_VULKAN_DIR}VulkanInstance.h
 ${INC_VULKAN_DIR}VulkanPhysicalDevice.h
 ${INC_VULKAN_DIR}VulkanSwapchain.h
 ${INC_VULKAN_DIR}VulkanDevice.h
+${INC_VULKAN_DIR}RenderSystemVK.h
 )
 
 

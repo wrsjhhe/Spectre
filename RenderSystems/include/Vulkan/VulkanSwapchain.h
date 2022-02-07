@@ -5,25 +5,35 @@ class VulkanInstance;
 
 BEGIN_NAMESPACE_SPECTRE
 
-struct SwapChainSupportDetails
-{
-	VkSurfaceCapabilitiesKHR capabilities;
-	std::vector<VkSurfaceFormatKHR> formats;
-	std::vector<VkPresentModeKHR> presentModes;
-};
-
-struct QueueFamilyIndices 
-{
-	int graphicsFamily = -1;
-	int presentFamily = -1;
-
-	bool isComplete() {
-		return graphicsFamily >= 0 && presentFamily >= 0;
-	}
-};
 
 class VulkanSwapChain
 {
+public:
+	enum class SwapStatus
+	{
+		Healthy = 0,
+		OutOfDate = -1,
+		SurfaceLost = -2,
+	};
+private:
+
+	struct SwapChainSupportDetails
+	{
+		VkSurfaceCapabilitiesKHR capabilities;
+		std::vector<VkSurfaceFormatKHR> formats;
+		std::vector<VkPresentModeKHR> presentModes;
+	};
+
+	struct QueueFamilyIndices
+	{
+		int graphicsFamily = -1;
+		int presentFamily = -1;
+
+		bool isComplete() {
+			return graphicsFamily >= 0 && presentFamily >= 0;
+		}
+	};
+
 public:
 	VulkanSwapChain(std::shared_ptr<const VulkanInstance> vulkanInstance, 
 		std::shared_ptr<const VulkanDevice> vulkanDevice,
@@ -36,6 +46,10 @@ public:
 	const std::vector<VkImage> GetImages() const { return m_VkImages; }
 	const std::vector<VkImageView> GetImageViews() const { return m_VkImageViews; }
 	uint32_t GetImageCount() const { return m_VkImageViews.size(); }
+
+	uint32_t AcquireImageIndex(VkSemaphore* outSemaphore);
+
+	SwapStatus Present(VkQueue presentQueue, VkSemaphore* doneSemaphore);
 private:
 	void CreateSurface();
 
@@ -56,6 +70,9 @@ private:
 	VkFormat                                m_VkSwapChainFormat;
 	uint32_t                                m_Width;
 	uint32_t                                m_Height;
+	uint32_t								m_SemaphoreIndex = 0;
+	std::vector<VkSemaphore>				m_ImageAcquiredSemaphore;
+	uint32_t                                m_CurrentImageIndex;
 };
 
 END_NAMESPACE_SPECTRE

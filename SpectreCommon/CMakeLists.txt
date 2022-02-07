@@ -19,6 +19,7 @@ set(PUBLIC_HDRS ${INC_DIR}CommonDefinitions.h
 				${INC_DIR}Mutex.h
 				${INC_DIR}FormotString.h
 				${INC_DIR}LogManager.h
+				${INC_DIR}MathDef.h
 				)
 #set(PRIVATE_HDRS )
 

@@ -1,9 +1,16 @@
-#include <iostream>
-#include "Spectre.h"
+#include "Vulkan/RenderSystemVK.h"
+
+using namespace Spectre;
 
 int main()
 {
-	Spectre s;
-	s.call("hello triangle!");
+	RenderSystemVK rsvk;
+	rsvk.Init();
+
+	while (true)
+	{
+		rsvk.Loop();
+	}
+
 	return 0;
 }

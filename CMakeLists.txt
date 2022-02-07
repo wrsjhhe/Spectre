@@ -25,6 +25,7 @@ ELSE()
 ENDIF()
 link_directories(./ThirdParty/VulkanSDK/lib)
 link_directories(./ThirdParty/GLFW/lib)
+
 # 包含子项目。
 add_subdirectory ("SpectreCommon")
 add_subdirectory ("RenderSystems")

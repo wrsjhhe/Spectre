@@ -23,7 +23,8 @@ VulkanDevice::VulkanDevice(const VulkanPhysicalDevice& PhysicalDevice,
 	m_EnabledFeatures{ *DeviceCI.pEnabledFeatures },
 	m_EnabledExtFeatures{ EnabledExtFeatures }
 {
-	auto res = vkCreateDevice(m_VulkanPhysicalDevice.GetVkPhysicalDevice(), &DeviceCI, vkAllocator, &m_VkDevice);
+	VkPhysicalDevice physicalDevice = m_VulkanPhysicalDevice.GetVkPhysicalDevice();
+	auto res = vkCreateDevice(physicalDevice, &DeviceCI, vkAllocator, &m_VkDevice);
 	VK_CHECK(res, "Failed to create logical device");
 
 	auto GraphicsStages =
@@ -90,20 +91,37 @@ VulkanDevice::VulkanDevice(const VulkanPhysicalDevice& PhysicalDevice,
 
 		if (Queue.queueFlags & VK_QUEUE_GRAPHICS_BIT)
 		{
+			vkGetDeviceQueue(m_VkDevice, q, 0, &m_GraphicQueue);
+			vkGetDeviceQueue(m_VkDevice, q, 0, &m_ComputeQueue);
+			vkGetDeviceQueue(m_VkDevice, q, 0, &m_TransferQueue);
 			StageMask |= GraphicsStages | ComputeStages | VK_PIPELINE_STAGE_ALL_TRANSFER;
 			AccessMask |= GraphicsAccessMask | ComputeAccessMask | TransferAccessMask;
 		}
 		else if (Queue.queueFlags & VK_QUEUE_COMPUTE_BIT)
 		{
+			if (m_ComputeQueue == VK_NULL_HANDLE)
+			{
+				vkGetDeviceQueue(m_VkDevice, q, 0, &m_ComputeQueue);
+			}
+			if (m_TransferQueue == VK_NULL_HANDLE)
+			{
+				vkGetDeviceQueue(m_VkDevice, q, 0, &m_TransferQueue);
+			}
+	
 			StageMask |= ComputeStages | VK_PIPELINE_STAGE_ALL_TRANSFER;
 			AccessMask |= ComputeAccessMask | TransferAccessMask;
 		}
 		else if (Queue.queueFlags & VK_QUEUE_TRANSFER_BIT)
 		{
+			if (m_TransferQueue == VK_NULL_HANDLE)
+			{
+				vkGetDeviceQueue(m_VkDevice, q, 0, &m_TransferQueue);
+			}
 			StageMask |= VK_PIPELINE_STAGE_ALL_TRANSFER;
 			AccessMask |= TransferAccessMask;
 		}
 	}
+
 }
 
 VulkanDevice::~VulkanDevice()
@@ -111,7 +129,7 @@ VulkanDevice::~VulkanDevice()
 	vkDestroyDevice(m_VkDevice, m_VkAllocator);
 }
 
-VkQueue VulkanDevice::GetQueue(uint32_t queueFamilyIndex, uint32_t queueIndex)
+VkQueue VulkanDevice::GetQueue(uint32_t queueFamilyIndex, uint32_t queueIndex) const
 {
 	VkQueue vkQueue = VK_NULL_HANDLE;
 	vkGetDeviceQueue(m_VkDevice,
@@ -121,4 +139,5 @@ VkQueue VulkanDevice::GetQueue(uint32_t queueFamilyIndex, uint32_t queueIndex)
 	EXP_CHECK(vkQueue != VK_NULL_HANDLE,"Can not find queue");
 	return vkQueue;
 }
+
 

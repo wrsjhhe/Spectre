@@ -34,7 +34,10 @@ public:
 		return m_VkDevice;
 	}
 
-	VkQueue GetQueue(uint32_t queueFamilyIndex, uint32_t queueIndex);
+	VkQueue GetQueue(uint32_t queueFamilyIndex, uint32_t queueIndex) const;
+	VkQueue GetGraphicQueue() const { return m_GraphicQueue; }
+	VkQueue GetTransferQueue() const { return m_TransferQueue; }
+	VkQueue GetComputeQueue() const { return m_ComputeQueue; }
 
 private:
 	VulkanDevice(const VulkanPhysicalDevice& PhysicalDevice,
@@ -50,6 +53,9 @@ private:
 	ExtensionFeatures                  m_EnabledExtFeatures = {};
 	std::vector<VkPipelineStageFlags>  m_SupportedStagesMask;
 	std::vector<VkAccessFlags>         m_SupportedAccessMask;
+	VkQueue                            m_GraphicQueue = VK_NULL_HANDLE;
+	VkQueue                            m_ComputeQueue = VK_NULL_HANDLE;
+	VkQueue                            m_TransferQueue = VK_NULL_HANDLE;
 };
 
 END_NAMESPACE_SPECTRE
