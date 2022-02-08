@@ -3,7 +3,9 @@
 #include "VulkanPhysicalDevice.h"
 #include "VulkanDevice.h"
 #include "VulkanSwapchain.h"
-
+#include "VulkanCommandPool.h"
+#include "VulkanCommandBuffers.h"
+#include "VulkanBuffer.h"
 #include "RenderSystemVK.h"
 
 #define GLFW_EXPOSE_NATIVE_WIN32
@@ -108,9 +110,7 @@ void Spectre::RenderSystemVK::Loop()
 		Draw();
 	}
 
-	//vkDeviceWaitIdle(device);
 	Exist();
-	//vkDeviceWaitIdle(device);
 }
 
 void Spectre::RenderSystemVK::Exist()
@@ -118,12 +118,9 @@ void Spectre::RenderSystemVK::Exist()
 	DestroyFrameBuffers();
 	DestoryRenderPass();
 	DestoryDepthStencil();
-	DestroyCommandBuffers();
 	DestroyDescriptorSetLayout();
 	DestroyDescriptorPool();
 	DestroyPipelines();
-	DestroyUniformBuffers();
-	DestroyMeshBuffers();
 	DestorySemaphores();
 	DestroyFences();
 
@@ -300,24 +297,22 @@ void Spectre::RenderSystemVK::CreateFences()
 void Spectre::RenderSystemVK::CreateCommandBuffers()
 {
 	VkDevice device = m_Device->GetVkDevice();
-	
-	VkCommandPoolCreateInfo cmdPoolInfo{};
-	cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	cmdPoolInfo.queueFamilyIndex = m_Device->GetPhysicalDevice().FindQueueFamily(VK_QUEUE_GRAPHICS_BIT);
-	cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	vkCreateCommandPool(device, &cmdPoolInfo, nullptr, &m_CommandPool);
+	m_CommandPool = VulkanCommandPool::CreateCommandPool(m_Device->GetSharedPtr());
+	//VkCommandPoolCreateInfo cmdPoolInfo{};
+	//cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	//cmdPoolInfo.queueFamilyIndex = m_Device->GetPhysicalDevice().FindQueueFamily(VK_QUEUE_GRAPHICS_BIT);
+	//cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+	//vkCreateCommandPool(device, &cmdPoolInfo, nullptr, &m_CommandPool);
 
-	VkCommandBufferAllocateInfo cmdBufferInfo{};
-	cmdBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	cmdBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	cmdBufferInfo.commandBufferCount = 1;
-	cmdBufferInfo.commandPool = m_CommandPool;
+	m_CommandBuffers = VulkanCommandBuffers::CreataCommandBuffers(m_Device->GetSharedPtr(), m_CommandPool, m_SwapChain->GetImageCount());
+	//m_CommandBuffers.resize(m_SwapChain->GetImageCount());
+	//VkCommandBufferAllocateInfo cmdBufferInfo{};
+	//cmdBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	//cmdBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	//cmdBufferInfo.commandBufferCount = m_CommandBuffers.size();
+	//cmdBufferInfo.commandPool = m_CommandPool;
 
-	m_CommandBuffers.resize(m_SwapChain->GetImageCount());
-	for (uint32_t i = 0; i < m_CommandBuffers.size(); ++i)
-	{
-		vkAllocateCommandBuffers(device, &cmdBufferInfo, &(m_CommandBuffers[i]));
-	}
+	//vkAllocateCommandBuffers(device, &cmdBufferInfo, m_CommandBuffers.data());
 }
 
 void Spectre::RenderSystemVK::CreateMeshBuffers()
@@ -345,24 +340,19 @@ void Spectre::RenderSystemVK::CreateMeshBuffers()
 	uint32_t vertexBufferSize = vertices.size() * sizeof(Vertex);
 	uint32_t indexBufferSize = (uint32_t)indices.size() * sizeof(uint16_t);
 
-	VulkanBuffer tempVertexBuffer(m_Device->GetSharedPtr());
-	VulkanBuffer tempIndexBuffer(m_Device->GetSharedPtr());
 
-	tempVertexBuffer.CreateHostBuffer(vertices.data(), vertices.size() * sizeof(Vertex));
-	tempIndexBuffer.CreateHostBuffer(indices.data(), m_IndicesCount * sizeof(uint16_t));
+	auto tempVertexBuffer = VulkanBuffer::CreateHostBuffer(m_Device->GetSharedPtr(),vertices.data(), vertices.size() * sizeof(Vertex));
+	auto tempIndexBuffer = VulkanBuffer::CreateHostBuffer(m_Device->GetSharedPtr(), indices.data(), m_IndicesCount * sizeof(uint16_t));
 
-	m_VertexBuffer.SetDevice(m_Device->GetSharedPtr());
-	m_IndicesBuffer.SetDevice(m_Device->GetSharedPtr());
-
-	m_VertexBuffer.CreateDeviceVertexBuffer(vertexBufferSize);
-	m_IndicesBuffer.CreateDeviceIndexBuffer(indexBufferSize);
+	m_VertexBuffer = VulkanBuffer::CreateDeviceVertexBuffer(m_Device->GetSharedPtr(), vertexBufferSize);
+	m_IndicesBuffer = VulkanBuffer::CreateDeviceIndexBuffer(m_Device->GetSharedPtr(), indexBufferSize);
 
 
 	VkCommandBuffer xferCmdBuffer;
 	// gfx queue自带transfer功能，为了优化需要使用专有的xfer queue。这里为了简单，先将就用。
 	VkCommandBufferAllocateInfo xferCmdBufferInfo{};
 	xferCmdBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	xferCmdBufferInfo.commandPool = m_CommandPool;
+	xferCmdBufferInfo.commandPool = m_CommandPool->GetVkCommandPool();
 	xferCmdBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	xferCmdBufferInfo.commandBufferCount = 1;
 	vkAllocateCommandBuffers(device, &xferCmdBufferInfo, &xferCmdBuffer);
@@ -372,8 +362,8 @@ void Spectre::RenderSystemVK::CreateMeshBuffers()
 	cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	vkBeginCommandBuffer(xferCmdBuffer, &cmdBufferBeginInfo);
 
-	tempVertexBuffer.MapToDevice(m_VertexBuffer, m_CommandPool, xferCmdBuffer);
-	tempIndexBuffer.MapToDevice(m_IndicesBuffer, m_CommandPool, xferCmdBuffer);
+	tempVertexBuffer->MapToDevice(*m_VertexBuffer, m_CommandPool->GetVkCommandPool(), xferCmdBuffer);
+	tempIndexBuffer->MapToDevice(*m_IndicesBuffer, m_CommandPool->GetVkCommandPool(), xferCmdBuffer);
 
 	// 结束录制
 	vkEndCommandBuffer(xferCmdBuffer);
@@ -394,169 +384,15 @@ void Spectre::RenderSystemVK::CreateMeshBuffers()
 	vkWaitForFences(device, 1, &fence, VK_TRUE, MAX_int64);
 
 	vkDestroyFence(device, fence, nullptr);
-	vkFreeCommandBuffers(device, m_CommandPool, 1, &xferCmdBuffer);
-
-
-	// 顶点数据以及索引数据在整个生命周期中几乎不会发生改变，因此最佳的方式是将这些数据存储到GPU的内存中。
-	// 存储到GPU内存也能加快GPU的访问。为了存储到GPU内存中，需要如下几个步骤。
-	// 1、在主机端(Host)创建一个Buffer
-	// 2、将数据拷贝至该Buffer
-	// 3、在GPU端(Local Device)创建一个Buffer
-	// 4、通过Transfer簇将数据从主机端拷贝至GPU端
-	// 5、删除主基端(Host)的Buffer
-	// 6、使用GPU端(Local Device)的Buffer进行渲染
-	//GPUBuffer tempVertexBuffer;
-	//GPUBuffer  tempIndexBuffer;
-
-	//void* dataPtr = nullptr;
-	//VkMemoryRequirements memReqInfo;
-	//VkMemoryAllocateInfo memAllocInfo{};
-	//memAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-
-	//// vertex buffer
-	//VkBufferCreateInfo vertexBufferInfo{};
-	//vertexBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	//vertexBufferInfo.size = vertices.size() * sizeof(Vertex);
-	//vertexBufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-	//vkCreateBuffer(device, &vertexBufferInfo, nullptr, &tempVertexBuffer.buffer);
-
-	//vkGetBufferMemoryRequirements(device, tempVertexBuffer.buffer, &memReqInfo);
-	//uint32_t memoryTypeIndex = m_Device->GetPhysicalDevice().GetMemoryTypeIndex(memReqInfo.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-	//memAllocInfo.allocationSize = memReqInfo.size;
-	//memAllocInfo.memoryTypeIndex = memoryTypeIndex;
-	//vkAllocateMemory(device, &memAllocInfo, nullptr, &tempVertexBuffer.memory);
-	//vkBindBufferMemory(device, tempVertexBuffer.buffer, tempVertexBuffer.memory, 0);
-
-	//vkMapMemory(device, tempVertexBuffer.memory, 0, memAllocInfo.allocationSize, 0, &dataPtr);
-	//std::memcpy(dataPtr, vertices.data(), vertexBufferInfo.size);
-	//vkUnmapMemory(device, tempVertexBuffer.memory);
-
-	//// local device vertex buffer
-	//vertexBufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-	//vkCreateBuffer(device, &vertexBufferInfo, nullptr, &m_VertexBuffer.buffer);
-
-	//vkGetBufferMemoryRequirements(device, m_VertexBuffer.buffer, &memReqInfo);
-	//memoryTypeIndex = m_Device->GetPhysicalDevice().GetMemoryTypeIndex(memReqInfo.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);	
-	//memAllocInfo.allocationSize = memReqInfo.size;
-	//memAllocInfo.memoryTypeIndex = memoryTypeIndex;
-	//vkAllocateMemory(device, &memAllocInfo, nullptr, &m_VertexBuffer.memory);
-	//vkBindBufferMemory(device, m_VertexBuffer.buffer, m_VertexBuffer.memory, 0);
-
-	//// index buffer
-	//VkBufferCreateInfo indexBufferInfo{};
-	//indexBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	//indexBufferInfo.size = m_IndicesCount * sizeof(uint16_t);
-	//indexBufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-	//vkCreateBuffer(device, &indexBufferInfo, nullptr, &tempIndexBuffer.buffer);
-
-	//vkGetBufferMemoryRequirements(device, tempIndexBuffer.buffer, &memReqInfo);
-	//memoryTypeIndex = m_Device->GetPhysicalDevice().GetMemoryTypeIndex(memReqInfo.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-	//memAllocInfo.allocationSize = memReqInfo.size;
-	//memAllocInfo.memoryTypeIndex = memoryTypeIndex;
-	//vkAllocateMemory(device, &memAllocInfo, nullptr, &tempIndexBuffer.memory);
-	//vkBindBufferMemory(device, tempIndexBuffer.buffer, tempIndexBuffer.memory, 0);
-
-	//vkMapMemory(device, tempIndexBuffer.memory, 0, memAllocInfo.allocationSize, 0, &dataPtr);
-	//std::memcpy(dataPtr, indices.data(), indexBufferInfo.size);
-	//vkUnmapMemory(device, tempIndexBuffer.memory);
-
-	//indexBufferInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-	//vkCreateBuffer(device, &indexBufferInfo, nullptr, &m_IndicesBuffer.buffer);
-
-	//vkGetBufferMemoryRequirements(device, m_IndicesBuffer.buffer, &memReqInfo);
-	//memoryTypeIndex = m_Device->GetPhysicalDevice().GetMemoryTypeIndex(memReqInfo.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);	
-	//memAllocInfo.allocationSize = memReqInfo.size;
-	//memAllocInfo.memoryTypeIndex = memoryTypeIndex;
-	//vkAllocateMemory(device, &memAllocInfo, nullptr, &m_IndicesBuffer.memory);
-	//vkBindBufferMemory(device, m_IndicesBuffer.buffer, m_IndicesBuffer.memory, 0);
-
-	//VkCommandBuffer xferCmdBuffer;
-	//// gfx queue自带transfer功能，为了优化需要使用专有的xfer queue。这里为了简单，先将就用。
-	//VkCommandBufferAllocateInfo xferCmdBufferInfo{};
-	//xferCmdBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	//xferCmdBufferInfo.commandPool = m_CommandPool;
-	//xferCmdBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	//xferCmdBufferInfo.commandBufferCount = 1;
-	//vkAllocateCommandBuffers(device, &xferCmdBufferInfo, &xferCmdBuffer);
-
-	//// 开始录制命令
-	//VkCommandBufferBeginInfo cmdBufferBeginInfo{};
-	//cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	//vkBeginCommandBuffer(xferCmdBuffer, &cmdBufferBeginInfo);
-
-	//VkBufferCopy copyRegion = {};
-	//copyRegion.size = vertices.size() * sizeof(Vertex);
-	//vkCmdCopyBuffer(xferCmdBuffer, tempVertexBuffer.buffer, m_VertexBuffer.buffer, 1, &copyRegion);
-
-	//copyRegion.size = indices.size() * sizeof(uint16_t);
-	//vkCmdCopyBuffer(xferCmdBuffer, tempIndexBuffer.buffer, m_IndicesBuffer.buffer, 1, &copyRegion);
-
-	//// 结束录制
-	//vkEndCommandBuffer(xferCmdBuffer);
-
-	//// 提交命令，并且等待命令执行完毕。
-	//VkSubmitInfo submitInfo{};
-	//submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	//submitInfo.commandBufferCount = 1;
-	//submitInfo.pCommandBuffers = &xferCmdBuffer;
-
-	//VkFenceCreateInfo fenceInfo{};
-	//fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	//fenceInfo.flags = 0;
-
-	//VkFence fence = VK_NULL_HANDLE;
-	//vkCreateFence(device, &fenceInfo, nullptr, &fence);
-	//vkQueueSubmit(queue, 1, &submitInfo, fence);
-	//vkWaitForFences(device, 1, &fence, VK_TRUE, MAX_int64);
-
-	//vkDestroyFence(device, fence, nullptr);
-	//vkFreeCommandBuffers(device, m_CommandPool, 1, &xferCmdBuffer);
-
-	//vkDestroyBuffer(device, tempVertexBuffer.buffer, nullptr);
-	//vkFreeMemory(device, tempVertexBuffer.memory, nullptr);
-	//vkDestroyBuffer(device, tempIndexBuffer.buffer, nullptr);
-	//vkFreeMemory(device, tempIndexBuffer.memory, nullptr);
+	vkFreeCommandBuffers(device, m_CommandPool->GetVkCommandPool(), 1, &xferCmdBuffer);
 }
 
 
 void Spectre::RenderSystemVK::CreateUniformBuffers()
 {
-	m_MVPBuffer.SetDevice(m_Device->GetSharedPtr());
-	m_MVPBuffer.CreateHostUniformBuffer(nullptr, sizeof(UBOData));
-	/*VkDevice device = m_Device->GetVkDevice();
+	m_MVPBuffer = VulkanBuffer::CreateHostUniformBuffer(m_Device->GetSharedPtr(),nullptr, sizeof(UBOData));
 
-	VkBufferCreateInfo bufferInfo{};
-	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	bufferInfo.size = sizeof(UBOData);
-	bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-	vkCreateBuffer(device, &bufferInfo, nullptr, &m_MVPBuffer.buffer);
-
-	VkMemoryRequirements memReqInfo;
-	vkGetBufferMemoryRequirements(device, m_MVPBuffer.buffer, &memReqInfo);
-	uint32_t memoryTypeIndex = m_Device->GetPhysicalDevice().GetMemoryTypeIndex(memReqInfo.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-	VkMemoryAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	allocInfo.allocationSize = memReqInfo.size;
-	allocInfo.memoryTypeIndex = memoryTypeIndex;
-	vkAllocateMemory(device, &allocInfo, nullptr, &m_MVPBuffer.memory);
-	vkBindBufferMemory(device, m_MVPBuffer.buffer, m_MVPBuffer.memory, 0);*/
-
-	//m_MVPDescriptor.buffer = m_MVPBuffer.buffer;
-	//m_MVPDescriptor.offset = 0;
-	//m_MVPDescriptor.range = sizeof(UBOData);
-
-	//Matrix_Identity(m_MVPData.model);
-	//Matrix_MoveTo(m_MVPData.model, InitVector(0, 0, 1, 0));
-
-	//Matrix_Identity(m_MVPData.view);
-	//m_MVPData.view.r[3].m128_f32[2] = 2.5f;
-	///*Matrix_MoveTo(m_MVPData.view, InitVector(0, 0, -2.5f, 0));
-	//Matrix_Inverse(m_MVPData.view);*/
-
-	//m_MVPData.projection = Matrix_Perspective(DegreesToRadians(75.0f), 1400.f / 900.f, 0.01f, 3000.0f);
-
-	m_MVPDescriptor.buffer = m_MVPBuffer.GetVkBuffer();
+	m_MVPDescriptor.buffer = m_MVPBuffer->GetVkBuffer();
 	m_MVPDescriptor.offset = 0;
 	m_MVPDescriptor.range = sizeof(UBOData);
 
@@ -784,7 +620,7 @@ void Spectre::RenderSystemVK::SetupCommandBuffers()
 	renderPassBeginInfo.renderArea.extent.width = fwidth;
 	renderPassBeginInfo.renderArea.extent.height = fheight;
 
-	for (uint32_t i = 0; i < m_CommandBuffers.size(); ++i)
+	for (uint32_t i = 0; i < m_CommandBuffers->GetVkCommandBuffers().size(); ++i)
 	{
 		renderPassBeginInfo.framebuffer = m_FrameBuffers[i];
 
@@ -804,19 +640,19 @@ void Spectre::RenderSystemVK::SetupCommandBuffers()
 
 		VkDeviceSize offsets[1] = { 0 };
 
-		vkBeginCommandBuffer(m_CommandBuffers[i], &cmdBeginInfo);
+		vkBeginCommandBuffer(m_CommandBuffers->GetVkCommandBuffers()[i], &cmdBeginInfo);
 
-		vkCmdBeginRenderPass(m_CommandBuffers[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-		vkCmdSetViewport(m_CommandBuffers[i], 0, 1, &viewport);
-		vkCmdSetScissor(m_CommandBuffers[i], 0, 1, &scissor);
-		vkCmdBindDescriptorSets(m_CommandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_PipelineLayout, 0, 1, &m_DescriptorSet, 0, nullptr);
-		vkCmdBindPipeline(m_CommandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline);
-		vkCmdBindVertexBuffers(m_CommandBuffers[i], 0, 1, &m_VertexBuffer.GetVkBuffer(), offsets);
-		vkCmdBindIndexBuffer(m_CommandBuffers[i], m_IndicesBuffer.GetVkBuffer(), 0, VK_INDEX_TYPE_UINT16);
-		vkCmdDrawIndexed(m_CommandBuffers[i], m_IndicesCount, 1, 0, 0, 0);
-		vkCmdEndRenderPass(m_CommandBuffers[i]);
+		vkCmdBeginRenderPass(m_CommandBuffers->GetVkCommandBuffers()[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdSetViewport(m_CommandBuffers->GetVkCommandBuffers()[i], 0, 1, &viewport);
+		vkCmdSetScissor(m_CommandBuffers->GetVkCommandBuffers()[i], 0, 1, &scissor);
+		vkCmdBindDescriptorSets(m_CommandBuffers->GetVkCommandBuffers()[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_PipelineLayout, 0, 1, &m_DescriptorSet, 0, nullptr);
+		vkCmdBindPipeline(m_CommandBuffers->GetVkCommandBuffers()[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline);
+		vkCmdBindVertexBuffers(m_CommandBuffers->GetVkCommandBuffers()[i], 0, 1, &m_VertexBuffer->GetVkBuffer(), offsets);
+		vkCmdBindIndexBuffer(m_CommandBuffers->GetVkCommandBuffers()[i], m_IndicesBuffer->GetVkBuffer(), 0, VK_INDEX_TYPE_UINT16);
+		vkCmdDrawIndexed(m_CommandBuffers->GetVkCommandBuffers()[i], m_IndicesCount, 1, 0, 0, 0);
+		vkCmdEndRenderPass(m_CommandBuffers->GetVkCommandBuffers()[i]);
 
-		vkEndCommandBuffer(m_CommandBuffers[i]);
+		vkEndCommandBuffer(m_CommandBuffers->GetVkCommandBuffers()[i]);
 	}
 }
 #include <fstream>
@@ -872,7 +708,7 @@ void Spectre::RenderSystemVK::Draw()
 	submitInfo.waitSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores = &m_RenderComplete;
 	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pCommandBuffers = &(m_CommandBuffers[backBufferIndex]);
+	submitInfo.pCommandBuffers = &(m_CommandBuffers->GetVkCommandBuffers()[backBufferIndex]);
 	submitInfo.commandBufferCount = 1;
 
 	// 提交绘制命令
@@ -891,7 +727,7 @@ void Spectre::RenderSystemVK::UpdateUniformBuffers()
 {
 	VkDevice device = m_Device->GetVkDevice();
 	//m_MVPData.model.AppendRotation(90.0f * delta, Vector3::UpVector);
-	m_MVPBuffer.UpdateHostBuffer(&m_MVPData);
+	m_MVPBuffer->UpdateHostBuffer(&m_MVPData);
 }
 
 void Spectre::RenderSystemVK::DestroyFrameBuffers()
@@ -937,16 +773,7 @@ void Spectre::RenderSystemVK::DestoryDepthStencil()
 	}
 }
 
-void Spectre::RenderSystemVK::DestroyCommandBuffers()
-{
-	VkDevice device = m_Device->GetVkDevice();
-	for (uint32_t i = 0; i < m_CommandBuffers.size(); ++i)
-	{
-		vkFreeCommandBuffers(device, m_CommandPool, 1, &(m_CommandBuffers[i]));
-	}
 
-	vkDestroyCommandPool(device, m_CommandPool, nullptr);
-}
 
 void Spectre::RenderSystemVK::DestroyDescriptorSetLayout()
 {
@@ -971,16 +798,6 @@ void Spectre::RenderSystemVK::DestroyPipelines()
 	vkDestroyPipelineCache(device, m_PipelineCache, nullptr);
 }
 
-void Spectre::RenderSystemVK::DestroyUniformBuffers()
-{
-	m_MVPBuffer.Release();
-}
-
-void Spectre::RenderSystemVK::DestroyMeshBuffers()
-{
-	m_VertexBuffer.Release();
-	m_IndicesBuffer.Release();
-}
 
 void Spectre::RenderSystemVK::DestorySemaphores()
 {

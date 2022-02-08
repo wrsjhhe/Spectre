@@ -15,37 +15,38 @@ public:
 		Buffer_Type_Device = 2
 	};
 public:
-	VulkanBuffer(){}
-	explicit VulkanBuffer(const std::shared_ptr<const VulkanDevice>& vulkanDevice);
+
+	static std::shared_ptr<VulkanBuffer> CreateHostBuffer(const std::shared_ptr<const VulkanDevice>& vulkanDevice,const void* ptr, uint32_t size);
+
+	static std::shared_ptr<VulkanBuffer> CreateHostUniformBuffer(const std::shared_ptr<const VulkanDevice>& vulkanDevice, const void* ptr, uint32_t size);
+
+	static std::shared_ptr<VulkanBuffer> CreateDeviceVertexBuffer(const std::shared_ptr<const VulkanDevice>& vulkanDevice, uint32_t size);
+
+	static std::shared_ptr<VulkanBuffer> CreateDeviceIndexBuffer(const std::shared_ptr<const VulkanDevice>& vulkanDevice, uint32_t size);
+
+public:
+	VulkanBuffer(const VulkanBuffer&) = delete;
+	VulkanBuffer(VulkanBuffer&&) = delete;
+	VulkanBuffer& operator = (const VulkanBuffer&) = delete;
+	VulkanBuffer& operator = (VulkanBuffer&&) = delete;
 
 	~VulkanBuffer();
 
-	void SetDevice(const std::shared_ptr<const VulkanDevice>& vulkanDevice)
-	{
-		m_DevicePtr = vulkanDevice;
-	}
-
 	BufferType GetBufferType() const { return m_BufferType; }
 
-	 VkDeviceMemory& GetVkDeviceMemory() { return m_VkMemory; }
+	VkDeviceMemory& GetVkDeviceMemory() { return m_VkMemory; }
 
-	 VkBuffer& GetVkBuffer()  { return m_VkbBuffer; }
+	VkBuffer& GetVkBuffer() { return m_VkbBuffer; }
 
-	void CreateHostBuffer(const void* ptr,uint32_t size);
 
-	void CreateHostUniformBuffer(const void* ptr, uint32_t size);
-
-	void CreateDeviceVertexBuffer(uint32_t size);
-
-	void CreateDeviceIndexBuffer(uint32_t size);
-
-	void MapToDevice(VulkanBuffer& dstBuffer,const VkCommandPool& commandPool, const VkCommandBuffer& commandBuffer);
+	void MapToDevice(VulkanBuffer& dstBuffer, const VkCommandPool& commandPool, const VkCommandBuffer& commandBuffer);
 
 	void UpdateHostBuffer(const void* const ptr);
 
 	void Release();
 
 private:
+	explicit VulkanBuffer(const std::shared_ptr<const VulkanDevice>& vulkanDevice, BufferType bufferType);
 	void CreateBuffer(const void* ptr, uint32_t size, VkBufferUsageFlagBits usage, VkMemoryPropertyFlags memoryFlags);
 
 private:

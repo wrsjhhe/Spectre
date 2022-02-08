@@ -5,12 +5,13 @@
 #include <string>
 #include <vulkan.h>
 #include "MathDef.h"
-#include "VulkanBuffer.h"
 
 class VulkanSwapChain;
 class VulkanInstance;
 class VulkanDevice;
-
+class VulkanBuffer;
+class VulkanCommandPool;
+class VulkanCommandBuffers;
 namespace Spectre
 {
 	class RenderSystemVK
@@ -64,53 +65,51 @@ namespace Spectre
 		void DestroyFrameBuffers();
 		void DestoryRenderPass();
 		void DestoryDepthStencil();
-		void DestroyCommandBuffers();
 		void DestroyDescriptorSetLayout();
 		void DestroyDescriptorPool();
 		void DestroyPipelines();
-		void DestroyUniformBuffers();
-		void DestroyMeshBuffers();
 		void DestorySemaphores();
 		void DestroyFences();
 	private:
-		std::shared_ptr<VulkanInstance>     m_Instance;
-		std::shared_ptr<VulkanDevice>       m_Device;
-		std::shared_ptr<VulkanSwapChain>	m_SwapChain;
+		std::shared_ptr<VulkanInstance>			m_Instance;
+		std::shared_ptr<VulkanDevice>			m_Device;
+		std::shared_ptr<VulkanSwapChain>		m_SwapChain;
+		std::shared_ptr<VulkanCommandPool>		m_CommandPool;
 
-		VkImage                         m_DepthStencilImage = VK_NULL_HANDLE;
-		VkImageView                     m_DepthStencilView = VK_NULL_HANDLE;
-		VkDeviceMemory                  m_DepthStencilMemory = VK_NULL_HANDLE;
+		VkImage									m_DepthStencilImage = VK_NULL_HANDLE;
+		VkImageView								m_DepthStencilView = VK_NULL_HANDLE;
+		VkDeviceMemory							m_DepthStencilMemory = VK_NULL_HANDLE;
 
-		VkRenderPass                    m_RenderPass = VK_NULL_HANDLE;
+		VkRenderPass							m_RenderPass = VK_NULL_HANDLE;
 
-		std::vector<VkFramebuffer>      m_FrameBuffers;
+		std::vector<VkFramebuffer>				m_FrameBuffers;
 
-		VkSemaphore                     m_RenderComplete = VK_NULL_HANDLE;
-		std::vector<VkFence>            m_Fences;
+		VkSemaphore								m_RenderComplete = VK_NULL_HANDLE;
+		std::vector<VkFence>					m_Fences;
 
-		VkCommandPool                   m_CommandPool = VK_NULL_HANDLE;
-		std::vector<VkCommandBuffer>    m_CommandBuffers;
 
-		VulkanBuffer					m_VertexBuffer;
+		std::shared_ptr<VulkanCommandBuffers>	m_CommandBuffers;
 
-		uint32_t                        m_IndicesCount = 0;
-		VulkanBuffer					m_IndicesBuffer;
+		std::shared_ptr<VulkanBuffer>			m_VertexBuffer;
 
-		VulkanBuffer                    m_MVPBuffer;
-		VkDescriptorBufferInfo          m_MVPDescriptor;
-		UBOData                         m_MVPData;
+		uint32_t								m_IndicesCount = 0;
+		std::shared_ptr<VulkanBuffer>			m_IndicesBuffer;
 
-		VkDescriptorPool                m_DescriptorPool = VK_NULL_HANDLE;
+		std::shared_ptr<VulkanBuffer>			m_MVPBuffer;
+		VkDescriptorBufferInfo					m_MVPDescriptor;
+		UBOData									m_MVPData;
 
-		VkDescriptorSetLayout           m_DescriptorSetLayout = VK_NULL_HANDLE;
-		VkPipelineLayout                m_PipelineLayout = VK_NULL_HANDLE;
+		VkDescriptorPool						m_DescriptorPool = VK_NULL_HANDLE;
 
-		VkDescriptorSet                 m_DescriptorSet = VK_NULL_HANDLE;
+		VkDescriptorSetLayout					m_DescriptorSetLayout = VK_NULL_HANDLE;
+		VkPipelineLayout						m_PipelineLayout = VK_NULL_HANDLE;
 
-		VkPipeline                      m_Pipeline = VK_NULL_HANDLE;
-		VkPipelineCache                 m_PipelineCache = VK_NULL_HANDLE;
+		VkDescriptorSet							m_DescriptorSet = VK_NULL_HANDLE;
 
-		VkSemaphore                     m_PresentComplete = VK_NULL_HANDLE;
+		VkPipeline								m_Pipeline = VK_NULL_HANDLE;
+		VkPipelineCache							m_PipelineCache = VK_NULL_HANDLE;
+
+		VkSemaphore								m_PresentComplete = VK_NULL_HANDLE;
 
 	};
 
