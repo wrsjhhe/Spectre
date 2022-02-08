@@ -5,6 +5,7 @@
 #include <string>
 #include <vulkan.h>
 #include "MathDef.h"
+#include "VulkanBuffer.h"
 
 class VulkanSwapChain;
 class VulkanInstance;
@@ -90,12 +91,12 @@ namespace Spectre
 		VkCommandPool                   m_CommandPool = VK_NULL_HANDLE;
 		std::vector<VkCommandBuffer>    m_CommandBuffers;
 
-		GPUBuffer						m_VertexBuffer;
+		VulkanBuffer					m_VertexBuffer;
 
 		uint32_t                        m_IndicesCount = 0;
-		GPUBuffer						m_IndicesBuffer;
+		VulkanBuffer					m_IndicesBuffer;
 
-		GPUBuffer                       m_MVPBuffer;
+		VulkanBuffer                    m_MVPBuffer;
 		VkDescriptorBufferInfo          m_MVPDescriptor;
 		UBOData                         m_MVPData;
 
