@@ -38,7 +38,7 @@ public:
 	VulkanSwapChain(std::shared_ptr<const VulkanInstance> vulkanInstance, 
 		std::shared_ptr<const VulkanDevice> vulkanDevice,
 		const NativeWindow& window, uint32_t width,uint32_t height);
-	//void CreateSwapChain();
+	~VulkanSwapChain();
 
 	uint32_t GetWidth() const { return m_Width; }
 	uint32_t GetHeight() const { return m_Height; }
@@ -50,6 +50,8 @@ public:
 	uint32_t AcquireImageIndex(VkSemaphore* outSemaphore);
 
 	SwapStatus Present(VkQueue presentQueue, VkSemaphore* doneSemaphore);
+
+	void DestorySwapChain();
 private:
 	void CreateSurface();
 

@@ -6,11 +6,11 @@ int main()
 {
 	RenderSystemVK rsvk;
 	rsvk.Init();
-
-	while (true)
-	{
-		rsvk.Loop();
-	}
+	rsvk.Loop();
+	//while (true)
+	//{
+	//	rsvk.Loop();
+	//}
 
 	return 0;
 }

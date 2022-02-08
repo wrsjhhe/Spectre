@@ -39,6 +39,8 @@ namespace Spectre
 		void Init();
 
 		void Loop();
+
+		void Exist();
 	private:
 		void CreateDepthStencil();
 		void CreateRenderPass();
@@ -57,6 +59,18 @@ namespace Spectre
 		void Draw();
 
 		void UpdateUniformBuffers();
+
+		void DestroyFrameBuffers();
+		void DestoryRenderPass();
+		void DestoryDepthStencil();
+		void DestroyCommandBuffers();
+		void DestroyDescriptorSetLayout();
+		void DestroyDescriptorPool();
+		void DestroyPipelines();
+		void DestroyUniformBuffers();
+		void DestroyMeshBuffers();
+		void DestorySemaphores();
+		void DestroyFences();
 	private:
 		std::shared_ptr<VulkanInstance>     m_Instance;
 		std::shared_ptr<VulkanDevice>       m_Device;

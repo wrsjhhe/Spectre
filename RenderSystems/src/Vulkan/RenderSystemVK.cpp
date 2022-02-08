@@ -102,12 +102,33 @@ void RenderSystemVK::Init()
 
 void Spectre::RenderSystemVK::Loop()
 {
-	while (true) {
+	VkDevice device = m_Device->GetVkDevice();
+	/*while (true) {
 		glfwPollEvents();
 		Draw();
-	}
-
+	}*/
+	Draw();
 	//vkDeviceWaitIdle(device);
+	Exist();
+	//vkDeviceWaitIdle(device);
+}
+
+void Spectre::RenderSystemVK::Exist()
+{
+	DestroyFrameBuffers();
+	DestoryRenderPass();
+	DestoryDepthStencil();
+	DestroyCommandBuffers();
+	DestroyDescriptorSetLayout();
+	DestroyDescriptorPool();
+	DestroyPipelines();
+	DestroyUniformBuffers();
+	DestroyMeshBuffers();
+	DestorySemaphores();
+	DestroyFences();
+
+	m_SwapChain->DestorySwapChain();
+	m_SwapChain = nullptr;
 }
 
 void Spectre::RenderSystemVK::CreateDepthStencil()
@@ -818,4 +839,116 @@ void Spectre::RenderSystemVK::UpdateUniformBuffers()
 	vkMapMemory(device, m_MVPBuffer.memory, 0, sizeof(UBOData), 0, (void**)&pData);
 	std::memcpy(pData, &m_MVPData, sizeof(UBOData));
 	vkUnmapMemory(device, m_MVPBuffer.memory);
+}
+
+void Spectre::RenderSystemVK::DestroyFrameBuffers()
+{
+	VkDevice device = m_Device->GetVkDevice();
+	for (uint32_t i = 0; i < m_FrameBuffers.size(); ++i)
+	{
+		vkDestroyFramebuffer(device, m_FrameBuffers[i], nullptr);
+	}
+	m_FrameBuffers.clear();
+}
+
+void Spectre::RenderSystemVK::DestoryRenderPass()
+{
+	VkDevice device = m_Device->GetVkDevice();
+	if (m_RenderPass != VK_NULL_HANDLE)
+	{
+		vkDestroyRenderPass(device, m_RenderPass, nullptr);
+		m_RenderPass = VK_NULL_HANDLE;
+	}
+}
+
+void Spectre::RenderSystemVK::DestoryDepthStencil()
+{
+	VkDevice device = m_Device->GetVkDevice();
+
+	if (m_DepthStencilMemory != VK_NULL_HANDLE)
+	{
+		vkFreeMemory(device, m_DepthStencilMemory, nullptr);
+		m_DepthStencilMemory = VK_NULL_HANDLE;
+	}
+
+	if (m_DepthStencilView != VK_NULL_HANDLE)
+	{
+		vkDestroyImageView(device, m_DepthStencilView, nullptr);
+		m_DepthStencilView = VK_NULL_HANDLE;
+	}
+
+	if (m_DepthStencilImage != VK_NULL_HANDLE)
+	{
+		vkDestroyImage(device, m_DepthStencilImage, nullptr);
+		m_DepthStencilImage = VK_NULL_HANDLE;
+	}
+}
+
+void Spectre::RenderSystemVK::DestroyCommandBuffers()
+{
+	VkDevice device = m_Device->GetVkDevice();
+	for (uint32_t i = 0; i < m_CommandBuffers.size(); ++i)
+	{
+		vkFreeCommandBuffers(device, m_CommandPool, 1, &(m_CommandBuffers[i]));
+	}
+
+	vkDestroyCommandPool(device, m_CommandPool, nullptr);
+}
+
+void Spectre::RenderSystemVK::DestroyDescriptorSetLayout()
+{
+	VkDevice device = m_Device->GetVkDevice();
+
+	vkDestroyDescriptorSetLayout(device, m_DescriptorSetLayout, nullptr);
+	vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
+}
+
+void Spectre::RenderSystemVK::DestroyDescriptorPool()
+{
+	VkDevice device = m_Device->GetVkDevice();
+
+	vkDestroyDescriptorPool(device, m_DescriptorPool, nullptr);
+
+}
+
+void Spectre::RenderSystemVK::DestroyPipelines()
+{
+	VkDevice device = m_Device->GetVkDevice();
+	vkDestroyPipeline(device, m_Pipeline, nullptr);
+	vkDestroyPipelineCache(device, m_PipelineCache, nullptr);
+}
+
+void Spectre::RenderSystemVK::DestroyUniformBuffers()
+{
+	VkDevice device = m_Device->GetVkDevice();
+
+	vkDestroyBuffer(device, m_MVPBuffer.buffer, nullptr);
+	vkFreeMemory(device, m_MVPBuffer.memory, nullptr);
+}
+
+void Spectre::RenderSystemVK::DestroyMeshBuffers()
+{
+	VkDevice device = m_Device->GetVkDevice();
+	vkDestroyBuffer(device, m_VertexBuffer.buffer, nullptr);
+	vkFreeMemory(device, m_VertexBuffer.memory, nullptr);
+	vkDestroyBuffer(device, m_IndicesBuffer.buffer, nullptr);
+	vkFreeMemory(device, m_IndicesBuffer.memory, nullptr);
+}
+
+void Spectre::RenderSystemVK::DestorySemaphores()
+{
+	VkDevice device = m_Device->GetVkDevice();
+	vkDestroySemaphore(device, m_RenderComplete, nullptr);
+	//vkDestroySemaphore(device, m_PresentComplete, nullptr);
+
+}
+
+void Spectre::RenderSystemVK::DestroyFences()
+{
+	VkDevice device = m_Device->GetVkDevice();
+
+	for (uint32_t i = 0; i < m_Fences.size(); ++i)
+	{
+		vkDestroyFence(device, m_Fences[i], nullptr);
+	}
 }

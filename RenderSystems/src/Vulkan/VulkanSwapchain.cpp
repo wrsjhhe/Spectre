@@ -125,6 +125,18 @@ VulkanSwapChain::VulkanSwapChain(std::shared_ptr<const VulkanInstance> vulkanIns
 	}
 }
 
+VulkanSwapChain::~VulkanSwapChain()
+{
+	VkDevice device = m_VulkanDevice->GetVkDevice();
+
+	for (uint32_t index = 0; index < m_ImageAcquiredSemaphore.size(); ++index) {
+		vkDestroySemaphore(device, m_ImageAcquiredSemaphore[index], nullptr);
+	}
+
+	vkDestroySwapchainKHR(device, m_VkSwapChain, nullptr);
+	vkDestroySurfaceKHR(m_VulkanInstance->GetVkInstance(), m_VkSurface, nullptr);
+}
+
 uint32_t VulkanSwapChain::AcquireImageIndex(VkSemaphore* outSemaphore)
 {
 	uint32_t imageIndex = 0;
@@ -179,6 +191,14 @@ VulkanSwapChain::SwapStatus VulkanSwapChain::Present(VkQueue presentQueue, VkSem
 	}
 
 	return SwapStatus::Healthy;
+}
+
+void VulkanSwapChain::DestorySwapChain()
+{
+	for (uint32_t i = 0; i < m_VkImageViews.size(); ++i) 
+	{
+		vkDestroyImageView(m_VulkanDevice->GetVkDevice(), m_VkImageViews[i], nullptr);
+	}
 }
 
 void VulkanSwapChain::CreateSurface()
