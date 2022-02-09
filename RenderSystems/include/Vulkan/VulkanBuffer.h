@@ -16,13 +16,13 @@ public:
 	};
 public:
 
-	static std::shared_ptr<VulkanBuffer> CreateHostBuffer(const std::shared_ptr<const VulkanDevice>& vulkanDevice,const void* ptr, uint32_t size);
+	static std::shared_ptr<VulkanBuffer> CreateHostBuffer(const VulkanDevice& vulkanDevice,const void* ptr, uint32_t size);
 
-	static std::shared_ptr<VulkanBuffer> CreateHostUniformBuffer(const std::shared_ptr<const VulkanDevice>& vulkanDevice, const void* ptr, uint32_t size);
+	static std::shared_ptr<VulkanBuffer> CreateHostUniformBuffer(const VulkanDevice& vulkanDevice, const void* ptr, uint32_t size);
 
-	static std::shared_ptr<VulkanBuffer> CreateDeviceVertexBuffer(const std::shared_ptr<const VulkanDevice>& vulkanDevice, uint32_t size);
+	static std::shared_ptr<VulkanBuffer> CreateDeviceVertexBuffer(const VulkanDevice& vulkanDevice, uint32_t size);
 
-	static std::shared_ptr<VulkanBuffer> CreateDeviceIndexBuffer(const std::shared_ptr<const VulkanDevice>& vulkanDevice, uint32_t size);
+	static std::shared_ptr<VulkanBuffer> CreateDeviceIndexBuffer(const VulkanDevice& vulkanDevice, uint32_t size);
 
 public:
 	VulkanBuffer(const VulkanBuffer&) = delete;
@@ -46,11 +46,11 @@ public:
 	void Release();
 
 private:
-	explicit VulkanBuffer(const std::shared_ptr<const VulkanDevice>& vulkanDevice, BufferType bufferType);
+	explicit VulkanBuffer(const VulkanDevice& vulkanDevice, BufferType bufferType);
 	void CreateBuffer(const void* ptr, uint32_t size, VkBufferUsageFlagBits usage, VkMemoryPropertyFlags memoryFlags);
 
 private:
-	std::shared_ptr<const VulkanDevice>			 m_DevicePtr;
+	const VulkanDevice&							 m_Device;
 	BufferType                                   m_BufferType = Buffer_Type_Undefined;
 	uint32_t                                     m_Size = 0;
 	VkDeviceMemory				                 m_VkMemory = VK_NULL_HANDLE;

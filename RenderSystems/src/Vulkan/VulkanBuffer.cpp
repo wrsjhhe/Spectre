@@ -4,8 +4,8 @@
 
 USING_NAMESPACE(Spectre)
 
-VulkanBuffer::VulkanBuffer(const std::shared_ptr<const VulkanDevice>& vulkanDevice, BufferType bufferType):
-	m_DevicePtr(vulkanDevice),
+VulkanBuffer::VulkanBuffer(const VulkanDevice& vulkanDevice, BufferType bufferType):
+	m_Device(vulkanDevice),
 	m_BufferType(bufferType)
 {
 
@@ -16,7 +16,7 @@ VulkanBuffer::~VulkanBuffer()
 	Release();
 }
 
-std::shared_ptr<VulkanBuffer> VulkanBuffer::CreateHostBuffer(const std::shared_ptr<const VulkanDevice>& vulkanDevice, const void* ptr, uint32_t size)
+std::shared_ptr<VulkanBuffer> VulkanBuffer::CreateHostBuffer(const VulkanDevice& vulkanDevice, const void* ptr, uint32_t size)
 {
 	auto* pBuffer = new VulkanBuffer(vulkanDevice, Buffer_Type_Host);
 
@@ -26,7 +26,7 @@ std::shared_ptr<VulkanBuffer> VulkanBuffer::CreateHostBuffer(const std::shared_p
 }
 
 
-std::shared_ptr<VulkanBuffer> VulkanBuffer::CreateHostUniformBuffer(const std::shared_ptr<const VulkanDevice>& vulkanDevice, const void* ptr, uint32_t size)
+std::shared_ptr<VulkanBuffer> VulkanBuffer::CreateHostUniformBuffer(const VulkanDevice& vulkanDevice, const void* ptr, uint32_t size)
 {
 	auto* pBuffer = new VulkanBuffer(vulkanDevice, Buffer_Type_Host);
 
@@ -35,7 +35,7 @@ std::shared_ptr<VulkanBuffer> VulkanBuffer::CreateHostUniformBuffer(const std::s
 	return std::shared_ptr<VulkanBuffer>{pBuffer};
 }
 
-std::shared_ptr<VulkanBuffer> VulkanBuffer::CreateDeviceVertexBuffer(const std::shared_ptr<const VulkanDevice>& vulkanDevice, uint32_t size)
+std::shared_ptr<VulkanBuffer> VulkanBuffer::CreateDeviceVertexBuffer(const VulkanDevice& vulkanDevice, uint32_t size)
 {
 	auto* pBuffer = new VulkanBuffer(vulkanDevice, Buffer_Type_Device);
 	pBuffer->CreateBuffer(nullptr, size, VkBufferUsageFlagBits(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT),
@@ -43,7 +43,7 @@ std::shared_ptr<VulkanBuffer> VulkanBuffer::CreateDeviceVertexBuffer(const std::
 	return std::shared_ptr<VulkanBuffer>{pBuffer};
 }
 
-std::shared_ptr<VulkanBuffer> VulkanBuffer::CreateDeviceIndexBuffer(const std::shared_ptr<const VulkanDevice>& vulkanDevice, uint32_t size)
+std::shared_ptr<VulkanBuffer> VulkanBuffer::CreateDeviceIndexBuffer(const VulkanDevice& vulkanDevice, uint32_t size)
 {
 	auto* pBuffer = new VulkanBuffer(vulkanDevice, Buffer_Type_Device);
 	pBuffer->CreateBuffer(nullptr, size, VkBufferUsageFlagBits(VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT),
@@ -54,7 +54,7 @@ std::shared_ptr<VulkanBuffer> VulkanBuffer::CreateDeviceIndexBuffer(const std::s
 void VulkanBuffer::MapToDevice(VulkanBuffer& dstBuffer, const VkCommandPool& commandPool, const VkCommandBuffer& commandBuffer)
 {
 	EXP_CHECK(dstBuffer.m_BufferType == Buffer_Type_Device, "dstBuffer type is not Buffer_Type_Device!");
-	VkDevice device = m_DevicePtr->GetVkDevice();
+	VkDevice device = m_Device.GetVkDevice();
 
 	VkBufferCopy copyRegion = {};
 	copyRegion.size = m_Size;
@@ -63,7 +63,7 @@ void VulkanBuffer::MapToDevice(VulkanBuffer& dstBuffer, const VkCommandPool& com
 
 void VulkanBuffer::UpdateHostBuffer(const void* ptr)
 {
-	VkDevice device = m_DevicePtr->GetVkDevice();
+	VkDevice device = m_Device.GetVkDevice();
 	void* dataPtr = nullptr;
 	vkMapMemory(device, m_VkMemory, 0, m_Size, 0, &dataPtr);
 	std::memcpy(dataPtr, ptr, m_Size);
@@ -72,12 +72,10 @@ void VulkanBuffer::UpdateHostBuffer(const void* ptr)
 
 void VulkanBuffer::Release()
 {
-	VkDevice device = m_DevicePtr->GetVkDevice();
+	VkDevice device = m_Device.GetVkDevice();
 
 	vkDestroyBuffer(device, m_VkbBuffer, nullptr);
 	m_VkbBuffer = VK_NULL_HANDLE;
-
-
 
 	vkFreeMemory(device, m_VkMemory, nullptr);
 	m_VkMemory = VK_NULL_HANDLE;
@@ -88,7 +86,7 @@ void VulkanBuffer::Release()
 void VulkanBuffer::CreateBuffer(const void* ptr, uint32_t size, VkBufferUsageFlagBits usage, VkMemoryPropertyFlags memoryFlags)
 {
 	m_Size = size;
-	VkDevice device = m_DevicePtr->GetVkDevice();
+	VkDevice device = m_Device.GetVkDevice();
 
 	VkBufferCreateInfo bufferCI{};
 	bufferCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -101,7 +99,7 @@ void VulkanBuffer::CreateBuffer(const void* ptr, uint32_t size, VkBufferUsageFla
 	memAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 
 	vkGetBufferMemoryRequirements(device, m_VkbBuffer, &memReqInfo);
-	uint32_t memoryTypeIndex = m_DevicePtr->GetPhysicalDevice().GetMemoryTypeIndex(memReqInfo.memoryTypeBits, memoryFlags);
+	uint32_t memoryTypeIndex = m_Device.GetPhysicalDevice().GetMemoryTypeIndex(memReqInfo.memoryTypeBits, memoryFlags);
 	memAllocInfo.allocationSize = memReqInfo.size;
 	memAllocInfo.memoryTypeIndex = memoryTypeIndex;
 	vkAllocateMemory(device, &memAllocInfo, nullptr, &m_VkMemory);

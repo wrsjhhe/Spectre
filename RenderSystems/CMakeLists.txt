@@ -47,6 +47,9 @@ ${SRC_VULKAN_DIR}VulkanSwapchain.cpp
 ${SRC_VULKAN_DIR}VulkanBuffer.cpp
 ${SRC_VULKAN_DIR}VulkanCommandPool.cpp
 ${SRC_VULKAN_DIR}VulkanCommandBuffers.cpp
+${SRC_VULKAN_DIR}VulkanImage.cpp
+${SRC_VULKAN_DIR}VulkanRenderPass.cpp
+${SRC_VULKAN_DIR}VulkanFrameBuffer.cpp
 ${SRC_VULKAN_DIR}RenderSystemVK.cpp
 )
 
@@ -59,6 +62,9 @@ ${INC_VULKAN_DIR}VulkanDevice.h
 ${INC_VULKAN_DIR}VulkanBuffer.h
 ${INC_VULKAN_DIR}VulkanCommandPool.h
 ${INC_VULKAN_DIR}VulkanCommandBuffers.h
+${INC_VULKAN_DIR}VulkanImage.h
+${INC_VULKAN_DIR}VulkanRenderPass.h
+${INC_VULKAN_DIR}VulkanFrameBuffer.h
 ${INC_VULKAN_DIR}RenderSystemVK.h
 )
 

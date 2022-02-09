@@ -8,7 +8,7 @@ class VulkanDevice;
 class VulkanCommandPool:std::enable_shared_from_this<VulkanCommandPool>
 {
 public:
-	static std::shared_ptr<VulkanCommandPool> CreateCommandPool(const std::shared_ptr<const VulkanDevice>& vulkanDevice);
+	static std::shared_ptr<VulkanCommandPool> CreateCommandPool(const VulkanDevice& vulkanDevice);
 public:
 	~VulkanCommandPool();
 
@@ -21,9 +21,9 @@ public:
 
 	void Destroy();
 private:
-	VulkanCommandPool(const std::shared_ptr<const VulkanDevice>& vulkanDevice);
+	VulkanCommandPool(const VulkanDevice& vulkanDevice);
 private:
-	std::shared_ptr<const VulkanDevice>			 m_DevicePtr;
+	const VulkanDevice&							 m_Device;
 	VkCommandPool								 m_VkCommandPool = VK_NULL_HANDLE;
 };
 

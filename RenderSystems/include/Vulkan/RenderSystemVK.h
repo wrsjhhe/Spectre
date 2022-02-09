@@ -12,6 +12,9 @@ class VulkanDevice;
 class VulkanBuffer;
 class VulkanCommandPool;
 class VulkanCommandBuffers;
+class VulkanImage;
+class VulkanRenderPass;
+
 namespace Spectre
 {
 	class RenderSystemVK
@@ -63,8 +66,6 @@ namespace Spectre
 		void UpdateUniformBuffers();
 
 		void DestroyFrameBuffers();
-		void DestoryRenderPass();
-		void DestoryDepthStencil();
 		void DestroyDescriptorSetLayout();
 		void DestroyDescriptorPool();
 		void DestroyPipelines();
@@ -76,11 +77,9 @@ namespace Spectre
 		std::shared_ptr<VulkanSwapChain>		m_SwapChain;
 		std::shared_ptr<VulkanCommandPool>		m_CommandPool;
 
-		VkImage									m_DepthStencilImage = VK_NULL_HANDLE;
-		VkImageView								m_DepthStencilView = VK_NULL_HANDLE;
-		VkDeviceMemory							m_DepthStencilMemory = VK_NULL_HANDLE;
+		std::shared_ptr<VulkanImage>			m_DepthStencilImage;
 
-		VkRenderPass							m_RenderPass = VK_NULL_HANDLE;
+		std::shared_ptr<VulkanRenderPass>		m_RenderPass;
 
 		std::vector<VkFramebuffer>				m_FrameBuffers;
 

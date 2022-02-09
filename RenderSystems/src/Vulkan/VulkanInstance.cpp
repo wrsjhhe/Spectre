@@ -172,7 +172,7 @@ VulkanInstance::VulkanInstance(const CreateInfo& CI):
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pNext = nullptr; 
     appInfo.pApplicationName = nullptr;
-    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+    appInfo.applicationVersion = VK_HEADER_VERSION_COMPLETE;
     appInfo.pEngineName = "Spectre Engine";
     appInfo.engineVersion = SPECTRE_ENGINE_VERSION; 
     appInfo.apiVersion = ApiVersion;

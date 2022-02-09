@@ -9,8 +9,8 @@ class VulkanCommandPool;
 class VulkanCommandBuffers
 {
 public:
-	static std::shared_ptr<VulkanCommandBuffers> CreataCommandBuffers(const std::shared_ptr<const VulkanDevice>& vulkanDevice,
-		const std::shared_ptr<const VulkanCommandPool>& commandPool, uint32_t size);
+	static std::shared_ptr<VulkanCommandBuffers> CreataCommandBuffers(const VulkanDevice& vulkanDevice,
+		const VulkanCommandPool& commandPool, uint32_t size);
 
 
 public:
@@ -19,10 +19,10 @@ public:
 
 	void Free();
 private:
-	VulkanCommandBuffers(const std::shared_ptr<const VulkanDevice>& vulkanDevice, const std::shared_ptr<const VulkanCommandPool>& commandPool, uint32_t size);
+	VulkanCommandBuffers(const VulkanDevice& vulkanDevice, const VulkanCommandPool& commandPool, uint32_t size);
 private:
-	std::shared_ptr<const VulkanDevice>			 m_DevicePtr;
-	std::shared_ptr<const VulkanCommandPool>	 m_CommandPool;
+	const VulkanDevice&							 m_Device;
+	const VulkanCommandPool&					 m_CommandPool;
 	std::vector<VkCommandBuffer>                 m_VkCommandBuffer;
 };
 

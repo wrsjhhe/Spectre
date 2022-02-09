@@ -49,10 +49,11 @@ VulkanSwapChain::VulkanSwapChain(std::shared_ptr<const VulkanInstance> vulkanIns
 	m_Width(width),
 	m_Height(height)
 {
+	CreateSurface();
+
 	VkDevice device = m_VulkanDevice->GetVkDevice();
 	VkPhysicalDevice physicalDevice = m_VulkanDevice->GetPhysicalDevice().GetVkPhysicalDevice();
-	CreateSurface();
-	
+
 	SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(physicalDevice);
 
 	VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
@@ -93,14 +94,13 @@ VulkanSwapChain::VulkanSwapChain(std::shared_ptr<const VulkanInstance> vulkanIns
 	createInfo.presentMode = presentMode;
 	createInfo.clipped = VK_TRUE;
 
-	if (vkCreateSwapchainKHR(device, &createInfo, nullptr, &m_VkSwapChain) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create swap chain!");
-	}
+	VK_CHECK(vkCreateSwapchainKHR(device, &createInfo, nullptr, &m_VkSwapChain), "Failed to create swap chain!");
+
 
 	vkGetSwapchainImagesKHR(device, m_VkSwapChain, &imageCount, nullptr);
 	m_VkImages.resize(imageCount);
 	vkGetSwapchainImagesKHR(device, m_VkSwapChain, &imageCount, m_VkImages.data());
-
+	
 	m_VkSwapChainFormat = surfaceFormat.format;
 
 	m_VkImageViews.resize(m_VkImages.size());
@@ -209,23 +209,12 @@ void VulkanSwapChain::CreateSurface()
 		m_VkSurface = VK_NULL_HANDLE;
 	}
 
-	//VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
-	//surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-	//surfaceCreateInfo.hinstance = GetModuleHandle(NULL);
-	//surfaceCreateInfo.hwnd = (HWND)m_Window.hWnd;
+	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
+	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+	surfaceCreateInfo.hinstance = GetModuleHandle(NULL);
+	surfaceCreateInfo.hwnd = (HWND)m_Window.hWnd;
+	VkResult err = vkCreateWin32SurfaceKHR(m_VulkanInstance->GetVkInstance(), &surfaceCreateInfo, nullptr, &m_VkSurface);
 
-	glfwInit();
-
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-	auto window = glfwCreateWindow(1400, 900, "Vulkan", nullptr, nullptr);
-
-	glfwSetWindowUserPointer(window, this); VK_PIPELINE_BIND_POINT_GRAPHICS;
-
-	glfwSetWindowUserPointer(window, this);
-
-	VkResult err = glfwCreateWindowSurface(m_VulkanInstance->GetVkInstance(), window, nullptr, &m_VkSurface);
-	//VkResult err = vkCreateWin32SurfaceKHR(m_VulkanInstance->GetVkInstance(), &surfaceCreateInfo, nullptr, &m_VkSurface);
 	VK_CHECK(err,"Failed create surface!")
 }
 

@@ -6,6 +6,8 @@
 #include "VulkanCommandPool.h"
 #include "VulkanCommandBuffers.h"
 #include "VulkanBuffer.h"
+#include "VulkanImage.h"
+#include "VulkanRenderPass.h"
 #include "RenderSystemVK.h"
 
 #define GLFW_EXPOSE_NATIVE_WIN32
@@ -35,7 +37,7 @@ void RenderSystemVK::Init()
 	m_Instance = VulkanInstance::Create(instanceCI);
 	VkPhysicalDevice vkPhysicalDevice = m_Instance->GetVkPhysicalDevices().at(0);
 
-	std::unique_ptr<VulkanPhysicalDevice> physicalDevice = VulkanPhysicalDevice::Create(vkPhysicalDevice, *m_Instance);
+	std::unique_ptr<VulkanPhysicalDevice> physicalDevice = VulkanPhysicalDevice::Create(vkPhysicalDevice, *m_Instance->GetSharedPtr());
 
 	//目前只创建了用于图形显示的队列
 	std::vector<VkDeviceQueueCreateInfo> queueInfos(1);
@@ -73,17 +75,17 @@ void RenderSystemVK::Init()
 	auto vkAllocator = m_Instance->GetVkAllocator();
 	m_Device = VulkanDevice::Create(*physicalDevice, vkDeviceCreateInfo, EnabledExtFeats, vkAllocator);
 
-	//glfwInit();
+	glfwInit();
 
-	//glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-	//auto window = glfwCreateWindow(1400, 900, "Vulkan", nullptr, nullptr);
-	//
-	//glfwSetWindowUserPointer(window, this); 
-	//
-	//HWND hwnd = glfwGetWin32Window(window);
-	//glfwSetWindowUserPointer(window, this);
-	NativeWindow win;
+	auto window = glfwCreateWindow(1400, 900, "Vulkan", nullptr, nullptr);
+
+	glfwSetWindowUserPointer(window, this);
+
+	HWND hwnd = glfwGetWin32Window(window);
+	glfwSetWindowUserPointer(window, this);
+	NativeWindow win{hwnd};
 	m_SwapChain = std::make_shared<VulkanSwapChain>(m_Instance->GetSharedPtr(), m_Device->GetSharedPtr(), win, 1400, 900);
 
 
@@ -116,8 +118,6 @@ void Spectre::RenderSystemVK::Loop()
 void Spectre::RenderSystemVK::Exist()
 {
 	DestroyFrameBuffers();
-	DestoryRenderPass();
-	DestoryDepthStencil();
 	DestroyDescriptorSetLayout();
 	DestroyDescriptorPool();
 	DestroyPipelines();
@@ -130,116 +130,12 @@ void Spectre::RenderSystemVK::Exist()
 
 void Spectre::RenderSystemVK::CreateDepthStencil()
 {
-	uint32_t fwidth = m_SwapChain->GetWidth();
-	uint32_t fheight = m_SwapChain->GetHeight();
-	VkDevice device = m_Device->GetVkDevice();
-
-	VkImageCreateInfo imageCreateInfo = {};
-	imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-	imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
-	imageCreateInfo.format = VK_FORMAT_D24_UNORM_S8_UINT;
-	imageCreateInfo.extent = { fwidth,fheight, 1 };
-	imageCreateInfo.mipLevels = 1;
-	imageCreateInfo.arrayLayers = 1;
-	imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-	imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-	imageCreateInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-	imageCreateInfo.flags = 0;
-	vkCreateImage(device, &imageCreateInfo, nullptr, &m_DepthStencilImage);
-
-	VkImageViewCreateInfo imageViewCreateInfo = {};
-	imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-	imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-	imageViewCreateInfo.format = VK_FORMAT_D24_UNORM_S8_UINT;
-	imageViewCreateInfo.flags = 0;
-	imageViewCreateInfo.image = m_DepthStencilImage;
-	imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-	imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-	imageViewCreateInfo.subresourceRange.levelCount = 1;
-	imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
-	imageViewCreateInfo.subresourceRange.layerCount = 1;
-
-	VkMemoryRequirements memRequire;
-	vkGetImageMemoryRequirements(device, imageViewCreateInfo.image, &memRequire);
-	uint32_t memoryTypeIndex = m_Device->GetPhysicalDevice().GetMemoryTypeIndex(memRequire.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-	VkMemoryAllocateInfo memAllocateInfo = {};
-	memAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	memAllocateInfo.allocationSize = memRequire.size;
-	memAllocateInfo.memoryTypeIndex = memoryTypeIndex;
-	vkAllocateMemory(device, &memAllocateInfo, nullptr, &m_DepthStencilMemory);
-	vkBindImageMemory(device, m_DepthStencilImage, m_DepthStencilMemory, 0);
-
-	vkCreateImageView(device, &imageViewCreateInfo, nullptr, &m_DepthStencilView);
+	m_DepthStencilImage = VulkanImage::CreateDepthStencil(*m_Device, m_SwapChain->GetWidth(), m_SwapChain->GetHeight());
 }
 
 void Spectre::RenderSystemVK::CreateRenderPass()
 {
-	std::vector<VkAttachmentDescription> attachments(2);
-	// color attachment
-	attachments[0].format = m_SwapChain->GetSwapChainFormat();
-	attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
-	attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-	attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-	attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-	attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	attachments[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-	// depth stencil attachment
-	attachments[1].format = VK_FORMAT_D24_UNORM_S8_UINT;
-	attachments[1].samples = VK_SAMPLE_COUNT_1_BIT;
-	attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-	attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-	attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-	attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	attachments[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-	VkAttachmentReference colorReference = { };
-	colorReference.attachment = 0;
-	colorReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-	VkAttachmentReference depthReference = { };
-	depthReference.attachment = 1;
-	depthReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-	VkSubpassDescription subpassDescription = { };
-	subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-	subpassDescription.colorAttachmentCount = 1;
-	subpassDescription.pColorAttachments = &colorReference;
-	subpassDescription.pDepthStencilAttachment = &depthReference;
-	subpassDescription.pResolveAttachments = nullptr;
-	subpassDescription.inputAttachmentCount = 0;
-	subpassDescription.pInputAttachments = nullptr;
-	subpassDescription.preserveAttachmentCount = 0;
-	subpassDescription.pPreserveAttachments = nullptr;
-
-	std::vector<VkSubpassDependency> dependencies(2);
-	dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-	dependencies[0].dstSubpass = 0;
-	dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-	dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-	dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-	dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
-	dependencies[1].srcSubpass = 0;
-	dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-	dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-	dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-	dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-	dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
-	VkRenderPassCreateInfo renderPassInfo = {};
-	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-	renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-	renderPassInfo.pAttachments = attachments.data();
-	renderPassInfo.subpassCount = 1;
-	renderPassInfo.pSubpasses = &subpassDescription;
-	renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
-	renderPassInfo.pDependencies = dependencies.data();
-	vkCreateRenderPass(m_Device->GetVkDevice(), &renderPassInfo, nullptr, &m_RenderPass);
+	m_RenderPass = VulkanRenderPass::CreateCommonRenderPass(*m_Device, m_SwapChain->GetSwapChainFormat());
 }
 
 void Spectre::RenderSystemVK::CreateFrameBuffer()
@@ -249,11 +145,11 @@ void Spectre::RenderSystemVK::CreateFrameBuffer()
 	VkDevice device = m_Device->GetVkDevice();
 
 	VkImageView attachments[2];
-	attachments[1] = m_DepthStencilView;
+	attachments[1] = m_DepthStencilImage->GetVkImageView();
 
 	VkFramebufferCreateInfo frameBufferCreateInfo = {};
 	frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-	frameBufferCreateInfo.renderPass = m_RenderPass;
+	frameBufferCreateInfo.renderPass = m_RenderPass->GetRenderPass();
 	frameBufferCreateInfo.attachmentCount = 2;
 	frameBufferCreateInfo.pAttachments = attachments;
 	frameBufferCreateInfo.width = fwidth;
@@ -297,22 +193,9 @@ void Spectre::RenderSystemVK::CreateFences()
 void Spectre::RenderSystemVK::CreateCommandBuffers()
 {
 	VkDevice device = m_Device->GetVkDevice();
-	m_CommandPool = VulkanCommandPool::CreateCommandPool(m_Device->GetSharedPtr());
-	//VkCommandPoolCreateInfo cmdPoolInfo{};
-	//cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	//cmdPoolInfo.queueFamilyIndex = m_Device->GetPhysicalDevice().FindQueueFamily(VK_QUEUE_GRAPHICS_BIT);
-	//cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	//vkCreateCommandPool(device, &cmdPoolInfo, nullptr, &m_CommandPool);
+	m_CommandPool = VulkanCommandPool::CreateCommandPool(*m_Device);
 
-	m_CommandBuffers = VulkanCommandBuffers::CreataCommandBuffers(m_Device->GetSharedPtr(), m_CommandPool, m_SwapChain->GetImageCount());
-	//m_CommandBuffers.resize(m_SwapChain->GetImageCount());
-	//VkCommandBufferAllocateInfo cmdBufferInfo{};
-	//cmdBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	//cmdBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	//cmdBufferInfo.commandBufferCount = m_CommandBuffers.size();
-	//cmdBufferInfo.commandPool = m_CommandPool;
-
-	//vkAllocateCommandBuffers(device, &cmdBufferInfo, m_CommandBuffers.data());
+	m_CommandBuffers = VulkanCommandBuffers::CreataCommandBuffers(*m_Device, *m_CommandPool, m_SwapChain->GetImageCount());
 }
 
 void Spectre::RenderSystemVK::CreateMeshBuffers()
@@ -341,11 +224,11 @@ void Spectre::RenderSystemVK::CreateMeshBuffers()
 	uint32_t indexBufferSize = (uint32_t)indices.size() * sizeof(uint16_t);
 
 
-	auto tempVertexBuffer = VulkanBuffer::CreateHostBuffer(m_Device->GetSharedPtr(),vertices.data(), vertices.size() * sizeof(Vertex));
-	auto tempIndexBuffer = VulkanBuffer::CreateHostBuffer(m_Device->GetSharedPtr(), indices.data(), m_IndicesCount * sizeof(uint16_t));
+	auto tempVertexBuffer = VulkanBuffer::CreateHostBuffer(*m_Device,vertices.data(), vertices.size() * sizeof(Vertex));
+	auto tempIndexBuffer = VulkanBuffer::CreateHostBuffer(*m_Device, indices.data(), m_IndicesCount * sizeof(uint16_t));
 
-	m_VertexBuffer = VulkanBuffer::CreateDeviceVertexBuffer(m_Device->GetSharedPtr(), vertexBufferSize);
-	m_IndicesBuffer = VulkanBuffer::CreateDeviceIndexBuffer(m_Device->GetSharedPtr(), indexBufferSize);
+	m_VertexBuffer = VulkanBuffer::CreateDeviceVertexBuffer(*m_Device, vertexBufferSize);
+	m_IndicesBuffer = VulkanBuffer::CreateDeviceIndexBuffer(*m_Device, indexBufferSize);
 
 
 	VkCommandBuffer xferCmdBuffer;
@@ -390,7 +273,7 @@ void Spectre::RenderSystemVK::CreateMeshBuffers()
 
 void Spectre::RenderSystemVK::CreateUniformBuffers()
 {
-	m_MVPBuffer = VulkanBuffer::CreateHostUniformBuffer(m_Device->GetSharedPtr(),nullptr, sizeof(UBOData));
+	m_MVPBuffer = VulkanBuffer::CreateHostUniformBuffer(*m_Device,nullptr, sizeof(UBOData));
 
 	m_MVPDescriptor.buffer = m_MVPBuffer->GetVkBuffer();
 	m_MVPDescriptor.offset = 0;
@@ -579,7 +462,7 @@ void Spectre::RenderSystemVK::CreatePipelines()
 	VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
 	pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 	pipelineCreateInfo.layout = m_PipelineLayout;
-	pipelineCreateInfo.renderPass = m_RenderPass;
+	pipelineCreateInfo.renderPass = m_RenderPass->GetRenderPass();
 	pipelineCreateInfo.stageCount = (uint32_t)shaderStages.size();
 	pipelineCreateInfo.pStages = shaderStages.data();
 	pipelineCreateInfo.pVertexInputState = &vertexInputState;
@@ -612,7 +495,7 @@ void Spectre::RenderSystemVK::SetupCommandBuffers()
 
 	VkRenderPassBeginInfo renderPassBeginInfo{};
 	renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderPassBeginInfo.renderPass = m_RenderPass;
+	renderPassBeginInfo.renderPass = m_RenderPass->GetRenderPass();
 	renderPassBeginInfo.clearValueCount = 2;
 	renderPassBeginInfo.pClearValues = clearValues;
 	renderPassBeginInfo.renderArea.offset.x = 0;
@@ -738,39 +621,6 @@ void Spectre::RenderSystemVK::DestroyFrameBuffers()
 		vkDestroyFramebuffer(device, m_FrameBuffers[i], nullptr);
 	}
 	m_FrameBuffers.clear();
-}
-
-void Spectre::RenderSystemVK::DestoryRenderPass()
-{
-	VkDevice device = m_Device->GetVkDevice();
-	if (m_RenderPass != VK_NULL_HANDLE)
-	{
-		vkDestroyRenderPass(device, m_RenderPass, nullptr);
-		m_RenderPass = VK_NULL_HANDLE;
-	}
-}
-
-void Spectre::RenderSystemVK::DestoryDepthStencil()
-{
-	VkDevice device = m_Device->GetVkDevice();
-
-	if (m_DepthStencilMemory != VK_NULL_HANDLE)
-	{
-		vkFreeMemory(device, m_DepthStencilMemory, nullptr);
-		m_DepthStencilMemory = VK_NULL_HANDLE;
-	}
-
-	if (m_DepthStencilView != VK_NULL_HANDLE)
-	{
-		vkDestroyImageView(device, m_DepthStencilView, nullptr);
-		m_DepthStencilView = VK_NULL_HANDLE;
-	}
-
-	if (m_DepthStencilImage != VK_NULL_HANDLE)
-	{
-		vkDestroyImage(device, m_DepthStencilImage, nullptr);
-		m_DepthStencilImage = VK_NULL_HANDLE;
-	}
 }
 
 

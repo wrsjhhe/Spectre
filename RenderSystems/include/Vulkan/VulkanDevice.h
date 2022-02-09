@@ -20,6 +20,11 @@ public:
 	VulkanDevice& operator = (VulkanDevice&&) = delete;
 
 	~VulkanDevice();
+	std::shared_ptr<VulkanDevice> GetSharedPtr()
+	{
+		return shared_from_this();
+	}
+
 	std::shared_ptr<const VulkanDevice> GetSharedPtr() const
 	{
 		return shared_from_this();
