@@ -113,8 +113,6 @@ void Spectre::RenderSystemVK::Loop()
 		glfwPollEvents();
 		Draw();
 	}
-	vkDeviceWaitIdle(m_Device->GetVkDevice());
-	Exist();
 }
 
 void Spectre::RenderSystemVK::Exist()
