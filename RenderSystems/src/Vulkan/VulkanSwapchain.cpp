@@ -1,6 +1,7 @@
 #include "VulkanCommon.h"
 #include "VulkanInstance.h"
 #include "VulkanDevice.h"
+#include "VulkanSemaphore.h"
 #include "VulkanSwapchain.h"
 #include "MathDef.h"
 #define GLFW_EXPOSE_NATIVE_WIN32
@@ -59,18 +60,18 @@ VulkanSwapChain::VulkanSwapChain(std::shared_ptr<const VulkanInstance> vulkanIns
 	VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
 	VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
 	VkExtent2D extent = ChooseSwapExtent(swapChainSupport.capabilities);
-
-	uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
-	if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) 
+	m_VkSwapChainFormat = surfaceFormat.format;
+	m_ImageCount = swapChainSupport.capabilities.minImageCount + 1;
+	if (swapChainSupport.capabilities.maxImageCount > 0 && m_ImageCount > swapChainSupport.capabilities.maxImageCount)
 	{
-		imageCount = swapChainSupport.capabilities.maxImageCount;
+		m_ImageCount = swapChainSupport.capabilities.maxImageCount;
 	}
 
 	VkSwapchainCreateInfoKHR createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 	createInfo.surface = m_VkSurface;
 
-	createInfo.minImageCount = imageCount;
+	createInfo.minImageCount = m_ImageCount;
 	createInfo.imageFormat = surfaceFormat.format;
 	createInfo.imageColorSpace = surfaceFormat.colorSpace;
 	createInfo.imageExtent = extent;
@@ -96,32 +97,14 @@ VulkanSwapChain::VulkanSwapChain(std::shared_ptr<const VulkanInstance> vulkanIns
 
 	VK_CHECK(vkCreateSwapchainKHR(device, &createInfo, nullptr, &m_VkSwapChain), "Failed to create swap chain!");
 
-
-	vkGetSwapchainImagesKHR(device, m_VkSwapChain, &imageCount, nullptr);
-	m_VkImages.resize(imageCount);
-	vkGetSwapchainImagesKHR(device, m_VkSwapChain, &imageCount, m_VkImages.data());
-	
-	m_VkSwapChainFormat = surfaceFormat.format;
-
-	m_VkImageViews.resize(m_VkImages.size());
-	m_ImageAcquiredSemaphore.resize(m_VkImages.size());
-	for (uint32_t i = 0; i < m_VkImages.size(); i++) {
-		VkImageViewCreateInfo viewInfo = {};
-		viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		viewInfo.image = m_VkImages[i];
-		viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-		viewInfo.format = surfaceFormat.format;
-		viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		viewInfo.subresourceRange.baseMipLevel = 0;
-		viewInfo.subresourceRange.levelCount = 1;
-		viewInfo.subresourceRange.baseArrayLayer = 0;
-		viewInfo.subresourceRange.layerCount = 1;
-
-		vkCreateImageView(device, &viewInfo, nullptr, &m_VkImageViews[i]);
-
-		VkSemaphoreCreateInfo createInfo{};
-		createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-		vkCreateSemaphore(device, &createInfo, nullptr, &m_ImageAcquiredSemaphore[i]);
+	m_Images = VulkanImages::CreateSwapChainImage(*vulkanDevice, *this);
+	m_ImageAcquiredSemaphore.resize(m_ImageCount);
+	for (uint32_t i = 0;i < m_ImageCount;++i)
+	{
+		m_ImageAcquiredSemaphore[i] = VulkanSemaphore::CreateSemaphore(*m_VulkanDevice);
+		//VkSemaphoreCreateInfo createInfo{};
+		//createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+		//vkCreateSemaphore(device, &createInfo, nullptr, &m_ImageAcquiredSemaphore[i]);
 	}
 }
 
@@ -129,22 +112,22 @@ VulkanSwapChain::~VulkanSwapChain()
 {
 	VkDevice device = m_VulkanDevice->GetVkDevice();
 
-	for (uint32_t index = 0; index < m_ImageAcquiredSemaphore.size(); ++index) {
-		vkDestroySemaphore(device, m_ImageAcquiredSemaphore[index], nullptr);
-	}
+	//for (uint32_t index = 0; index < m_ImageAcquiredSemaphore.size(); ++index) {
+	//	vkDestroySemaphore(device, m_ImageAcquiredSemaphore[index], nullptr);
+	//}
 
 	vkDestroySwapchainKHR(device, m_VkSwapChain, nullptr);
 	vkDestroySurfaceKHR(m_VulkanInstance->GetVkInstance(), m_VkSurface, nullptr);
 }
 
-uint32_t VulkanSwapChain::AcquireImageIndex(VkSemaphore* outSemaphore)
+uint32_t VulkanSwapChain::AcquireImageIndex(std::shared_ptr<VulkanSemaphore>& outSemaphore)
 {
 	uint32_t imageIndex = 0;
 	VkDevice device = m_VulkanDevice->GetVkDevice();
 	const uint32_t prev = m_SemaphoreIndex;
 
 	m_SemaphoreIndex = (m_SemaphoreIndex + 1) % m_ImageAcquiredSemaphore.size();
-	VkResult result = vkAcquireNextImageKHR(device, m_VkSwapChain, MAX_uint64, m_ImageAcquiredSemaphore[m_SemaphoreIndex], VK_NULL_HANDLE, &imageIndex);
+	VkResult result = vkAcquireNextImageKHR(device, m_VkSwapChain, MAX_uint64, m_ImageAcquiredSemaphore[m_SemaphoreIndex]->GetVkSemaphore(), VK_NULL_HANDLE, &imageIndex);
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
 		m_SemaphoreIndex = prev;
@@ -156,7 +139,7 @@ uint32_t VulkanSwapChain::AcquireImageIndex(VkSemaphore* outSemaphore)
 		return (int32_t)SwapStatus::SurfaceLost;
 	}
 
-	*outSemaphore = m_ImageAcquiredSemaphore[m_SemaphoreIndex];
+	outSemaphore = m_ImageAcquiredSemaphore[m_SemaphoreIndex];
 	m_CurrentImageIndex = (uint32_t)imageIndex;
 
 	return m_CurrentImageIndex;
@@ -195,10 +178,7 @@ VulkanSwapChain::SwapStatus VulkanSwapChain::Present(VkQueue presentQueue, VkSem
 
 void VulkanSwapChain::DestorySwapChain()
 {
-	for (uint32_t i = 0; i < m_VkImageViews.size(); ++i) 
-	{
-		vkDestroyImageView(m_VulkanDevice->GetVkDevice(), m_VkImageViews[i], nullptr);
-	}
+	m_Images = nullptr;
 }
 
 void VulkanSwapChain::CreateSurface()

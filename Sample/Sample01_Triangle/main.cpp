@@ -7,7 +7,6 @@ int main()
 	RenderSystemVK rsvk;
 	rsvk.Init();
 
-
 	rsvk.Loop();
 	
 

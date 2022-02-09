@@ -43,7 +43,7 @@ public:
 
 	void UpdateHostBuffer(const void* const ptr);
 
-	void Release();
+	void Destroy();
 
 private:
 	explicit VulkanBuffer(const VulkanDevice& vulkanDevice, BufferType bufferType);

@@ -13,7 +13,7 @@ VulkanBuffer::VulkanBuffer(const VulkanDevice& vulkanDevice, BufferType bufferTy
 
 VulkanBuffer::~VulkanBuffer()
 {
-	Release();
+	Destroy();
 }
 
 std::shared_ptr<VulkanBuffer> VulkanBuffer::CreateHostBuffer(const VulkanDevice& vulkanDevice, const void* ptr, uint32_t size)
@@ -70,7 +70,7 @@ void VulkanBuffer::UpdateHostBuffer(const void* ptr)
 	vkUnmapMemory(device, m_VkMemory);
 }
 
-void VulkanBuffer::Release()
+void VulkanBuffer::Destroy()
 {
 	VkDevice device = m_Device.GetVkDevice();
 

@@ -9,7 +9,8 @@ public:
 	static std::shared_ptr<VulkanRenderPass> CreateCommonRenderPass(const VulkanDevice& vulkanDevice, VkFormat colorAttachmentFormat);
 
 public:
-	VkRenderPass GetRenderPass()const { return m_VkRenderPass; }
+	~VulkanRenderPass();
+	VkRenderPass GetVkRenderPass()const { return m_VkRenderPass; }
 
 	void Destroy();
 private:

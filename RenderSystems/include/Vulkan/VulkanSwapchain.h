@@ -1,10 +1,11 @@
 #pragma once
 #include "NativeWindow.h"
-
-class VulkanInstance;
+#include "VulkanImages.h"
 
 BEGIN_NAMESPACE_SPECTRE
 
+class VulkanInstance;
+class VulkanSemaphore;
 
 class VulkanSwapChain
 {
@@ -40,14 +41,17 @@ public:
 		const NativeWindow& window, uint32_t width,uint32_t height);
 	~VulkanSwapChain();
 
+	VkSwapchainKHR GetVkSwapChain() const { return m_VkSwapChain; }
+
+	uint32_t GetImageCount() const { return m_ImageCount; }
+
 	uint32_t GetWidth() const { return m_Width; }
 	uint32_t GetHeight() const { return m_Height; }
 	VkFormat GetSwapChainFormat() const { return m_VkSwapChainFormat; }
-	const std::vector<VkImage> GetImages() const { return m_VkImages; }
-	const std::vector<VkImageView> GetImageViews() const { return m_VkImageViews; }
-	uint32_t GetImageCount() const { return m_VkImageViews.size(); }
 
-	uint32_t AcquireImageIndex(VkSemaphore* outSemaphore);
+	const VulkanImages& GetImages() const { return *m_Images; }
+
+	uint32_t AcquireImageIndex(std::shared_ptr<VulkanSemaphore>& outSemaphore);
 
 	SwapStatus Present(VkQueue presentQueue, VkSemaphore* doneSemaphore);
 
@@ -62,19 +66,19 @@ private:
 	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
 private:
 
-	std::shared_ptr<const VulkanInstance>   m_VulkanInstance;
-	std::shared_ptr<const VulkanDevice>     m_VulkanDevice;
-	VkSwapchainKHR							m_VkSwapChain;
-	VkSurfaceKHR							m_VkSurface = VK_NULL_HANDLE;
-	NativeWindow							m_Window;
-	std::vector<VkImage>                    m_VkImages;
-	std::vector<VkImageView>                m_VkImageViews;
-	VkFormat                                m_VkSwapChainFormat;
-	uint32_t                                m_Width;
-	uint32_t                                m_Height;
-	uint32_t								m_SemaphoreIndex = 0;
-	std::vector<VkSemaphore>				m_ImageAcquiredSemaphore;
-	uint32_t                                m_CurrentImageIndex;
+	std::shared_ptr<const VulkanInstance>			m_VulkanInstance;
+	std::shared_ptr<const VulkanDevice>				m_VulkanDevice;
+	VkSwapchainKHR									m_VkSwapChain;
+	VkSurfaceKHR									m_VkSurface = VK_NULL_HANDLE;
+	NativeWindow									m_Window;
+	uint32_t										m_ImageCount;
+	std::shared_ptr<VulkanImages>					m_Images;
+	VkFormat										m_VkSwapChainFormat;
+	uint32_t										m_Width;
+	uint32_t										m_Height;
+	uint32_t										m_SemaphoreIndex = 0;
+	std::vector<std::shared_ptr<VulkanSemaphore>>	m_ImageAcquiredSemaphore;
+	uint32_t										m_CurrentImageIndex;
 };
 
 END_NAMESPACE_SPECTRE

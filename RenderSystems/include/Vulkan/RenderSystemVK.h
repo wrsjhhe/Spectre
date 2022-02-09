@@ -3,36 +3,29 @@
 #include <memory>
 #include <vector>
 #include <string>
-#include <vulkan.h>
 #include "MathDef.h"
-
-class VulkanSwapChain;
-class VulkanInstance;
-class VulkanDevice;
-class VulkanBuffer;
-class VulkanCommandPool;
-class VulkanCommandBuffers;
-class VulkanImage;
-class VulkanRenderPass;
 
 namespace Spectre
 {
+	class VulkanSwapChain;
+	class VulkanInstance;
+	class VulkanDevice;
+	class VulkanBuffer;
+	class VulkanCommandPool;
+	class VulkanCommandBuffers;
+	class VulkanImages;
+	class VulkanRenderPass;
+	class VulkanFrameBuffer;
+	class VulkanSemaphore;
+	class VulkanFence;
+	class VulkanDescriptorPool;
+	class VulkanDescriptorSetLayout;
+	class VulkanDescriptorSet;
+	class VulkanPipeline;
+
 	class RenderSystemVK
 	{
 	private:
-		struct GPUBuffer
-		{
-			VkDeviceMemory  memory;
-			VkBuffer        buffer;
-
-			GPUBuffer()
-				: memory(VK_NULL_HANDLE)
-				, buffer(VK_NULL_HANDLE)
-			{
-
-			}
-		};
-
 		struct UBOData
 		{
 			Matrix4x4 model;
@@ -60,34 +53,25 @@ namespace Spectre
 		void CreateDescriptorSet();
 		void CreatePipelines();
 		void SetupCommandBuffers();
-		VkShaderModule LoadSPIPVShader(const std::string& filepath);
 		void Draw();
 
 		void UpdateUniformBuffers();
-
-		void DestroyFrameBuffers();
-		void DestroyDescriptorSetLayout();
-		void DestroyDescriptorPool();
-		void DestroyPipelines();
-		void DestorySemaphores();
-		void DestroyFences();
 	private:
+		uint32_t                                m_Width = 1400;
+		uint32_t                                m_Height = 900;
 		std::shared_ptr<VulkanInstance>			m_Instance;
 		std::shared_ptr<VulkanDevice>			m_Device;
 		std::shared_ptr<VulkanSwapChain>		m_SwapChain;
 		std::shared_ptr<VulkanCommandPool>		m_CommandPool;
 
-		std::shared_ptr<VulkanImage>			m_DepthStencilImage;
+		std::shared_ptr<VulkanImages>			m_DepthStencilImage;
 
 		std::shared_ptr<VulkanRenderPass>		m_RenderPass;
 
-		std::vector<VkFramebuffer>				m_FrameBuffers;
+		std::vector<std::shared_ptr<VulkanFrameBuffer>>	m_FrameBuffers;
 
-		VkSemaphore								m_RenderComplete = VK_NULL_HANDLE;
-		std::vector<VkFence>					m_Fences;
-
-
-		std::shared_ptr<VulkanCommandBuffers>	m_CommandBuffers;
+		std::shared_ptr<VulkanSemaphore>		m_RenderComplete;
+		std::vector<std::shared_ptr<VulkanFence>>	m_Fences;
 
 		std::shared_ptr<VulkanBuffer>			m_VertexBuffer;
 
@@ -95,20 +79,18 @@ namespace Spectre
 		std::shared_ptr<VulkanBuffer>			m_IndicesBuffer;
 
 		std::shared_ptr<VulkanBuffer>			m_MVPBuffer;
-		VkDescriptorBufferInfo					m_MVPDescriptor;
 		UBOData									m_MVPData;
 
-		VkDescriptorPool						m_DescriptorPool = VK_NULL_HANDLE;
+		std::shared_ptr<VulkanCommandBuffers>	m_CommandBuffers;
 
-		VkDescriptorSetLayout					m_DescriptorSetLayout = VK_NULL_HANDLE;
-		VkPipelineLayout						m_PipelineLayout = VK_NULL_HANDLE;
+		std::shared_ptr<VulkanDescriptorPool>	m_DescriptorPool;
 
-		VkDescriptorSet							m_DescriptorSet = VK_NULL_HANDLE;
+		std::shared_ptr<VulkanDescriptorSetLayout>	m_DescriptorSetLayout;
 
-		VkPipeline								m_Pipeline = VK_NULL_HANDLE;
-		VkPipelineCache							m_PipelineCache = VK_NULL_HANDLE;
+		std::shared_ptr<VulkanDescriptorSet>	m_DescriptorSet;
+		std::shared_ptr<VulkanPipeline>         m_Pipeline;
 
-		VkSemaphore								m_PresentComplete = VK_NULL_HANDLE;
+		std::shared_ptr<VulkanSemaphore>		m_PresentComplete;
 
 	};
 

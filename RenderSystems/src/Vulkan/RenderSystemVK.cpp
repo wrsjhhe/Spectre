@@ -6,21 +6,23 @@
 #include "VulkanCommandPool.h"
 #include "VulkanCommandBuffers.h"
 #include "VulkanBuffer.h"
-#include "VulkanImage.h"
+#include "VulkanImages.h"
 #include "VulkanRenderPass.h"
+#include "VulkanFrameBuffer.h"
+#include "VulkanSemaphore.h"
+#include "VulkanFence.h"
+#include "VulkanDescriptorPool.h"
+#include "VulkanDescriptorSetLayout.h"
+#include "VulkanDescriptorSet.h"
+#include "VulkanPipeline.h"
 #include "RenderSystemVK.h"
 
+#include "Vertex.h"
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <glfw3.h>
 #include <glfw3native.h>
 
 USING_NAMESPACE(Spectre)
-struct Vertex
-{
-	float position[3];
-	float color[3];
-};
-
 struct UBOData
 {
 	Matrix4x4 model;
@@ -79,14 +81,14 @@ void RenderSystemVK::Init()
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-	auto window = glfwCreateWindow(1400, 900, "Vulkan", nullptr, nullptr);
+	auto window = glfwCreateWindow(m_Width, m_Height, "Vulkan", nullptr, nullptr);
 
 	glfwSetWindowUserPointer(window, this);
 
 	HWND hwnd = glfwGetWin32Window(window);
 	glfwSetWindowUserPointer(window, this);
 	NativeWindow win{hwnd};
-	m_SwapChain = std::make_shared<VulkanSwapChain>(m_Instance->GetSharedPtr(), m_Device->GetSharedPtr(), win, 1400, 900);
+	m_SwapChain = std::make_shared<VulkanSwapChain>(m_Instance->GetSharedPtr(), m_Device->GetSharedPtr(), win, m_Width, m_Height);
 
 
 	CreateDepthStencil();
@@ -111,26 +113,18 @@ void Spectre::RenderSystemVK::Loop()
 		glfwPollEvents();
 		Draw();
 	}
-
+	vkDeviceWaitIdle(m_Device->GetVkDevice());
 	Exist();
 }
 
 void Spectre::RenderSystemVK::Exist()
 {
-	DestroyFrameBuffers();
-	DestroyDescriptorSetLayout();
-	DestroyDescriptorPool();
-	DestroyPipelines();
-	DestorySemaphores();
-	DestroyFences();
 
-	m_SwapChain->DestorySwapChain();
-	m_SwapChain = nullptr;
 }
 
 void Spectre::RenderSystemVK::CreateDepthStencil()
 {
-	m_DepthStencilImage = VulkanImage::CreateDepthStencil(*m_Device, m_SwapChain->GetWidth(), m_SwapChain->GetHeight());
+	m_DepthStencilImage = VulkanImages::CreateDepthStencilImage(*m_Device, m_SwapChain->GetWidth(), m_SwapChain->GetHeight());
 }
 
 void Spectre::RenderSystemVK::CreateRenderPass()
@@ -144,49 +138,34 @@ void Spectre::RenderSystemVK::CreateFrameBuffer()
 	uint32_t fheight = m_SwapChain->GetHeight();
 	VkDevice device = m_Device->GetVkDevice();
 
-	VkImageView attachments[2];
-	attachments[1] = m_DepthStencilImage->GetVkImageView();
+	std::vector<VkImageView> attachments;
+	attachments.resize(2);
+	attachments[1] = m_DepthStencilImage->GetVkImageViews()[0];
 
-	VkFramebufferCreateInfo frameBufferCreateInfo = {};
-	frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-	frameBufferCreateInfo.renderPass = m_RenderPass->GetRenderPass();
-	frameBufferCreateInfo.attachmentCount = 2;
-	frameBufferCreateInfo.pAttachments = attachments;
-	frameBufferCreateInfo.width = fwidth;
-	frameBufferCreateInfo.height = fheight;
-	frameBufferCreateInfo.layers = 1;
-
-	const std::vector<VkImageView>& backbufferViews = m_SwapChain->GetImageViews();
+	const std::vector<VkImageView>& backbufferViews = m_SwapChain->GetImages().GetVkImageViews();
 
 	m_FrameBuffers.resize(backbufferViews.size());
 	for (uint32_t i = 0; i < m_FrameBuffers.size(); ++i)
 	{
 		attachments[0] = backbufferViews[i];
-		vkCreateFramebuffer(device, &frameBufferCreateInfo, nullptr, &m_FrameBuffers[i]);
+		m_FrameBuffers[i] = VulkanFrameBuffer::CreateFrameBuffer(*m_Device, *m_RenderPass, attachments, m_Width, m_Height);
 	}
 }
 
 void Spectre::RenderSystemVK::CreateSemaphores()
 {
-	VkDevice device = m_Device->GetVkDevice();
-	VkSemaphoreCreateInfo createInfo{};
-	createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-	vkCreateSemaphore(device, &createInfo, nullptr, &m_RenderComplete);
+	m_RenderComplete = VulkanSemaphore::CreateSemaphore(*m_Device);
 }
 
 void Spectre::RenderSystemVK::CreateFences()
 {
-	VkDevice device = m_Device->GetVkDevice();
 	uint32_t frameCount = m_SwapChain->GetImageCount();
 
-	VkFenceCreateInfo fenceCreateInfo{};
-	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
 	m_Fences.resize(frameCount);
 	for (uint32_t i = 0; i < m_Fences.size(); ++i)
 	{
-		vkCreateFence(device, &fenceCreateInfo, nullptr, &m_Fences[i]);
+		m_Fences[i] = VulkanFence::CreateFence(*m_Device);
 	}
 }
 
@@ -275,10 +254,6 @@ void Spectre::RenderSystemVK::CreateUniformBuffers()
 {
 	m_MVPBuffer = VulkanBuffer::CreateHostUniformBuffer(*m_Device,nullptr, sizeof(UBOData));
 
-	m_MVPDescriptor.buffer = m_MVPBuffer->GetVkBuffer();
-	m_MVPDescriptor.offset = 0;
-	m_MVPDescriptor.range = sizeof(UBOData);
-
 	m_MVPData.model.SetIdentity();
 	m_MVPData.model.SetOrigin(0, 0, 0);
 
@@ -286,197 +261,42 @@ void Spectre::RenderSystemVK::CreateUniformBuffers()
 	m_MVPData.view.m[3][2] = 2.5f; 
 
 	m_MVPData.projection.SetIdentity();
-	m_MVPData.projection.Perspective(DegreesToRadians(75.0f), 1400, 900, 0.01f, 3000.0f);
+	m_MVPData.projection.Perspective(DegreesToRadians(75.0f), m_Width, m_Height, 0.01f, 3000.0f);
 }
 
 void Spectre::RenderSystemVK::CreateDescriptorPool()
 {
-	VkDevice device = m_Device->GetVkDevice();
-
-	VkDescriptorPoolSize poolSize = {};
-	poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	poolSize.descriptorCount = 1;
-
-	VkDescriptorPoolCreateInfo descriptorPoolInfo{};
-	descriptorPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	descriptorPoolInfo.poolSizeCount = 1;
-	descriptorPoolInfo.pPoolSizes = &poolSize;
-	descriptorPoolInfo.maxSets = 1;
-	vkCreateDescriptorPool(device, &descriptorPoolInfo, nullptr, &m_DescriptorPool);
+	m_DescriptorPool = VulkanDescriptorPool::CreateDescriptorPool(*m_Device);
 }
 
 void Spectre::RenderSystemVK::CreateDescriptorSetLayout()
 {
-	VkDevice device = m_Device->GetVkDevice();
-
-	VkDescriptorSetLayoutBinding layoutBinding;
-	layoutBinding.binding = 0;
-	layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	layoutBinding.descriptorCount = 1;
-	layoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-	layoutBinding.pImmutableSamplers = nullptr;
-
-	VkDescriptorSetLayoutCreateInfo descSetLayoutInfo{};
-	descSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	descSetLayoutInfo.bindingCount = 1;
-	descSetLayoutInfo.pBindings = &layoutBinding;
-	vkCreateDescriptorSetLayout(device, &descSetLayoutInfo, nullptr, &m_DescriptorSetLayout);
-
-	VkPipelineLayoutCreateInfo pipeLayoutInfo{};
-	pipeLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipeLayoutInfo.setLayoutCount = 1;
-	pipeLayoutInfo.pSetLayouts = &m_DescriptorSetLayout;
-	vkCreatePipelineLayout(device, &pipeLayoutInfo, nullptr, &m_PipelineLayout);
+	m_DescriptorSetLayout = VulkanDescriptorSetLayout::CreateDescriptorSetLayout(*m_Device);
 }
 
 void Spectre::RenderSystemVK::CreateDescriptorSet()
 {
 	VkDevice device = m_Device->GetVkDevice();
 
-	VkDescriptorSetAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.descriptorPool = m_DescriptorPool;
-	allocInfo.descriptorSetCount = 1;
-	allocInfo.pSetLayouts = &m_DescriptorSetLayout;
-	vkAllocateDescriptorSets(device, &allocInfo, &m_DescriptorSet);
+	m_DescriptorSet = VulkanDescriptorSet::CreateDescriptorSet(*m_Device, *m_DescriptorPool, *m_DescriptorSetLayout);
+	VkDescriptorBufferInfo MVPDescriptor;
+	MVPDescriptor.buffer = m_MVPBuffer->GetVkBuffer();
+	MVPDescriptor.offset = 0;
+	MVPDescriptor.range = sizeof(UBOData);
 
 	VkWriteDescriptorSet writeDescriptorSet{};
 	writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	writeDescriptorSet.dstSet = m_DescriptorSet;
+	writeDescriptorSet.dstSet = m_DescriptorSet->GetVkDescriptorSet();
 	writeDescriptorSet.descriptorCount = 1;
 	writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	writeDescriptorSet.pBufferInfo = &m_MVPDescriptor;
+	writeDescriptorSet.pBufferInfo = &MVPDescriptor;
 	writeDescriptorSet.dstBinding = 0;
 	vkUpdateDescriptorSets(device, 1, &writeDescriptorSet, 0, nullptr);
 }
 
 void Spectre::RenderSystemVK::CreatePipelines()
 {
-	VkDevice device = m_Device->GetVkDevice();
-
-	VkPipelineCacheCreateInfo createInfo{};
-	createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-	vkCreatePipelineCache(device, &createInfo, nullptr, &m_PipelineCache);
-
-	VkPipelineInputAssemblyStateCreateInfo inputAssemblyState{};
-	inputAssemblyState.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-	inputAssemblyState.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-
-	VkPipelineRasterizationStateCreateInfo rasterizationState{};
-	rasterizationState.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-	rasterizationState.polygonMode = VK_POLYGON_MODE_FILL;
-	rasterizationState.cullMode = VK_CULL_MODE_NONE;
-	rasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-	rasterizationState.depthClampEnable = VK_FALSE;
-	rasterizationState.rasterizerDiscardEnable = VK_FALSE;
-	rasterizationState.depthBiasEnable = VK_FALSE;
-	rasterizationState.lineWidth = 1.0f;
-
-	VkPipelineColorBlendAttachmentState blendAttachmentState[1] = {};
-	blendAttachmentState[0].colorWriteMask = (
-		VK_COLOR_COMPONENT_R_BIT |
-		VK_COLOR_COMPONENT_G_BIT |
-		VK_COLOR_COMPONENT_B_BIT |
-		VK_COLOR_COMPONENT_A_BIT
-		);
-	blendAttachmentState[0].blendEnable = VK_FALSE;
-
-	VkPipelineColorBlendStateCreateInfo colorBlendState{};
-	colorBlendState.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-	colorBlendState.attachmentCount = 1;
-	colorBlendState.pAttachments = blendAttachmentState;
-
-	VkPipelineViewportStateCreateInfo viewportState{};
-	viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-	viewportState.viewportCount = 1;
-	viewportState.scissorCount = 1;
-
-	std::vector<VkDynamicState> dynamicStateEnables;
-	dynamicStateEnables.push_back(VK_DYNAMIC_STATE_VIEWPORT);
-	dynamicStateEnables.push_back(VK_DYNAMIC_STATE_SCISSOR);
-	VkPipelineDynamicStateCreateInfo dynamicState{};
-	dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-	dynamicState.dynamicStateCount = (uint32_t)dynamicStateEnables.size();
-	dynamicState.pDynamicStates = dynamicStateEnables.data();
-
-	VkPipelineDepthStencilStateCreateInfo depthStencilState{};
-	depthStencilState.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-	depthStencilState.depthTestEnable = VK_TRUE;
-	depthStencilState.depthWriteEnable = VK_TRUE;
-	depthStencilState.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
-	depthStencilState.depthBoundsTestEnable = VK_FALSE;
-	depthStencilState.back.failOp = VK_STENCIL_OP_KEEP;
-	depthStencilState.back.passOp = VK_STENCIL_OP_KEEP;
-	depthStencilState.back.compareOp = VK_COMPARE_OP_ALWAYS;
-	depthStencilState.stencilTestEnable = VK_FALSE;
-	depthStencilState.front = depthStencilState.back;
-
-	VkPipelineMultisampleStateCreateInfo multisampleState{};
-	multisampleState.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-	multisampleState.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT; //todo
-	multisampleState.pSampleMask = nullptr;
-
-	// (triangle.vert):
-	// layout (location = 0) in vec3 inPos;
-	// layout (location = 1) in vec3 inColor;
-	// Attribute location 0: Position
-	// Attribute location 1: Color
-	// vertex input bindding
-	VkVertexInputBindingDescription vertexInputBinding = {};
-	vertexInputBinding.binding = 0; // Vertex Buffer 0
-	vertexInputBinding.stride = sizeof(Vertex); // Position + Color
-	vertexInputBinding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-	std::vector<VkVertexInputAttributeDescription> vertexInputAttributs(2);
-	// position
-	vertexInputAttributs[0].binding = 0;
-	vertexInputAttributs[0].location = 0; // triangle.vert : layout (location = 0)
-	vertexInputAttributs[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-	vertexInputAttributs[0].offset = 0;
-	// color
-	vertexInputAttributs[1].binding = 0;
-	vertexInputAttributs[1].location = 1; // triangle.vert : layout (location = 1)
-	vertexInputAttributs[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-	vertexInputAttributs[1].offset = 12;
-
-	VkPipelineVertexInputStateCreateInfo vertexInputState{};
-	vertexInputState.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexInputState.vertexBindingDescriptionCount = 1;
-	vertexInputState.pVertexBindingDescriptions = &vertexInputBinding;
-	vertexInputState.vertexAttributeDescriptionCount = 2;
-	vertexInputState.pVertexAttributeDescriptions = vertexInputAttributs.data();
-
-	std::vector<VkPipelineShaderStageCreateInfo> shaderStages(2);
-	shaderStages[0] = {};
-	shaderStages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	shaderStages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-	shaderStages[0].module = LoadSPIPVShader("../../../../../../Resources/Shaders/triangle.vert.spv");
-	shaderStages[0].pName = "main";
-
-	shaderStages[1] = {};
-	shaderStages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	shaderStages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-	shaderStages[1].module = LoadSPIPVShader("../../../../../../Resources/Shaders/triangle.frag.spv");
-	shaderStages[1].pName = "main";
-
-	VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
-	pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-	pipelineCreateInfo.layout = m_PipelineLayout;
-	pipelineCreateInfo.renderPass = m_RenderPass->GetRenderPass();
-	pipelineCreateInfo.stageCount = (uint32_t)shaderStages.size();
-	pipelineCreateInfo.pStages = shaderStages.data();
-	pipelineCreateInfo.pVertexInputState = &vertexInputState;
-	pipelineCreateInfo.pInputAssemblyState = &inputAssemblyState;
-	pipelineCreateInfo.pRasterizationState = &rasterizationState;
-	pipelineCreateInfo.pColorBlendState = &colorBlendState;
-	pipelineCreateInfo.pMultisampleState = &multisampleState;
-	pipelineCreateInfo.pViewportState = &viewportState;
-	pipelineCreateInfo.pDepthStencilState = &depthStencilState;
-	pipelineCreateInfo.pDynamicState = &dynamicState;
-	vkCreateGraphicsPipelines(device, m_PipelineCache, 1, &pipelineCreateInfo, nullptr, &m_Pipeline);
-
-	vkDestroyShaderModule(device, shaderStages[0].module, nullptr);
-	vkDestroyShaderModule(device, shaderStages[1].module, nullptr);
+	m_Pipeline = VulkanPipeline::CreatePipeline(*m_Device, *m_RenderPass, *m_DescriptorSetLayout);
 }
 
 void Spectre::RenderSystemVK::SetupCommandBuffers()
@@ -495,7 +315,7 @@ void Spectre::RenderSystemVK::SetupCommandBuffers()
 
 	VkRenderPassBeginInfo renderPassBeginInfo{};
 	renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderPassBeginInfo.renderPass = m_RenderPass->GetRenderPass();
+	renderPassBeginInfo.renderPass = m_RenderPass->GetVkRenderPass();
 	renderPassBeginInfo.clearValueCount = 2;
 	renderPassBeginInfo.pClearValues = clearValues;
 	renderPassBeginInfo.renderArea.offset.x = 0;
@@ -505,7 +325,7 @@ void Spectre::RenderSystemVK::SetupCommandBuffers()
 
 	for (uint32_t i = 0; i < m_CommandBuffers->GetVkCommandBuffers().size(); ++i)
 	{
-		renderPassBeginInfo.framebuffer = m_FrameBuffers[i];
+		renderPassBeginInfo.framebuffer = m_FrameBuffers[i]->GetVkFrameBuffer();
 
 		VkViewport viewport = {};
 		viewport.x = 0;
@@ -528,8 +348,8 @@ void Spectre::RenderSystemVK::SetupCommandBuffers()
 		vkCmdBeginRenderPass(m_CommandBuffers->GetVkCommandBuffers()[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 		vkCmdSetViewport(m_CommandBuffers->GetVkCommandBuffers()[i], 0, 1, &viewport);
 		vkCmdSetScissor(m_CommandBuffers->GetVkCommandBuffers()[i], 0, 1, &scissor);
-		vkCmdBindDescriptorSets(m_CommandBuffers->GetVkCommandBuffers()[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_PipelineLayout, 0, 1, &m_DescriptorSet, 0, nullptr);
-		vkCmdBindPipeline(m_CommandBuffers->GetVkCommandBuffers()[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline);
+		vkCmdBindDescriptorSets(m_CommandBuffers->GetVkCommandBuffers()[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetVkPipelineLayout(), 0, 1, &m_DescriptorSet->GetVkDescriptorSet(), 0, nullptr);
+		vkCmdBindPipeline(m_CommandBuffers->GetVkCommandBuffers()[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetVkPipeline());
 		vkCmdBindVertexBuffers(m_CommandBuffers->GetVkCommandBuffers()[i], 0, 1, &m_VertexBuffer->GetVkBuffer(), offsets);
 		vkCmdBindIndexBuffer(m_CommandBuffers->GetVkCommandBuffers()[i], m_IndicesBuffer->GetVkBuffer(), 0, VK_INDEX_TYPE_UINT16);
 		vkCmdDrawIndexed(m_CommandBuffers->GetVkCommandBuffers()[i], m_IndicesCount, 1, 0, 0, 0);
@@ -538,41 +358,6 @@ void Spectre::RenderSystemVK::SetupCommandBuffers()
 		vkEndCommandBuffer(m_CommandBuffers->GetVkCommandBuffers()[i]);
 	}
 }
-#include <fstream>
-static std::vector<char> readFile(const std::string& filename)
-{
-	std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
-	if (!file.is_open())
-	{
-		throw std::runtime_error("failed to open file!");
-	}
-	size_t fileSize = (size_t)file.tellg();
-	std::vector<char> buffer(fileSize);
-
-	file.seekg(0);
-	file.read(buffer.data(), fileSize);
-
-	file.close();
-
-	return buffer;
-}
-VkShaderModule Spectre::RenderSystemVK::LoadSPIPVShader(const std::string& filepath)
-{
-	VkDevice device = m_Device->GetVkDevice();
-
-	std::vector<char> shaderCode = readFile(filepath);
-
-	VkShaderModuleCreateInfo moduleCreateInfo{};
-	moduleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	moduleCreateInfo.codeSize = shaderCode.size();
-	moduleCreateInfo.pCode = reinterpret_cast<const uint32_t*>(shaderCode.data());
-
-	VkShaderModule shaderModule;
-	vkCreateShaderModule(device, &moduleCreateInfo, nullptr, &shaderModule);
-
-	return shaderModule;
-}
 
 void Spectre::RenderSystemVK::Draw()
 {
@@ -580,29 +365,29 @@ void Spectre::RenderSystemVK::Draw()
 
 	VkDevice device = m_Device->GetVkDevice();
 	VkQueue queue = m_Device->GetGraphicQueue();
-	int32_t backBufferIndex = m_SwapChain->AcquireImageIndex(&m_PresentComplete);
+	int32_t backBufferIndex = m_SwapChain->AcquireImageIndex(m_PresentComplete);
 
 	VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 	VkSubmitInfo submitInfo = {};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submitInfo.pWaitDstStageMask = &waitStageMask;
-	submitInfo.pWaitSemaphores = &m_PresentComplete;
+	submitInfo.pWaitSemaphores = &m_PresentComplete->GetVkSemaphore();
 	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = &m_RenderComplete;
+	submitInfo.pSignalSemaphores = &m_RenderComplete->GetVkSemaphore();
 	submitInfo.signalSemaphoreCount = 1;
 	submitInfo.pCommandBuffers = &(m_CommandBuffers->GetVkCommandBuffers()[backBufferIndex]);
 	submitInfo.commandBufferCount = 1;
 
 	// Ìá½»»æÖÆÃüÁî
-	vkResetFences(device, 1, &(m_Fences[backBufferIndex]));
-	vkQueueSubmit(queue, 1, &submitInfo, m_Fences[backBufferIndex]);
-	vkWaitForFences(device, 1, &(m_Fences[backBufferIndex]), true, 200 * 1000 * 1000);
+	vkResetFences(device, 1, &(m_Fences[backBufferIndex]->GetVkFence()));
+	vkQueueSubmit(queue, 1, &submitInfo, m_Fences[backBufferIndex]->GetVkFence());
+	vkWaitForFences(device, 1, &(m_Fences[backBufferIndex]->GetVkFence()), true, 200 * 1000 * 1000);
 
 	// present
 	m_SwapChain->Present(
 		m_Device->GetGraphicQueue(),
-		&m_RenderComplete
+		&m_RenderComplete->GetVkSemaphore()
 	);
 }
 
@@ -613,56 +398,19 @@ void Spectre::RenderSystemVK::UpdateUniformBuffers()
 	m_MVPBuffer->UpdateHostBuffer(&m_MVPData);
 }
 
-void Spectre::RenderSystemVK::DestroyFrameBuffers()
-{
-	VkDevice device = m_Device->GetVkDevice();
-	for (uint32_t i = 0; i < m_FrameBuffers.size(); ++i)
-	{
-		vkDestroyFramebuffer(device, m_FrameBuffers[i], nullptr);
-	}
-	m_FrameBuffers.clear();
-}
 
-
-
-void Spectre::RenderSystemVK::DestroyDescriptorSetLayout()
-{
-	VkDevice device = m_Device->GetVkDevice();
-
-	vkDestroyDescriptorSetLayout(device, m_DescriptorSetLayout, nullptr);
-	vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
-}
-
-void Spectre::RenderSystemVK::DestroyDescriptorPool()
-{
-	VkDevice device = m_Device->GetVkDevice();
-
-	vkDestroyDescriptorPool(device, m_DescriptorPool, nullptr);
-
-}
-
-void Spectre::RenderSystemVK::DestroyPipelines()
-{
-	VkDevice device = m_Device->GetVkDevice();
-	vkDestroyPipeline(device, m_Pipeline, nullptr);
-	vkDestroyPipelineCache(device, m_PipelineCache, nullptr);
-}
-
-
-void Spectre::RenderSystemVK::DestorySemaphores()
-{
-	VkDevice device = m_Device->GetVkDevice();
-	vkDestroySemaphore(device, m_RenderComplete, nullptr);
-	//vkDestroySemaphore(device, m_PresentComplete, nullptr);
-
-}
-
-void Spectre::RenderSystemVK::DestroyFences()
-{
-	VkDevice device = m_Device->GetVkDevice();
-
-	for (uint32_t i = 0; i < m_Fences.size(); ++i)
-	{
-		vkDestroyFence(device, m_Fences[i], nullptr);
-	}
-}
+//
+//void Spectre::RenderSystemVK::DestroyDescriptorSetLayout()
+//{
+//	VkDevice device = m_Device->GetVkDevice();
+//
+//	vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
+//}
+//
+//
+//void Spectre::RenderSystemVK::DestroyPipelines()
+//{
+//	VkDevice device = m_Device->GetVkDevice();
+//	vkDestroyPipeline(device, m_Pipeline, nullptr);
+//	vkDestroyPipelineCache(device, m_PipelineCache, nullptr);
+//}

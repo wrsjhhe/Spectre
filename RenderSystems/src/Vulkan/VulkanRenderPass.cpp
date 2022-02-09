@@ -69,6 +69,11 @@ std::shared_ptr<VulkanRenderPass> VulkanRenderPass::CreateCommonRenderPass(const
 
 }
 
+VulkanRenderPass::~VulkanRenderPass()
+{
+	Destroy();
+}
+
 void VulkanRenderPass::Destroy()
 {
 	vkDestroyRenderPass(m_Device.GetVkDevice(), m_VkRenderPass, nullptr);

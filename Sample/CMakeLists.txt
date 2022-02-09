@@ -1,8 +1,5 @@
 project ("Sample")
 
-set(VULKANSDK_DIR ../ThirdParty/VulkanSDK/include/)
-include_directories(${VULKANSDK_DIR})
-
 set(DIRECTXMATH_DIR ../ThirdParty/DirectXMath/include)
 include_directories(${DIRECTXMATH_DIR})
 
