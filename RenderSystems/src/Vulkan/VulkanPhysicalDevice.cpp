@@ -346,15 +346,33 @@ uint32_t VulkanPhysicalDevice::FindQueueFamily(VkQueueFlags QueueFlags) const
 
 	for (uint32_t i = 0; i < m_QueueFamilyProperties.size(); ++i)
 	{
-		// Try to find a queue for which all requested flags are set
 		const auto& Props = m_QueueFamilyProperties[i];
-		// Check only QueueFlags as VK_QUEUE_TRANSFER_BIT is
-		// optional for graphics and/or compute queues
-		if ((Props.queueFlags & QueueFlags) == QueueFlags)
+
+		if (QueueFlags == VK_QUEUE_GRAPHICS_BIT)
 		{
-			familyInd = i;
-			break;
+			if ((Props.queueFlags & QueueFlags) == QueueFlags)
+			{
+				familyInd = i;
+			}
 		}
+		else if (QueueFlags == VK_QUEUE_COMPUTE_BIT)
+		{
+			if (!(Props.queueFlags & VK_QUEUE_GRAPHICS_BIT) &&
+				(Props.queueFlags & VK_QUEUE_COMPUTE_BIT))
+			{
+				familyInd = i;
+			}
+		}
+		else if (QueueFlags == VK_QUEUE_TRANSFER_BIT)
+		{
+			if (!(Props.queueFlags & VK_QUEUE_GRAPHICS_BIT) &&
+				!(Props.queueFlags & VK_QUEUE_COMPUTE_BIT) &&
+				(Props.queueFlags & VK_QUEUE_TRANSFER_BIT))
+			{
+				familyInd = i;
+			}
+		}
+
 	}
 
 	EXP_CHECK(familyInd != invalidFamilyInd, "Failed to find suitable queue family");

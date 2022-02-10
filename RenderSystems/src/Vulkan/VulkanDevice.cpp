@@ -17,30 +17,29 @@ VulkanDevice::VulkanDevice(const VulkanPhysicalDevice& physicalDevice):
 	const std::vector<VkQueueFamilyProperties>& queueProps = physicalDevice.GetQueueProperties();
 	uint32_t queueCount = queueProps.size();
 
-	std::vector<VkDeviceQueueCreateInfo> queueInfos(queueCount);
-	std::vector<float>                   queuePriorities(queueCount);
+	std::vector<VkDeviceQueueCreateInfo> deviceQueueCI(queueCount);
+
 
 	//一般的显卡只有一种图形队列，RTX显卡有另外两种专用队列
+	uint32_t numPriorities = 0;
 	int32_t graphicsQueueIndex = -1;
 	int32_t computeQueueIndex = -1;
 	int32_t transferQueueIndex = -1;
 	for (int i = 0; i < queueCount; ++i)
 	{
-		VkDeviceQueueCreateInfo& queueCI = queueInfos[i];
+		VkDeviceQueueCreateInfo& queueCI = deviceQueueCI[i];
 		queueCI.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 		queueCI.flags = 0;
 		queueCI.queueCount = queueProps[i].queueCount;
-		queueCI.pQueuePriorities = &queuePriorities[i];
+		//queueCI.pQueuePriorities = &queuePriorities[i];
 		if (queueProps[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
 		{
-			queuePriorities[i] = 1.0f;
 			graphicsQueueIndex = physicalDevice.FindQueueFamily(VK_QUEUE_GRAPHICS_BIT);
-			queueCI.queueFamilyIndex = graphicsQueueIndex;		
+			queueCI.queueFamilyIndex = graphicsQueueIndex;
 		}
 		else if ( !(queueProps[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) &&
 				  (queueProps[i].queueFlags & VK_QUEUE_COMPUTE_BIT))
 		{
-			queuePriorities[i] = 0.5f;
 			computeQueueIndex = physicalDevice.FindQueueFamily(VK_QUEUE_COMPUTE_BIT);
 			queueCI.queueFamilyIndex = computeQueueIndex;
 		}
@@ -48,18 +47,27 @@ VulkanDevice::VulkanDevice(const VulkanPhysicalDevice& physicalDevice):
 			!(queueProps[i].queueFlags & VK_QUEUE_COMPUTE_BIT) &&
 			(queueProps[i].queueFlags & VK_QUEUE_TRANSFER_BIT))
 		{
-			queuePriorities[i] = 0.0f;
 			transferQueueIndex = physicalDevice.FindQueueFamily(VK_QUEUE_TRANSFER_BIT);
 			queueCI.queueFamilyIndex = transferQueueIndex;
 		}
+
+
+	}
+	std::vector<std::vector<float>> queuePriorities(deviceQueueCI.size());
+	for (uint32_t index = 0; index < deviceQueueCI.size(); ++index)
+	{
+		float queuePriority = 1.0f;
+		VkDeviceQueueCreateInfo& currQueue = deviceQueueCI[index];
+		queuePriorities[index] = std::vector(currQueue.queueCount,1.0f);
+		currQueue.pQueuePriorities = queuePriorities[index].data();
 	}
 
 	VkDeviceCreateInfo vkDeviceCreateInfo{};
 	vkDeviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	vkDeviceCreateInfo.enabledLayerCount = 0;       // 已废弃
 	vkDeviceCreateInfo.ppEnabledLayerNames = nullptr; // 已废弃
-	vkDeviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueInfos.size());
-	vkDeviceCreateInfo.pQueueCreateInfos = queueInfos.data();
+	vkDeviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(deviceQueueCI.size());
+	vkDeviceCreateInfo.pQueueCreateInfos = deviceQueueCI.data();
 
 	const auto& vkDeviceFeatures = physicalDevice.GetFeatures();
 	VkPhysicalDeviceFeatures vkEnabledFeatures{};
