@@ -5,139 +5,118 @@
 USING_NAMESPACE(Spectre)
 
 
-std::shared_ptr<VulkanDevice> VulkanDevice::Create(const VulkanPhysicalDevice& PhysicalDevice,
-	const VkDeviceCreateInfo& DeviceCI, 
-	const ExtensionFeatures& EnabledExtFeatures, 
-	const VkAllocationCallbacks* vkAllocator)
+std::shared_ptr<VulkanDevice> VulkanDevice::Create(const VulkanPhysicalDevice& PhysicalDevice)
 {
-	auto* LogicalDevice = new VulkanDevice{ PhysicalDevice, DeviceCI, EnabledExtFeatures, vkAllocator };
+	auto* LogicalDevice = new VulkanDevice{ PhysicalDevice };
 	return std::shared_ptr<VulkanDevice>{LogicalDevice};
 }
 
-VulkanDevice::VulkanDevice(const VulkanPhysicalDevice& PhysicalDevice, 
-	const VkDeviceCreateInfo& DeviceCI, 
-	const ExtensionFeatures& EnabledExtFeatures, 
-	const VkAllocationCallbacks* vkAllocator):
-	m_VulkanPhysicalDevice(PhysicalDevice),
-	m_VkAllocator{ vkAllocator },
-	m_EnabledFeatures{ *DeviceCI.pEnabledFeatures },
-	m_EnabledExtFeatures{ EnabledExtFeatures }
+VulkanDevice::VulkanDevice(const VulkanPhysicalDevice& physicalDevice):
+	m_PhysicalDevice(physicalDevice)
 {
-	VkPhysicalDevice physicalDevice = m_VulkanPhysicalDevice.GetVkPhysicalDevice();
-	auto res = vkCreateDevice(physicalDevice, &DeviceCI, vkAllocator, &m_VkDevice);
-	VK_CHECK(res, "Failed to create logical device");
+	const std::vector<VkQueueFamilyProperties>& queueProps = physicalDevice.GetQueueProperties();
+	uint32_t queueCount = queueProps.size();
 
-	auto GraphicsStages =
-		VK_PIPELINE_STAGE_VERTEX_SHADER_BIT |
-		VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT |
-		VK_PIPELINE_STAGE_VERTEX_INPUT_BIT |
-		VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
-		VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT |
-		VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
-		VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
-	auto ComputeStages =
-		VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT |
-		VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+	std::vector<VkDeviceQueueCreateInfo> queueInfos(queueCount);
+	std::vector<float>                   queuePriorities(queueCount);
 
-	auto GraphicsAccessMask =
-		VK_ACCESS_INDEX_READ_BIT |
-		VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT |
-		VK_ACCESS_INPUT_ATTACHMENT_READ_BIT |
-		VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
-		VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
-		VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
-		VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-	auto ComputeAccessMask =
-		VK_ACCESS_INDIRECT_COMMAND_READ_BIT |
-		VK_ACCESS_UNIFORM_READ_BIT |
-		VK_ACCESS_SHADER_READ_BIT |
-		VK_ACCESS_SHADER_WRITE_BIT;
-	auto TransferAccessMask =
-		VK_ACCESS_TRANSFER_READ_BIT |
-		VK_ACCESS_TRANSFER_WRITE_BIT |
-		VK_ACCESS_HOST_READ_BIT |
-		VK_ACCESS_HOST_WRITE_BIT;
-
-	if (DeviceCI.pEnabledFeatures->geometryShader)
-		GraphicsStages |= VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT;
-	if (DeviceCI.pEnabledFeatures->tessellationShader)
-		GraphicsStages |= VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT | VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT;
-	if (m_EnabledExtFeatures.MeshShader.meshShader != VK_FALSE && m_EnabledExtFeatures.MeshShader.taskShader != VK_FALSE)
-		GraphicsStages |= VK_PIPELINE_STAGE_TASK_SHADER_BIT_NV | VK_PIPELINE_STAGE_MESH_SHADER_BIT_NV;
-	if (m_EnabledExtFeatures.RayTracingPipeline.rayTracingPipeline != VK_FALSE)
+	//一般的显卡只有一种图形队列，RTX显卡有另外两种专用队列
+	int32_t graphicsQueueIndex = -1;
+	int32_t computeQueueIndex = -1;
+	int32_t transferQueueIndex = -1;
+	for (int i = 0; i < queueCount; ++i)
 	{
-		ComputeStages |= VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR | VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR;
-		ComputeAccessMask |= VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR | VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR;
-	}
-	if (m_EnabledExtFeatures.ShadingRate.attachmentFragmentShadingRate != VK_FALSE)
-	{
-		GraphicsStages |= VK_PIPELINE_STAGE_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR;
-		GraphicsAccessMask |= VK_ACCESS_FRAGMENT_SHADING_RATE_ATTACHMENT_READ_BIT_KHR;
-	}
-	if (m_EnabledExtFeatures.FragmentDensityMap.fragmentDensityMap != VK_FALSE)
-	{
-		GraphicsStages |= VK_PIPELINE_STAGE_FRAGMENT_DENSITY_PROCESS_BIT_EXT;
-		GraphicsAccessMask |= VK_ACCESS_FRAGMENT_DENSITY_MAP_READ_BIT_EXT;
-	}
-
-	const auto QueueCount = m_VulkanPhysicalDevice.GetQueueProperties().size();
-	m_SupportedStagesMask.resize(QueueCount, 0);
-	m_SupportedAccessMask.resize(QueueCount, 0);
-	for (size_t q = 0; q < QueueCount; ++q)
-	{
-		const auto& Queue = m_VulkanPhysicalDevice.GetQueueProperties()[q];
-		auto& StageMask = m_SupportedStagesMask[q];
-		auto& AccessMask = m_SupportedAccessMask[q];
-
-		if (Queue.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+		VkDeviceQueueCreateInfo& queueCI = queueInfos[i];
+		queueCI.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queueCI.flags = 0;
+		queueCI.queueCount = queueProps[i].queueCount;
+		queueCI.pQueuePriorities = &queuePriorities[i];
+		if (queueProps[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
 		{
-			vkGetDeviceQueue(m_VkDevice, q, 0, &m_GraphicQueue);
-			vkGetDeviceQueue(m_VkDevice, q, 0, &m_ComputeQueue);
-			vkGetDeviceQueue(m_VkDevice, q, 0, &m_TransferQueue);
-			StageMask |= GraphicsStages | ComputeStages | VK_PIPELINE_STAGE_ALL_TRANSFER;
-			AccessMask |= GraphicsAccessMask | ComputeAccessMask | TransferAccessMask;
+			queuePriorities[i] = 1.0f;
+			graphicsQueueIndex = physicalDevice.FindQueueFamily(VK_QUEUE_GRAPHICS_BIT);
+			queueCI.queueFamilyIndex = graphicsQueueIndex;		
 		}
-		else if (Queue.queueFlags & VK_QUEUE_COMPUTE_BIT)
+		else if ( !(queueProps[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) &&
+				  (queueProps[i].queueFlags & VK_QUEUE_COMPUTE_BIT))
 		{
-			if (m_ComputeQueue == VK_NULL_HANDLE)
-			{
-				vkGetDeviceQueue(m_VkDevice, q, 0, &m_ComputeQueue);
-			}
-			if (m_TransferQueue == VK_NULL_HANDLE)
-			{
-				vkGetDeviceQueue(m_VkDevice, q, 0, &m_TransferQueue);
-			}
-	
-			StageMask |= ComputeStages | VK_PIPELINE_STAGE_ALL_TRANSFER;
-			AccessMask |= ComputeAccessMask | TransferAccessMask;
+			queuePriorities[i] = 0.5f;
+			computeQueueIndex = physicalDevice.FindQueueFamily(VK_QUEUE_COMPUTE_BIT);
+			queueCI.queueFamilyIndex = computeQueueIndex;
 		}
-		else if (Queue.queueFlags & VK_QUEUE_TRANSFER_BIT)
+		else if (!(queueProps[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) &&
+			!(queueProps[i].queueFlags & VK_QUEUE_COMPUTE_BIT) &&
+			(queueProps[i].queueFlags & VK_QUEUE_TRANSFER_BIT))
 		{
-			if (m_TransferQueue == VK_NULL_HANDLE)
-			{
-				vkGetDeviceQueue(m_VkDevice, q, 0, &m_TransferQueue);
-			}
-			StageMask |= VK_PIPELINE_STAGE_ALL_TRANSFER;
-			AccessMask |= TransferAccessMask;
+			queuePriorities[i] = 0.0f;
+			transferQueueIndex = physicalDevice.FindQueueFamily(VK_QUEUE_TRANSFER_BIT);
+			queueCI.queueFamilyIndex = transferQueueIndex;
 		}
 	}
 
+	VkDeviceCreateInfo vkDeviceCreateInfo{};
+	vkDeviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+	vkDeviceCreateInfo.enabledLayerCount = 0;       // 已废弃
+	vkDeviceCreateInfo.ppEnabledLayerNames = nullptr; // 已废弃
+	vkDeviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueInfos.size());
+	vkDeviceCreateInfo.pQueueCreateInfos = queueInfos.data();
+
+	const auto& vkDeviceFeatures = physicalDevice.GetFeatures();
+	VkPhysicalDeviceFeatures vkEnabledFeatures{};
+	vkDeviceCreateInfo.pEnabledFeatures = &vkEnabledFeatures;
+
+	std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+	if (physicalDevice.IsExtensionSupported(VK_KHR_MAINTENANCE1_EXTENSION_NAME))
+		deviceExtensions.push_back(VK_KHR_MAINTENANCE1_EXTENSION_NAME); // 支持反转viewport
+
+	vkDeviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.empty() ? nullptr : deviceExtensions.data();
+	vkDeviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+
+	VK_CHECK(vkCreateDevice(physicalDevice.GetVkPhysicalDevice(), &vkDeviceCreateInfo, nullptr, &m_VkDevice),
+		"Failed to create logical device");
+
+	if (graphicsQueueIndex >= 0)
+	{
+		m_GraphicQueue = VulkanQueue(m_VkDevice, graphicsQueueIndex);
+	}
+	else
+	{
+		std::runtime_error("None graphicQueue!");
+	}
+
+	if (computeQueueIndex >= 0)
+	{
+		m_ComputeQueue = VulkanQueue(m_VkDevice, computeQueueIndex);
+	}
+	else
+	{
+		m_ComputeQueue = m_GraphicQueue;
+	}
+
+	if (transferQueueIndex >= 0)
+	{
+		m_TransferQueue = VulkanQueue(m_VkDevice, transferQueueIndex);
+	}
+	else
+	{
+		m_TransferQueue = m_GraphicQueue;
+	}
 }
 
 VulkanDevice::~VulkanDevice()
 {
-	vkDestroyDevice(m_VkDevice, m_VkAllocator);
+	vkDestroyDevice(m_VkDevice, nullptr);
 }
 
-VkQueue VulkanDevice::GetQueue(uint32_t queueFamilyIndex, uint32_t queueIndex) const
-{
-	VkQueue vkQueue = VK_NULL_HANDLE;
-	vkGetDeviceQueue(m_VkDevice,
-		queueFamilyIndex, // Index of the queue family to which the queue belongs
-		0,                // Index within this queue family of the queue to retrieve
-		&vkQueue);
-	EXP_CHECK(vkQueue != VK_NULL_HANDLE,"Can not find queue");
-	return vkQueue;
-}
+//VkQueue VulkanDevice::GetQueue(uint32_t queueFamilyIndex, uint32_t queueIndex) const
+//{
+//	VkQueue vkQueue = VK_NULL_HANDLE;
+//	vkGetDeviceQueue(m_VkDevice,
+//		queueFamilyIndex, // Index of the queue family to which the queue belongs
+//		0,                // Index within this queue family of the queue to retrieve
+//		&vkQueue);
+//	EXP_CHECK(vkQueue != VK_NULL_HANDLE,"Can not find queue");
+//	return vkQueue;
+//}
 
 

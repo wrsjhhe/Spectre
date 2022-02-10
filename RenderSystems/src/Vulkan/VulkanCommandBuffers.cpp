@@ -5,10 +5,17 @@
 
 USING_NAMESPACE(Spectre)
 
-std::shared_ptr<VulkanCommandBuffers> VulkanCommandBuffers::CreataCommandBuffers(const VulkanDevice& vulkanDevice,
+std::shared_ptr<VulkanCommandBuffers> VulkanCommandBuffers::CreataGraphicBuffers(const VulkanDevice& vulkanDevice,
 	const VulkanCommandPool& commandPool, uint32_t size)
 {
-	auto* commandBuffers = new VulkanCommandBuffers(vulkanDevice, commandPool, size);
+	auto* commandBuffers = new VulkanCommandBuffers(vulkanDevice, commandPool.GetVkGraphicCommandPool(), size);
+	return std::shared_ptr<VulkanCommandBuffers>(commandBuffers);
+}
+
+std::shared_ptr<VulkanCommandBuffers> VulkanCommandBuffers::CreataTransferBuffers(const VulkanDevice& vulkanDevice, 
+	const VulkanCommandPool& commandPool, uint32_t size)
+{
+	auto* commandBuffers = new VulkanCommandBuffers(vulkanDevice, commandPool.GetVkTransferCommandPool(), size);
 	return std::shared_ptr<VulkanCommandBuffers>(commandBuffers);
 }
 
@@ -18,7 +25,7 @@ VulkanCommandBuffers::~VulkanCommandBuffers()
 }
 
 VulkanCommandBuffers::VulkanCommandBuffers(const VulkanDevice& vulkanDevice,
-	const VulkanCommandPool& commandPool, uint32_t size) :
+	const VkCommandPool& commandPool, uint32_t size) :
 	m_Device(vulkanDevice),
 	m_CommandPool(commandPool)
 {
@@ -27,12 +34,12 @@ VulkanCommandBuffers::VulkanCommandBuffers(const VulkanDevice& vulkanDevice,
 	cmdBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	cmdBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	cmdBufferInfo.commandBufferCount = size;
-	cmdBufferInfo.commandPool = m_CommandPool.GetVkCommandPool();
+	cmdBufferInfo.commandPool = commandPool;
 
 	vkAllocateCommandBuffers(m_Device.GetVkDevice(), &cmdBufferInfo, m_VkCommandBuffer.data());
 }
 
 void VulkanCommandBuffers::Free()
 {
-	vkFreeCommandBuffers(m_Device.GetVkDevice(), m_CommandPool.GetVkCommandPool(), m_VkCommandBuffer.size(), m_VkCommandBuffer.data());
+	vkFreeCommandBuffers(m_Device.GetVkDevice(), m_CommandPool, m_VkCommandBuffer.size(), m_VkCommandBuffer.data());
 }

@@ -2,7 +2,7 @@
 
 BEGIN_NAMESPACE_SPECTRE
 
-class VulkanDescriptorSet
+class VulkanDescriptorSet : public Noncopyable
 {
 public:
 	static std::shared_ptr<VulkanDescriptorSet> CreateDescriptorSet(const VulkanDevice& vulkanDevice,
@@ -15,9 +15,6 @@ private:
 		const VulkanDescriptorPool& descriptorPool, const VulkanDescriptorSetLayout& descriptorSetLayout);
 
 private:
-	//const VulkanDevice&					m_Device;
-	//const VulkanDescriptorPool&			m_DescriptorPool;
-	//const VulkanDescriptorSetLayout&	m_DescriptorSetLayout;
 	VkDescriptorSet						m_VkDescriptorSet = VK_NULL_HANDLE;
 };
 

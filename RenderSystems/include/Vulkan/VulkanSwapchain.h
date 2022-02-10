@@ -7,7 +7,7 @@ BEGIN_NAMESPACE_SPECTRE
 class VulkanInstance;
 class VulkanSemaphore;
 
-class VulkanSwapChain
+class VulkanSwapChain : public Noncopyable
 {
 public:
 	enum class SwapStatus

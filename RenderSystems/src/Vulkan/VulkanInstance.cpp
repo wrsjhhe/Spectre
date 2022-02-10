@@ -103,11 +103,8 @@ VulkanInstance::VulkanInstance(const CreateInfo& CI):
     }
     else
     {
-        if (CI.InstanceExtensionCount != 0)
-        {
-            /*LOG_ERROR_MESSAGE("Global extensions pointer is null while extensions count is ", CI.InstanceExtensionCount,
-                ". Please initialize 'ppInstanceExtensionNames' member of EngineVkCreateInfo struct.");*/
-        }
+        EXP_CHECK(CI.InstanceExtensionCount == 0, "Global extensions pointer is null while extensions count is ", CI.InstanceExtensionCount,
+            ". Please initialize 'ppInstanceExtensionNames' member of EngineVkCreateInfo struct.");
     }
 
     for (const auto* ExtName : instanceExtensions)
@@ -126,17 +123,12 @@ VulkanInstance::VulkanInstance(const CreateInfo& CI):
         }
     }
 
-    auto ApiVersion = CI.ApiVersion;
-    if (vkEnumerateInstanceVersion != nullptr && ApiVersion > g_VkVersion)
+    auto ApiVersion = g_VkVersion;
+    if (vkEnumerateInstanceVersion != nullptr)
     {
         uint32_t MaxApiVersion = 0;
         vkEnumerateInstanceVersion(&MaxApiVersion);
-        ApiVersion = std::min(ApiVersion, MaxApiVersion);
-    }
-    else
-    {
-        // Only Vulkan 1.0 is supported.
-        ApiVersion = g_VkVersion;
+        ApiVersion = std::max(ApiVersion, MaxApiVersion);
     }
 
     std::vector<const char*> InstanceLayers;
@@ -172,7 +164,7 @@ VulkanInstance::VulkanInstance(const CreateInfo& CI):
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pNext = nullptr; 
     appInfo.pApplicationName = nullptr;
-    appInfo.applicationVersion = VK_HEADER_VERSION_COMPLETE;
+    appInfo.applicationVersion = SPECTRE_ENGINE_VERSION;
     appInfo.pEngineName = "Spectre Engine";
     appInfo.engineVersion = SPECTRE_ENGINE_VERSION; 
     appInfo.apiVersion = ApiVersion;

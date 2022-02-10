@@ -2,7 +2,7 @@
 
 BEGIN_NAMESPACE_SPECTRE
 
-class VulkanDescriptorSetLayout
+class VulkanDescriptorSetLayout : public Noncopyable
 {
 public:
 	static std::shared_ptr<VulkanDescriptorSetLayout> CreateDescriptorSetLayout(const VulkanDevice& vulkanDevice);

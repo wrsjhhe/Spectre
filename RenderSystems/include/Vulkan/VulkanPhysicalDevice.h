@@ -2,7 +2,7 @@
 #include "VulkanInstance.h"
 BEGIN_NAMESPACE_SPECTRE
 
-class VulkanPhysicalDevice
+class VulkanPhysicalDevice : public Noncopyable
 {
 public:
 	struct ExtensionFeatures

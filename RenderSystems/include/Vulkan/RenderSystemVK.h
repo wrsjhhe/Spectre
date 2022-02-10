@@ -81,7 +81,7 @@ namespace Spectre
 		std::shared_ptr<VulkanBuffer>			m_MVPBuffer;
 		UBOData									m_MVPData;
 
-		std::shared_ptr<VulkanCommandBuffers>	m_CommandBuffers;
+		std::shared_ptr<VulkanCommandBuffers>	m_RenderCommandBuffers;
 
 		std::shared_ptr<VulkanDescriptorPool>	m_DescriptorPool;
 

@@ -329,7 +329,7 @@ uint32_t VulkanPhysicalDevice::GetMemoryTypeIndex(uint32_t memoryTypeBitsRequire
 		if (isRequiredMemoryType)
 		{
 			const VkMemoryPropertyFlags properties = m_MemoryProperties.memoryTypes[memoryIndex].propertyFlags;
-			const bool                  hasRequiredProperties = (properties & requiredProperties) == requiredProperties;
+			const bool hasRequiredProperties = (properties & requiredProperties) == requiredProperties;
 
 			if (hasRequiredProperties)
 				return memoryIndex;

@@ -41,41 +41,7 @@ void RenderSystemVK::Init()
 
 	std::unique_ptr<VulkanPhysicalDevice> physicalDevice = VulkanPhysicalDevice::Create(vkPhysicalDevice, *m_Instance->GetSharedPtr());
 
-	//目前只创建了用于图形显示的队列
-	std::vector<VkDeviceQueueCreateInfo> queueInfos(1);
-	std::vector<float>                   queuePriorities(1);
-	queuePriorities[0] = 1.0f;
-
-	VkDeviceQueueCreateInfo& queueCI = queueInfos[0];
-	queueCI.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-	queueCI.flags = 0; // reserved for future use
-	queueCI.queueFamilyIndex = physicalDevice->FindQueueFamily(VK_QUEUE_GRAPHICS_BIT);
-	queueCI.queueCount = 1;
-	queueCI.pQueuePriorities = queuePriorities.data();
-
-	VkDeviceCreateInfo vkDeviceCreateInfo{};
-	vkDeviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-	vkDeviceCreateInfo.enabledLayerCount = 0;       // 已废弃
-	vkDeviceCreateInfo.ppEnabledLayerNames = nullptr; // 已废弃
-	vkDeviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueInfos.size());
-	vkDeviceCreateInfo.pQueueCreateInfos = queueInfos.data();
-
-	const auto& vkDeviceFeatures = physicalDevice->GetFeatures();
-	VkPhysicalDeviceFeatures vkEnabledFeatures{};
-	vkDeviceCreateInfo.pEnabledFeatures = &vkEnabledFeatures;
-
-	std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-	if (physicalDevice->IsExtensionSupported(VK_KHR_MAINTENANCE1_EXTENSION_NAME))
-		deviceExtensions.push_back(VK_KHR_MAINTENANCE1_EXTENSION_NAME); // 支持反转viewport
-
-	vkDeviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.empty() ? nullptr : deviceExtensions.data();
-	vkDeviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
-
-	using ExtensionFeatures = VulkanPhysicalDevice::ExtensionFeatures;
-	ExtensionFeatures        EnabledExtFeats = {};
-
-	auto vkAllocator = m_Instance->GetVkAllocator();
-	m_Device = VulkanDevice::Create(*physicalDevice, vkDeviceCreateInfo, EnabledExtFeats, vkAllocator);
+	m_Device = VulkanDevice::Create(*physicalDevice);
 
 	glfwInit();
 
@@ -172,13 +138,13 @@ void Spectre::RenderSystemVK::CreateCommandBuffers()
 	VkDevice device = m_Device->GetVkDevice();
 	m_CommandPool = VulkanCommandPool::CreateCommandPool(*m_Device);
 
-	m_CommandBuffers = VulkanCommandBuffers::CreataCommandBuffers(*m_Device, *m_CommandPool, m_SwapChain->GetImageCount());
+	m_RenderCommandBuffers = VulkanCommandBuffers::CreataGraphicBuffers(*m_Device, *m_CommandPool, m_SwapChain->GetImageCount());
 }
 
 void Spectre::RenderSystemVK::CreateMeshBuffers()
 {
 	VkDevice device = m_Device->GetVkDevice();
-	VkQueue queue = m_Device->GetGraphicQueue();
+	VulkanQueue queue = m_Device->GetGraphicQueue();
 
 	// 顶点数据
 	std::vector<Vertex> vertices = {
@@ -207,32 +173,25 @@ void Spectre::RenderSystemVK::CreateMeshBuffers()
 	m_VertexBuffer = VulkanBuffer::CreateDeviceVertexBuffer(*m_Device, vertexBufferSize);
 	m_IndicesBuffer = VulkanBuffer::CreateDeviceIndexBuffer(*m_Device, indexBufferSize);
 
-
-	VkCommandBuffer xferCmdBuffer;
-	// gfx queue自带transfer功能，为了优化需要使用专有的xfer queue。这里为了简单，先将就用。
-	VkCommandBufferAllocateInfo xferCmdBufferInfo{};
-	xferCmdBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	xferCmdBufferInfo.commandPool = m_CommandPool->GetVkCommandPool();
-	xferCmdBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	xferCmdBufferInfo.commandBufferCount = 1;
-	vkAllocateCommandBuffers(device, &xferCmdBufferInfo, &xferCmdBuffer);
+	auto xferCmdBuffer = VulkanCommandBuffers::CreataTransferBuffers(*m_Device, *m_CommandPool, 1);
+	VkCommandBuffer vkCmdBuffer = xferCmdBuffer->GetVkCommandBuffers()[0];
 
 	// 开始录制命令
 	VkCommandBufferBeginInfo cmdBufferBeginInfo{};
 	cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	vkBeginCommandBuffer(xferCmdBuffer, &cmdBufferBeginInfo);
+	vkBeginCommandBuffer(vkCmdBuffer, &cmdBufferBeginInfo);
 
-	tempVertexBuffer->MapToDevice(*m_VertexBuffer, m_CommandPool->GetVkCommandPool(), xferCmdBuffer);
-	tempIndexBuffer->MapToDevice(*m_IndicesBuffer, m_CommandPool->GetVkCommandPool(), xferCmdBuffer);
+	tempVertexBuffer->MapToDevice(*m_VertexBuffer, vkCmdBuffer);
+	tempIndexBuffer->MapToDevice(*m_IndicesBuffer, vkCmdBuffer);
 
 	// 结束录制
-	vkEndCommandBuffer(xferCmdBuffer);
+	vkEndCommandBuffer(vkCmdBuffer);
 
 	// 提交命令，并且等待命令执行完毕。
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &xferCmdBuffer;
+	submitInfo.pCommandBuffers = &vkCmdBuffer;
 
 	VkFenceCreateInfo fenceInfo{};
 	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
@@ -240,11 +199,10 @@ void Spectre::RenderSystemVK::CreateMeshBuffers()
 
 	VkFence fence = VK_NULL_HANDLE;
 	vkCreateFence(device, &fenceInfo, nullptr, &fence);
-	vkQueueSubmit(queue, 1, &submitInfo, fence);
+	vkQueueSubmit(queue.m_VkQueue, 1, &submitInfo, fence);
 	vkWaitForFences(device, 1, &fence, VK_TRUE, MAX_int64);
 
 	vkDestroyFence(device, fence, nullptr);
-	vkFreeCommandBuffers(device, m_CommandPool->GetVkCommandPool(), 1, &xferCmdBuffer);
 }
 
 
@@ -321,7 +279,7 @@ void Spectre::RenderSystemVK::SetupCommandBuffers()
 	renderPassBeginInfo.renderArea.extent.width = fwidth;
 	renderPassBeginInfo.renderArea.extent.height = fheight;
 
-	for (uint32_t i = 0; i < m_CommandBuffers->GetVkCommandBuffers().size(); ++i)
+	for (uint32_t i = 0; i < m_RenderCommandBuffers->GetVkCommandBuffers().size(); ++i)
 	{
 		renderPassBeginInfo.framebuffer = m_FrameBuffers[i]->GetVkFrameBuffer();
 
@@ -341,19 +299,19 @@ void Spectre::RenderSystemVK::SetupCommandBuffers()
 
 		VkDeviceSize offsets[1] = { 0 };
 
-		vkBeginCommandBuffer(m_CommandBuffers->GetVkCommandBuffers()[i], &cmdBeginInfo);
+		vkBeginCommandBuffer(m_RenderCommandBuffers->GetVkCommandBuffers()[i], &cmdBeginInfo);
 
-		vkCmdBeginRenderPass(m_CommandBuffers->GetVkCommandBuffers()[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-		vkCmdSetViewport(m_CommandBuffers->GetVkCommandBuffers()[i], 0, 1, &viewport);
-		vkCmdSetScissor(m_CommandBuffers->GetVkCommandBuffers()[i], 0, 1, &scissor);
-		vkCmdBindDescriptorSets(m_CommandBuffers->GetVkCommandBuffers()[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetVkPipelineLayout(), 0, 1, &m_DescriptorSet->GetVkDescriptorSet(), 0, nullptr);
-		vkCmdBindPipeline(m_CommandBuffers->GetVkCommandBuffers()[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetVkPipeline());
-		vkCmdBindVertexBuffers(m_CommandBuffers->GetVkCommandBuffers()[i], 0, 1, &m_VertexBuffer->GetVkBuffer(), offsets);
-		vkCmdBindIndexBuffer(m_CommandBuffers->GetVkCommandBuffers()[i], m_IndicesBuffer->GetVkBuffer(), 0, VK_INDEX_TYPE_UINT16);
-		vkCmdDrawIndexed(m_CommandBuffers->GetVkCommandBuffers()[i], m_IndicesCount, 1, 0, 0, 0);
-		vkCmdEndRenderPass(m_CommandBuffers->GetVkCommandBuffers()[i]);
+		vkCmdBeginRenderPass(m_RenderCommandBuffers->GetVkCommandBuffers()[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdSetViewport(m_RenderCommandBuffers->GetVkCommandBuffers()[i], 0, 1, &viewport);
+		vkCmdSetScissor(m_RenderCommandBuffers->GetVkCommandBuffers()[i], 0, 1, &scissor);
+		vkCmdBindDescriptorSets(m_RenderCommandBuffers->GetVkCommandBuffers()[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetVkPipelineLayout(), 0, 1, &m_DescriptorSet->GetVkDescriptorSet(), 0, nullptr);
+		vkCmdBindPipeline(m_RenderCommandBuffers->GetVkCommandBuffers()[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetVkPipeline());
+		vkCmdBindVertexBuffers(m_RenderCommandBuffers->GetVkCommandBuffers()[i], 0, 1, &m_VertexBuffer->GetVkBuffer(), offsets);
+		vkCmdBindIndexBuffer(m_RenderCommandBuffers->GetVkCommandBuffers()[i], m_IndicesBuffer->GetVkBuffer(), 0, VK_INDEX_TYPE_UINT16);
+		vkCmdDrawIndexed(m_RenderCommandBuffers->GetVkCommandBuffers()[i], m_IndicesCount, 1, 0, 0, 0);
+		vkCmdEndRenderPass(m_RenderCommandBuffers->GetVkCommandBuffers()[i]);
 
-		vkEndCommandBuffer(m_CommandBuffers->GetVkCommandBuffers()[i]);
+		vkEndCommandBuffer(m_RenderCommandBuffers->GetVkCommandBuffers()[i]);
 	}
 }
 
@@ -362,7 +320,7 @@ void Spectre::RenderSystemVK::Draw()
 	UpdateUniformBuffers();
 
 	VkDevice device = m_Device->GetVkDevice();
-	VkQueue queue = m_Device->GetGraphicQueue();
+	VulkanQueue queue = m_Device->GetGraphicQueue();
 	int32_t backBufferIndex = m_SwapChain->AcquireImageIndex(m_PresentComplete);
 
 	VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
@@ -374,17 +332,17 @@ void Spectre::RenderSystemVK::Draw()
 	submitInfo.waitSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores = &m_RenderComplete->GetVkSemaphore();
 	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pCommandBuffers = &(m_CommandBuffers->GetVkCommandBuffers()[backBufferIndex]);
+	submitInfo.pCommandBuffers = &(m_RenderCommandBuffers->GetVkCommandBuffers()[backBufferIndex]);
 	submitInfo.commandBufferCount = 1;
 
 	// 提交绘制命令
 	vkResetFences(device, 1, &(m_Fences[backBufferIndex]->GetVkFence()));
-	vkQueueSubmit(queue, 1, &submitInfo, m_Fences[backBufferIndex]->GetVkFence());
+	vkQueueSubmit(queue.m_VkQueue, 1, &submitInfo, m_Fences[backBufferIndex]->GetVkFence());
 	vkWaitForFences(device, 1, &(m_Fences[backBufferIndex]->GetVkFence()), true, 200 * 1000 * 1000);
 
 	// present
 	m_SwapChain->Present(
-		m_Device->GetGraphicQueue(),
+		queue.m_VkQueue,
 		&m_RenderComplete->GetVkSemaphore()
 	);
 }
