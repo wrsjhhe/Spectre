@@ -4,7 +4,8 @@
 #include <vector>
 #include <string>
 #include "MathDef.h"
-
+#include "NativeWindow.h"
+#include "VulkanGraphicTypes.h"
 namespace Spectre
 {
 	class VulkanSwapChain;
@@ -34,11 +35,13 @@ namespace Spectre
 		};
 
 	public:
-		void Init();
+		void CreateRenderContext();
 
-		void Loop();
+		void CreateSwapChain(const NativeWindow& wnd,  const SwapChainDesc& desc);
 
-		void Exist();
+		void Setup();
+
+		void Draw();
 	private:
 		void CreateDepthStencil();
 		void CreateRenderPass();
@@ -52,8 +55,7 @@ namespace Spectre
 		void CreateDescriptorSetLayout();
 		void CreateDescriptorSet();
 		void CreatePipelines();
-		void SetupCommandBuffers();
-		void Draw();
+
 
 		void UpdateUniformBuffers();
 	private:
@@ -81,7 +83,7 @@ namespace Spectre
 		std::shared_ptr<VulkanBuffer>			m_MVPBuffer;
 		UBOData									m_MVPData;
 
-		std::shared_ptr<VulkanCommandBuffers>	m_CommandBuffers;
+		std::shared_ptr<VulkanCommandBuffers>	m_RenderCommandBuffers;
 
 		std::shared_ptr<VulkanDescriptorPool>	m_DescriptorPool;
 

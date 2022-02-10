@@ -2,7 +2,7 @@
 
 BEGIN_NAMESPACE_SPECTRE
 
-class VulkanDescriptorPool
+class VulkanDescriptorPool : public Noncopyable
 {
 public:
 	static std::shared_ptr<VulkanDescriptorPool> CreateDescriptorPool(const VulkanDevice& vulkanDevice);

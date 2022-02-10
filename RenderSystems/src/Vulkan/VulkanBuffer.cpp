@@ -51,7 +51,7 @@ std::shared_ptr<VulkanBuffer> VulkanBuffer::CreateDeviceIndexBuffer(const Vulkan
 	return std::shared_ptr<VulkanBuffer>{pBuffer};
 }
 
-void VulkanBuffer::MapToDevice(VulkanBuffer& dstBuffer, const VkCommandPool& commandPool, const VkCommandBuffer& commandBuffer)
+void VulkanBuffer::MapToDevice(VulkanBuffer& dstBuffer ,const VkCommandBuffer& commandBuffer)
 {
 	EXP_CHECK(dstBuffer.m_BufferType == Buffer_Type_Device, "dstBuffer type is not Buffer_Type_Device!");
 	VkDevice device = m_Device.GetVkDevice();

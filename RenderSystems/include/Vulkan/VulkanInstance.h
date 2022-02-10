@@ -4,12 +4,11 @@
 
 BEGIN_NAMESPACE_SPECTRE
 
-class VulkanInstance : public std::enable_shared_from_this<VulkanInstance>
+class VulkanInstance : public std::enable_shared_from_this<VulkanInstance>,public Noncopyable
 {
 public:
 	struct CreateInfo
 	{
-		uint32_t               ApiVersion = 0;
 		bool                   EnableValidation = false;
 		bool                   EnableDeviceSimulation = false;
 		uint32_t               InstanceExtensionCount = 0;
@@ -18,10 +17,7 @@ public:
 	};
 	static std::shared_ptr<VulkanInstance> Create(const CreateInfo& CI);
 public:
-	VulkanInstance(const VulkanInstance&) = delete;
-	VulkanInstance(VulkanInstance&&) = delete;
-	VulkanInstance& operator = (const VulkanInstance&) = delete;
-	VulkanInstance& operator = (VulkanInstance&&) = delete;
+
 	~VulkanInstance();
 
 	std::shared_ptr<VulkanInstance> GetSharedPtr()

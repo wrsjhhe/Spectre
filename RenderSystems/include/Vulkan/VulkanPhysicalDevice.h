@@ -2,7 +2,7 @@
 #include "VulkanInstance.h"
 BEGIN_NAMESPACE_SPECTRE
 
-class VulkanPhysicalDevice
+class VulkanPhysicalDevice : public Noncopyable
 {
 public:
 	struct ExtensionFeatures
@@ -51,7 +51,7 @@ public:
 	};
 
 	static constexpr uint32_t InvalidMemoryTypeIndex = ~uint32_t{ 0 };
-	static std::unique_ptr<VulkanPhysicalDevice> Create(VkPhysicalDevice   vkDevice,
+	static std::shared_ptr<VulkanPhysicalDevice> Create(VkPhysicalDevice   vkDevice,
 		const VulkanInstance& Instance);
 public:
 	VulkanPhysicalDevice(const VulkanPhysicalDevice&) = delete;

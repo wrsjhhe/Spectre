@@ -2,7 +2,7 @@
 
 BEGIN_NAMESPACE_SPECTRE
 
-class VulkanFence
+class VulkanFence : public Noncopyable
 {
 public:
 	static std::shared_ptr<VulkanFence> CreateFence(const VulkanDevice& vulkanDevice);

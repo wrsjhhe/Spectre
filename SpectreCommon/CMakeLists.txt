@@ -20,6 +20,8 @@ set(PUBLIC_HDRS ${INC_DIR}CommonDefinitions.h
 				${INC_DIR}FormotString.h
 				${INC_DIR}LogManager.h
 				${INC_DIR}MathDef.h
+				${INC_DIR}Noncopyable.h
+				${INC_DIR}NativeWindow.h
 				)
 #set(PRIVATE_HDRS )
 

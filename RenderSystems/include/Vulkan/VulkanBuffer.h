@@ -39,7 +39,7 @@ public:
 	VkBuffer& GetVkBuffer() { return m_VkbBuffer; }
 
 
-	void MapToDevice(VulkanBuffer& dstBuffer, const VkCommandPool& commandPool, const VkCommandBuffer& commandBuffer);
+	void MapToDevice(VulkanBuffer& dstBuffer, const VkCommandBuffer& commandBuffer);
 
 	void UpdateHostBuffer(const void* const ptr);
 

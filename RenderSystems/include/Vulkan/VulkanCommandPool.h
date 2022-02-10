@@ -1,11 +1,12 @@
 #pragma once
 #include <memory>
-#include <vector>
+#include <map>
+#include <vulkan.h>
 BEGIN_NAMESPACE_SPECTRE
 
 class VulkanDevice;
 
-class VulkanCommandPool:std::enable_shared_from_this<VulkanCommandPool>
+class VulkanCommandPool:std::enable_shared_from_this<VulkanCommandPool>, public Noncopyable
 {
 public:
 	static std::shared_ptr<VulkanCommandPool> CreateCommandPool(const VulkanDevice& vulkanDevice);
@@ -16,15 +17,17 @@ public:
 	{
 		return shared_from_this();
 	}
-	//Todo 将每类CommandPool分开
-	VkCommandPool GetVkCommandPool() const { return m_VkCommandPool; }
+
+	VkCommandPool GetVkGraphicCommandPool() const;
+	VkCommandPool GetVkComputeCommandPool() const;
+	VkCommandPool GetVkTransferCommandPool() const;
 
 	void Destroy();
 private:
 	VulkanCommandPool(const VulkanDevice& vulkanDevice);
 private:
 	const VulkanDevice&							 m_Device;
-	VkCommandPool								 m_VkCommandPool = VK_NULL_HANDLE;
+	std::map<uint32_t, VkCommandPool>			 m_VkCommandPools;
 };
 
 

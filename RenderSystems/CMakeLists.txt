@@ -10,9 +10,6 @@ include_directories(${VULKANSDK_DIR})
 set(SPECTRE_COMMON_DIR ../SpectreCommon/include/)
 include_directories(${SPECTRE_COMMON_DIR})
 
-set(GLFW_DIR ../ThirdParty/GLFW/include/)
-include_directories(${GLFW_DIR})
-
 set(SPDLOG_DIR ../ThirdParty/spdlog/include)
 include_directories(${SPDLOG_DIR})
 # ==================================================================================================
@@ -43,6 +40,7 @@ ${SRC_VULKAN_DIR}VulkanCommon.cpp
 ${SRC_VULKAN_DIR}VulkanInstance.cpp
 ${SRC_VULKAN_DIR}VulkanPhysicalDevice.cpp
 ${SRC_VULKAN_DIR}VulkanDevice.cpp
+${SRC_VULKAN_DIR}VulkanQueue.cpp
 ${SRC_VULKAN_DIR}VulkanSwapchain.cpp
 ${SRC_VULKAN_DIR}VulkanBuffer.cpp
 ${SRC_VULKAN_DIR}VulkanCommandPool.cpp
@@ -61,10 +59,12 @@ ${SRC_VULKAN_DIR}RenderSystemVK.cpp
 
 set(VULKAN_PRIVATE_HDRS
 ${INC_VULKAN_DIR}VulkanCommon.h
+${INC_VULKAN_DIR}VulkanGraphicTypes.h
 ${INC_VULKAN_DIR}VulkanInstance.h
 ${INC_VULKAN_DIR}VulkanPhysicalDevice.h
 ${INC_VULKAN_DIR}VulkanSwapchain.h
 ${INC_VULKAN_DIR}VulkanDevice.h
+${INC_VULKAN_DIR}VulkanQueue.h
 ${INC_VULKAN_DIR}VulkanBuffer.h
 ${INC_VULKAN_DIR}VulkanCommandPool.h
 ${INC_VULKAN_DIR}VulkanCommandBuffers.h
@@ -84,4 +84,3 @@ ${INC_VULKAN_DIR}RenderSystemVK.h
 add_library (RenderSystems STATIC ${VULKAN_PUBLIC_HDRS} ${VULKAN_PRIVATE_HDRS} ${VULKAN_SRCS})
 target_link_libraries(RenderSystems PRIVATE SpectreCommon)
 target_link_libraries(RenderSystems PRIVATE vulkan-1)
-target_link_libraries(RenderSystems PRIVATE glfw3.lib)

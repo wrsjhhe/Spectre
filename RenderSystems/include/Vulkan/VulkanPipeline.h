@@ -2,7 +2,7 @@
 
 BEGIN_NAMESPACE_SPECTRE
 
-class VulkanPipeline
+class VulkanPipeline : public Noncopyable
 {
 public:
 	static std::shared_ptr<VulkanPipeline> CreatePipeline(const VulkanDevice& vulkanDevice,const VulkanRenderPass& renderPass, const VulkanDescriptorSetLayout& descriptorSetLayout);
