@@ -7,10 +7,10 @@
 USING_NAMESPACE(Spectre)
 
 
-std::unique_ptr<VulkanPhysicalDevice> VulkanPhysicalDevice::Create(VkPhysicalDevice vkDevice, const VulkanInstance& Instance)
+std::shared_ptr<VulkanPhysicalDevice> VulkanPhysicalDevice::Create(VkPhysicalDevice vkDevice, const VulkanInstance& Instance)
 {
 	auto* PhysicalDevice = new VulkanPhysicalDevice{ vkDevice, Instance };
-	return std::unique_ptr<VulkanPhysicalDevice>{PhysicalDevice};
+	return std::shared_ptr<VulkanPhysicalDevice>{PhysicalDevice};
 }
 
 VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice vkDevice, const VulkanInstance& instance):

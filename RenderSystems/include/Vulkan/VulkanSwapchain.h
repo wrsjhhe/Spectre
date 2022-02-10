@@ -1,7 +1,7 @@
 #pragma once
 #include "NativeWindow.h"
 #include "VulkanImages.h"
-
+#include "VulkanGraphicTypes.h"
 BEGIN_NAMESPACE_SPECTRE
 
 class VulkanInstance;
@@ -38,7 +38,7 @@ private:
 public:
 	VulkanSwapChain(std::shared_ptr<const VulkanInstance> vulkanInstance, 
 		std::shared_ptr<const VulkanDevice> vulkanDevice,
-		const NativeWindow& window, uint32_t width,uint32_t height);
+		const NativeWindow& window,  const SwapChainDesc& desc);
 	~VulkanSwapChain();
 
 	VkSwapchainKHR GetVkSwapChain() const { return m_VkSwapChain; }

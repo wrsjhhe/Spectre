@@ -4,8 +4,6 @@
 #include "VulkanSemaphore.h"
 #include "VulkanSwapchain.h"
 #include "MathDef.h"
-#define GLFW_EXPOSE_NATIVE_WIN32
-#include <glfw3.h>
 USING_NAMESPACE(Spectre)
 
 
@@ -43,12 +41,12 @@ VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR> avail
 
 VulkanSwapChain::VulkanSwapChain(std::shared_ptr<const VulkanInstance> vulkanInstance,
 	std::shared_ptr<const VulkanDevice> vulkanDevice,
-	const NativeWindow& window, uint32_t width, uint32_t height):
+	const NativeWindow& window, const SwapChainDesc& desc):
 	m_VulkanInstance(vulkanInstance),
 	m_VulkanDevice(vulkanDevice),
 	m_Window(window),
-	m_Width(width),
-	m_Height(height)
+	m_Width(desc.Width),
+	m_Height(desc.Height)
 {
 	CreateSurface();
 
@@ -102,19 +100,12 @@ VulkanSwapChain::VulkanSwapChain(std::shared_ptr<const VulkanInstance> vulkanIns
 	for (uint32_t i = 0;i < m_ImageCount;++i)
 	{
 		m_ImageAcquiredSemaphore[i] = VulkanSemaphore::CreateSemaphore(*m_VulkanDevice);
-		//VkSemaphoreCreateInfo createInfo{};
-		//createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-		//vkCreateSemaphore(device, &createInfo, nullptr, &m_ImageAcquiredSemaphore[i]);
 	}
 }
 
 VulkanSwapChain::~VulkanSwapChain()
 {
 	VkDevice device = m_VulkanDevice->GetVkDevice();
-
-	//for (uint32_t index = 0; index < m_ImageAcquiredSemaphore.size(); ++index) {
-	//	vkDestroySemaphore(device, m_ImageAcquiredSemaphore[index], nullptr);
-	//}
 
 	vkDestroySwapchainKHR(device, m_VkSwapChain, nullptr);
 	vkDestroySurfaceKHR(m_VulkanInstance->GetVkInstance(), m_VkSurface, nullptr);
@@ -222,7 +213,7 @@ VkExtent2D VulkanSwapChain::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& cap
 
 VulkanSwapChain::SwapChainSupportDetails VulkanSwapChain::QuerySwapChainSupport(VkPhysicalDevice device)
 {
-	SwapChainSupportDetails details;
+	SwapChainSupportDetails details{};
 
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, m_VkSurface, &details.capabilities);
 

@@ -8,7 +8,7 @@ class VulkanDevice : public std::enable_shared_from_this<VulkanDevice>,public No
 public:
 	using ExtensionFeatures = VulkanPhysicalDevice::ExtensionFeatures;
 
-	static std::shared_ptr<VulkanDevice> Create(const VulkanPhysicalDevice& PhysicalDevice);
+	static std::shared_ptr<VulkanDevice> Create(std::shared_ptr<VulkanPhysicalDevice> physicalDevice);
 
 public:
 
@@ -24,7 +24,7 @@ public:
 	}
 	const VulkanPhysicalDevice& GetPhysicalDevice() const
 	{
-		return m_PhysicalDevice;
+		return *m_PhysicalDevice;
 	}
 
 	VkDevice GetVkDevice() const
@@ -38,16 +38,16 @@ public:
 	const VulkanQueue& GetComputeQueue() const { return m_ComputeQueue; }
 
 private:
-	VulkanDevice(const VulkanPhysicalDevice& PhysicalDevice);
+	VulkanDevice(std::shared_ptr<VulkanPhysicalDevice> physicalDevice);
 
 private:
-	const VulkanPhysicalDevice&		   m_PhysicalDevice;
-	VkDevice                           m_VkDevice = VK_NULL_HANDLE;
-	std::vector<VkPipelineStageFlags>  m_SupportedStagesMask;
-	std::vector<VkAccessFlags>         m_SupportedAccessMask;
-	VulkanQueue                        m_GraphicQueue;
-	VulkanQueue                        m_ComputeQueue;
-	VulkanQueue                        m_TransferQueue;
+	std::shared_ptr<VulkanPhysicalDevice>		    m_PhysicalDevice;
+	VkDevice										m_VkDevice = VK_NULL_HANDLE;
+	std::vector<VkPipelineStageFlags>				m_SupportedStagesMask;
+	std::vector<VkAccessFlags>						m_SupportedAccessMask;
+	VulkanQueue										m_GraphicQueue;
+	VulkanQueue										m_ComputeQueue;
+	VulkanQueue										m_TransferQueue;
 };
 
 END_NAMESPACE_SPECTRE
