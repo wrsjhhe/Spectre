@@ -12,12 +12,12 @@ std::shared_ptr<VulkanCommandBuffers> VulkanCommandBuffers::CreataGraphicBuffers
 	return std::shared_ptr<VulkanCommandBuffers>(commandBuffers);
 }
 
-std::shared_ptr<VulkanCommandBuffers> VulkanCommandBuffers::CreataTransferBuffers(const VulkanDevice& vulkanDevice, 
-	const VulkanCommandPool& commandPool, uint32_t size)
-{
-	auto* commandBuffers = new VulkanCommandBuffers(vulkanDevice, commandPool.GetVkTransferCommandPool(), size);
-	return std::shared_ptr<VulkanCommandBuffers>(commandBuffers);
-}
+//std::shared_ptr<VulkanCommandBuffers> VulkanCommandBuffers::CreataTransferBuffers(const VulkanDevice& vulkanDevice, 
+//	const VulkanCommandPool& commandPool, uint32_t size)
+//{
+//	auto* commandBuffers = new VulkanCommandBuffers(vulkanDevice, commandPool.GetVkTransferCommandPool(), size);
+//	return std::shared_ptr<VulkanCommandBuffers>(commandBuffers);
+//}
 
 VulkanCommandBuffers::~VulkanCommandBuffers()
 {

@@ -39,7 +39,7 @@ public:
 
 	void Resize(uint32_t width, uint32_t height)
 	{
-
+		engine.Resize(width, height);
 	}
 
 	void Exit()

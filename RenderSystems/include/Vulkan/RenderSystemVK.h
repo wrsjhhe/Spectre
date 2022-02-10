@@ -42,12 +42,15 @@ namespace Spectre
 		void Setup();
 
 		void Draw();
+
+		void ReceateSwapchain(const NativeWindow& wnd, const SwapChainDesc& desc);
 	private:
 		void CreateDepthStencil();
 		void CreateRenderPass();
 		void CreateFrameBuffer();
 		void CreateSemaphores();
 		void CreateFences();
+		void CreateCommandPool();
 		void CreateCommandBuffers();
 		void CreateMeshBuffers();
 		void CreateUniformBuffers();
@@ -58,9 +61,12 @@ namespace Spectre
 
 
 		void UpdateUniformBuffers();
+
+		void DestorySwapchain();
 	private:
 		uint32_t                                m_Width = 1400;
 		uint32_t                                m_Height = 900;
+		NativeWindow                            m_Window;
 		std::shared_ptr<VulkanInstance>			m_Instance;
 		std::shared_ptr<VulkanDevice>			m_Device;
 		std::shared_ptr<VulkanSwapChain>		m_SwapChain;

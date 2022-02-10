@@ -55,7 +55,7 @@ public:
 
 	SwapStatus Present(VkQueue presentQueue, VkSemaphore* doneSemaphore);
 
-	void DestorySwapChain();
+	void Destory();
 private:
 	void CreateSurface();
 

@@ -105,6 +105,7 @@ VulkanSwapChain::VulkanSwapChain(std::shared_ptr<const VulkanInstance> vulkanIns
 
 VulkanSwapChain::~VulkanSwapChain()
 {
+	m_Images = nullptr;
 	VkDevice device = m_VulkanDevice->GetVkDevice();
 
 	vkDestroySwapchainKHR(device, m_VkSwapChain, nullptr);
@@ -167,9 +168,10 @@ VulkanSwapChain::SwapStatus VulkanSwapChain::Present(VkQueue presentQueue, VkSem
 	return SwapStatus::Healthy;
 }
 
-void VulkanSwapChain::DestorySwapChain()
+void VulkanSwapChain::Destory()
 {
-	m_Images = nullptr;
+
+	//m_Images = nullptr;
 }
 
 void VulkanSwapChain::CreateSurface()
@@ -206,7 +208,6 @@ VkExtent2D VulkanSwapChain::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& cap
 
 		actualExtent.width = std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, actualExtent.width));
 		actualExtent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, actualExtent.height));
-
 		return actualExtent;
 	}
 }

@@ -12,7 +12,9 @@ class Engine : public Noncopyable
 public:
 	bool Init(const EngineCreateInfo& info);
 
-	void Loop(onEngineLoopCallback loopcb);
+	void Loop(onEngineLoopCallback loopCb);
+
+	void Resize(uint32_t width,uint32_t height);
 
 	void Exit();
 
@@ -23,6 +25,7 @@ public:
 private:
 	RenderSystemVK* m_pRenderSystem = nullptr;
 	bool            m_Exit = false;
+	NativeWindow	m_window;
 };
 
 END_NAMESPACE_SPECTRE

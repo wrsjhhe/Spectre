@@ -6,13 +6,14 @@ USING_NAMESPACE(Spectre)
 
 bool Engine::Init(const EngineCreateInfo& info)
 {
+	m_window = info.Wnd;
 	m_pRenderSystem = new RenderSystemVK();
 	m_pRenderSystem->CreateRenderContext();
 
 	SwapChainDesc swapChainDesc;
 	swapChainDesc.Width = info.Width;
 	swapChainDesc.Height = info.Height;
-	m_pRenderSystem->CreateSwapChain(info.Wnd, swapChainDesc);
+	m_pRenderSystem->CreateSwapChain(m_window, swapChainDesc);
 	return true;
 }
 
@@ -25,6 +26,14 @@ void Engine::Loop(onEngineLoopCallback loopcb)
 			loopcb();
 		m_pRenderSystem->Draw();
 	}
+}
+
+void Engine::Resize(uint32_t width, uint32_t height)
+{
+	SwapChainDesc swapChainDesc;
+	swapChainDesc.Width = width;
+	swapChainDesc.Height = height;
+	m_pRenderSystem->ReceateSwapchain(m_window, swapChainDesc);
 }
 
 void Engine::Exit()

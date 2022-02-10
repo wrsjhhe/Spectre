@@ -21,15 +21,15 @@ VkCommandPool VulkanCommandPool::GetVkGraphicCommandPool() const
 	return m_VkCommandPools.at(VK_QUEUE_GRAPHICS_BIT);
 }
 
-VkCommandPool VulkanCommandPool::GetVkComputeCommandPool() const
-{
-	return m_VkCommandPools.at(VK_QUEUE_COMPUTE_BIT);
-}
-
-VkCommandPool VulkanCommandPool::GetVkTransferCommandPool() const
-{
-	return m_VkCommandPools.at(VK_QUEUE_TRANSFER_BIT);
-}
+//VkCommandPool VulkanCommandPool::GetVkComputeCommandPool() const
+//{
+//	return m_VkCommandPools.at(VK_QUEUE_COMPUTE_BIT);
+//}
+//
+//VkCommandPool VulkanCommandPool::GetVkTransferCommandPool() const
+//{
+//	return m_VkCommandPools.at(VK_QUEUE_TRANSFER_BIT);
+//}
 
 void VulkanCommandPool::Destroy()
 {
