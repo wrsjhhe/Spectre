@@ -62,14 +62,7 @@ static __inline auto DegreesToRadians(T const& degVal) -> decltype(degVal* (PI /
 //
 //
 //
-//static __inline void Matrix_MoveTo(Matrix4x4& mat,const Vector4& vec)
-//{
-//	Vector4 a = InitVector(1,1,1,1);
-//	Vector4 b = InitVector(1, 1, 1, 1);;
-//	Vector4 c = InitVector(1, 1, 1, 1);
-//	Vector4 d = vec;
-//	DirectX::XMMatrixAffineTransformation(a,b,c,d);
-//}
+
 struct Matrix4x4
 {
 public:
