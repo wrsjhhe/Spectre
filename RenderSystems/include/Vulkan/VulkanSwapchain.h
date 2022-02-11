@@ -4,7 +4,7 @@
 #include "VulkanGraphicTypes.h"
 BEGIN_NAMESPACE_SPECTRE
 
-class VulkanInstance;
+class VulkanSurface;
 class VulkanSemaphore;
 
 class VulkanSwapChain : public Noncopyable
@@ -36,9 +36,8 @@ private:
 	};
 
 public:
-	VulkanSwapChain(std::shared_ptr<const VulkanInstance> vulkanInstance, 
-		std::shared_ptr<const VulkanDevice> vulkanDevice,
-		const NativeWindow& window,  const SwapChainDesc& desc);
+	VulkanSwapChain(const VulkanInstance& vulkanInstance,const VulkanDevice& vulkanDevice,
+		const VulkanSurface& vulkanSurface, const SwapChainDesc& desc);
 	~VulkanSwapChain();
 
 	VkSwapchainKHR GetVkSwapChain() const { return m_VkSwapChain; }
@@ -55,9 +54,7 @@ public:
 
 	SwapStatus Present(VkQueue presentQueue, VkSemaphore* doneSemaphore);
 
-	void Destory();
 private:
-	void CreateSurface();
 
 	VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
@@ -66,11 +63,10 @@ private:
 	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
 private:
 
-	std::shared_ptr<const VulkanInstance>			m_VulkanInstance;
-	std::shared_ptr<const VulkanDevice>				m_VulkanDevice;
+	const VulkanInstance&							m_Instance;
+	const VulkanDevice&								m_Device;
+	const VulkanSurface&							m_Surface;
 	VkSwapchainKHR									m_VkSwapChain;
-	VkSurfaceKHR									m_VkSurface = VK_NULL_HANDLE;
-	NativeWindow									m_Window;
 	uint32_t										m_ImageCount;
 	std::shared_ptr<VulkanImages>					m_Images;
 	VkFormat										m_VkSwapChainFormat;

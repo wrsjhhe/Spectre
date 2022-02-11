@@ -19,8 +19,8 @@ public:
 	}
 
 	VkCommandPool GetVkGraphicCommandPool() const;
-	//VkCommandPool GetVkComputeCommandPool() const;
-	//VkCommandPool GetVkTransferCommandPool() const;
+	VkCommandPool GetVkComputeCommandPool() const;
+	VkCommandPool GetVkTransferCommandPool() const;
 
 	void Destroy();
 private:

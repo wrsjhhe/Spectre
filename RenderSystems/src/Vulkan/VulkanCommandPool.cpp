@@ -21,15 +21,23 @@ VkCommandPool VulkanCommandPool::GetVkGraphicCommandPool() const
 	return m_VkCommandPools.at(VK_QUEUE_GRAPHICS_BIT);
 }
 
-//VkCommandPool VulkanCommandPool::GetVkComputeCommandPool() const
-//{
-//	return m_VkCommandPools.at(VK_QUEUE_COMPUTE_BIT);
-//}
-//
-//VkCommandPool VulkanCommandPool::GetVkTransferCommandPool() const
-//{
-//	return m_VkCommandPools.at(VK_QUEUE_TRANSFER_BIT);
-//}
+VkCommandPool VulkanCommandPool::GetVkComputeCommandPool() const
+{
+	if (m_VkCommandPools.find(VK_QUEUE_COMPUTE_BIT)!=m_VkCommandPools.end())
+	{
+		return m_VkCommandPools.at(VK_QUEUE_COMPUTE_BIT);
+	}
+	return m_VkCommandPools.at(VK_QUEUE_GRAPHICS_BIT);
+}
+
+VkCommandPool VulkanCommandPool::GetVkTransferCommandPool() const
+{
+	if (m_VkCommandPools.find(VK_QUEUE_TRANSFER_BIT) != m_VkCommandPools.end())
+	{
+		return m_VkCommandPools.at(VK_QUEUE_TRANSFER_BIT);
+	}
+	return m_VkCommandPools.at(VK_QUEUE_GRAPHICS_BIT);
+}
 
 void VulkanCommandPool::Destroy()
 {
@@ -64,15 +72,16 @@ VulkanCommandPool::VulkanCommandPool(const VulkanDevice& vulkanDevice):
 	{
 		vkCommandPool = VK_NULL_HANDLE;
 		cmdPoolInfo.queueFamilyIndex = computeQueue.m_QueueFamilyIndex;
-		vkCreateCommandPool(m_Device.GetVkDevice(), &cmdPoolInfo, nullptr, &vkCommandPool);		
+		vkCreateCommandPool(m_Device.GetVkDevice(), &cmdPoolInfo, nullptr, &vkCommandPool);	
+		m_VkCommandPools[VK_QUEUE_COMPUTE_BIT] = vkCommandPool;
 	}
-	m_VkCommandPools[VK_QUEUE_COMPUTE_BIT] = vkCommandPool;
+	
 
 	if (graphicQueue.m_QueueFamilyIndex != transferQueue.m_QueueFamilyIndex)
 	{
 		vkCommandPool = VK_NULL_HANDLE;
 		cmdPoolInfo.queueFamilyIndex = transferQueue.m_QueueFamilyIndex;
 		vkCreateCommandPool(m_Device.GetVkDevice(), &cmdPoolInfo, nullptr, &vkCommandPool);
+		m_VkCommandPools[VK_QUEUE_TRANSFER_BIT] = vkCommandPool;
 	}
-	m_VkCommandPools[VK_QUEUE_TRANSFER_BIT] = vkCommandPool;
 }

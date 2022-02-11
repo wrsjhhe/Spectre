@@ -40,6 +40,7 @@ ${SRC_VULKAN_DIR}VulkanCommon.cpp
 ${SRC_VULKAN_DIR}VulkanInstance.cpp
 ${SRC_VULKAN_DIR}VulkanPhysicalDevice.cpp
 ${SRC_VULKAN_DIR}VulkanDevice.cpp
+${SRC_VULKAN_DIR}VulkanSurface.cpp
 ${SRC_VULKAN_DIR}VulkanQueue.cpp
 ${SRC_VULKAN_DIR}VulkanSwapchain.cpp
 ${SRC_VULKAN_DIR}VulkanBuffer.cpp
@@ -64,6 +65,7 @@ ${INC_VULKAN_DIR}VulkanInstance.h
 ${INC_VULKAN_DIR}VulkanPhysicalDevice.h
 ${INC_VULKAN_DIR}VulkanSwapchain.h
 ${INC_VULKAN_DIR}VulkanDevice.h
+${INC_VULKAN_DIR}VulkanSurface.h
 ${INC_VULKAN_DIR}VulkanQueue.h
 ${INC_VULKAN_DIR}VulkanBuffer.h
 ${INC_VULKAN_DIR}VulkanCommandPool.h
