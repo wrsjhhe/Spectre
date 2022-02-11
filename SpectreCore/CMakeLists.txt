@@ -13,7 +13,11 @@ include_directories(${SPECTRE_COMMON_DIR})
 set(INC_DIR ./include/)
 include_directories(${INC_DIR})
 
-set(PUBLIC_HDRS ${INC_DIR}Engine.h)
+set(PUBLIC_HDRS ${INC_DIR}Engine.h
+				${INC_DIR}SceneNode.h
+				${INC_DIR}Scene.h
+				${INC_DIR}Material.h
+)
 
 set(PRIVATE_HDRS )
 
@@ -23,7 +27,11 @@ set(PRIVATE_HDRS )
 set(SRC_DIR ./src/)
 include_directories(${SRC_DIR})
 
-set(SRCS ${SRC_DIR}Engine.cpp)
+set(SRCS ${SRC_DIR}Engine.cpp
+		 ${SRC_DIR}SceneNode.cpp
+		 ${SRC_DIR}Scene.cpp
+		 ${SRC_DIR}Material.cpp
+)
 
 
 add_library (SpectreCore STATIC ${PUBLIC_HDRS} ${PRIVATE_HDRS} ${SRCS} )

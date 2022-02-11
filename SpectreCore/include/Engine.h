@@ -2,6 +2,8 @@
 #include "CommonDefinitions.h"
 #include "Noncopyable.h"
 #include "EngineCreateInfo.h"
+#include "Scene.h"
+
 BEGIN_NAMESPACE_SPECTRE
 
 typedef void (*onEngineLoopCallback)();
@@ -12,7 +14,7 @@ class Engine : public Noncopyable
 public:
 	bool Init(const EngineCreateInfo& info);
 
-	void Loop(onEngineLoopCallback loopCb);
+	void Render(onEngineLoopCallback loopCb);
 
 	void Resize(uint32_t width,uint32_t height);
 
@@ -23,9 +25,11 @@ public:
 	~Engine();
 
 private:
-	RenderSystemVK* m_pRenderSystem = nullptr;
-	bool            m_Exit = false;
-	NativeWindow	m_window;
+	RenderSystemVK*						m_pRenderSystem = nullptr;
+	Scene								m_Scene;
+
+
+	bool								m_Exit = false;
 };
 
 END_NAMESPACE_SPECTRE

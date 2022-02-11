@@ -6,11 +6,10 @@ USING_NAMESPACE(Spectre)
 
 bool Engine::Init(const EngineCreateInfo& info)
 {
-	m_window = info.Wnd;
 	m_pRenderSystem = new RenderSystemVK();
 	m_pRenderSystem->CreateRenderContext();
 
-	m_pRenderSystem->CreateSurface(m_window);
+	m_pRenderSystem->CreateSurface(info.Wnd);
 
 	SwapChainDesc swapChainDesc;
 	swapChainDesc.Width = info.Width;
@@ -19,8 +18,16 @@ bool Engine::Init(const EngineCreateInfo& info)
 	return true;
 }
 
-void Engine::Loop(onEngineLoopCallback loopCB)
+void Engine::Render(onEngineLoopCallback loopCB)
 {
+	auto meshes = m_Scene.GetRootNode()->TraverseMeshes();
+	
+	for (auto& mesh : meshes)
+	{
+
+	}
+
+
 	m_pRenderSystem->Setup();
 	while (!m_Exit)
 	{

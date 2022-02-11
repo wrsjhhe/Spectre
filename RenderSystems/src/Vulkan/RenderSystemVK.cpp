@@ -18,7 +18,7 @@
 #include "VulkanPipeline.h"
 #include "RenderSystemVK.h"
 
-#include "Vertex.h"
+#include "Geometry/Vertex.h"
 
 
 USING_NAMESPACE(Spectre)
@@ -241,26 +241,26 @@ void Spectre::RenderSystemVK::CreateCommandBuffers()
 	m_RenderCommandBuffers = VulkanCommandBuffers::CreataGraphicBuffers(*m_Device, *m_CommandPool, m_SwapChain->GetImageCount());
 }
 
-void Spectre::RenderSystemVK::CreateMeshBuffers()
+void Spectre::RenderSystemVK::CreateMeshBuffers(const std::vector<Vertex> vertices,const std::vector<uint16_t> indices)
 {
 	VkDevice device = m_Device->GetVkDevice();
 	VulkanQueue queue = m_Device->GetGraphicQueue();
 
-	// 顶点数据
-	std::vector<Vertex> vertices = {
-		{
-			{  1.0f,  1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }
-		},
-		{
-			{ -1.0f,  1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }
-		},
-		{
-			{  0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }
-		}
-	};
+	//// 顶点数据
+	//std::vector<Vertex> vertices = {
+	//	{
+	//		{  1.0f,  1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }
+	//	},
+	//	{
+	//		{ -1.0f,  1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }
+	//	},
+	//	{
+	//		{  0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }
+	//	}
+	//};
 
-	// 索引数据
-	std::vector<uint16_t> indices = { 0, 1, 2 };
+	//// 索引数据
+	//std::vector<uint16_t> indices = { 0, 1, 2 };
 	m_IndicesCount = (uint32_t)indices.size();
 
 	uint32_t vertexBufferSize = vertices.size() * sizeof(Vertex);
@@ -360,6 +360,8 @@ void Spectre::RenderSystemVK::CreatePipelines()
 
 void Spectre::RenderSystemVK::UpdateUniformBuffers()
 {
+	m_MVPData.projection.SetIdentity();
+	m_MVPData.projection.Perspective(DegreesToRadians(75.0f), m_Width, m_Height, 0.01f, 3000.0f);
 	VkDevice device = m_Device->GetVkDevice();
 	//m_MVPData.model.AppendRotation(90.0f * delta, Vector3::UpVector);
 	m_MVPBuffer->UpdateHostBuffer(&m_MVPData);

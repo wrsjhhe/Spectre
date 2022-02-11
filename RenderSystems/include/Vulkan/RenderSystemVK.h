@@ -42,6 +42,8 @@ namespace Spectre
 
 		void CreateSwapChain(const SwapChainDesc& desc);
 
+		void CreateMeshBuffers(const std::vector<Vertex> vertices,const std::vector<uint16_t> indices);
+
 		void Setup();
 
 		void Draw();
@@ -55,7 +57,7 @@ namespace Spectre
 		void CreateFences();
 		void CreateCommandPool();
 		void CreateCommandBuffers();
-		void CreateMeshBuffers();
+
 		void CreateUniformBuffers();
 		void CreateDescriptorPool();
 		void CreateDescriptorSetLayout();

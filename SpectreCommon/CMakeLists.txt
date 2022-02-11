@@ -16,6 +16,11 @@ include_directories(${DIRECTXMATH_DIR})
 set(PUBLIC_HDRS ${INC_DIR}CommonDefinitions.h
 				${INC_DIR}Allocator.h
 				${INC_DIR}Platform.h
+				
+				${INC_DIR}/Geometry/Vertex.h
+				${INC_DIR}/Geometry/Face.h
+				${INC_DIR}/Geometry/Mesh.h
+
 				${INC_DIR}Mutex.h
 				${INC_DIR}FormotString.h
 				${INC_DIR}LogManager.h
@@ -32,6 +37,7 @@ set(SRC_DIR ./src/)
 include_directories(${SRC_DIR})
 
 set(SRCS ${SRC_DIR}Allocator.cpp
+		 ${SRC_DIR}/Geometry/Mesh.cpp
 		 ${SRC_DIR}Mutex.cpp
 		 ${SRC_DIR}LogManager.cpp)
 
