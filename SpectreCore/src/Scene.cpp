@@ -7,6 +7,11 @@ Scene::Scene()
 	m_RootNode = new SceneNode();
 }
 
+Scene::~Scene()
+{
+	delete m_RootNode;
+}
+
 void Scene::AddNode(SceneNode* pNode)
 {
 	pNode->m_Parent = this->m_RootNode;

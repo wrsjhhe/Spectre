@@ -6,6 +6,8 @@
 #include "MathDef.h"
 #include "NativeWindow.h"
 #include "VulkanGraphicTypes.h"
+#include "Geometry/Vertex.h"
+
 namespace Spectre
 {
 	class VulkanSurface;
@@ -42,7 +44,7 @@ namespace Spectre
 
 		void CreateSwapChain(const SwapChainDesc& desc);
 
-		void CreateMeshBuffers(const std::vector<Vertex> vertices,const std::vector<uint16_t> indices);
+		void CreateMeshBuffers(const std::vector<Vertex> vertices,const std::vector<uint32_t> indices);
 
 		void Setup();
 

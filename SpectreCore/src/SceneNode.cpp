@@ -19,6 +19,20 @@ std::vector<Mesh*> SceneNode::TraverseMeshes()
 	return m_Meshes;
 }
 
+SceneNode::~SceneNode()
+{
+	for (auto& pMesh: m_Meshes)
+	{
+		delete pMesh;
+		pMesh = nullptr;
+	}
+	for (auto& pNode: m_Children)
+	{
+		delete pNode;
+		pNode = nullptr;
+	}
+}
+
 uint64_t SceneNode::GetNodeId()
 {
 	return m_Id;

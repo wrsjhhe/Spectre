@@ -9,8 +9,8 @@
 #include <malloc.h>
 #endif
 
-#define HEAP_ALLOC( _size)  Spectre::Common::heap_alloc(_size)
-#define HEAP_Free( _ptr)    Spectre::Common::free(_ptr)
+#define HEAP_ALLOC( _size)  Spectre::heap_alloc(_size)
+#define HEAP_Free( _ptr)    Spectre::free(_ptr)
 
 
 BEGIN_NAMESPACE_SPECTRE

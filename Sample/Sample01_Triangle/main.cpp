@@ -29,7 +29,31 @@ public:
 
 
 		engine.Init(info);
-		engine.Loop([]() {
+
+		// 顶点数据
+		std::vector<Vertex> vertices = {
+			{
+				{  1.0f,  1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }
+			},
+			{
+				{ -1.0f,  1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }
+			},
+			{
+				{  0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }
+			}
+		};
+
+		// 索引数据
+		std::vector<uint32_t> indices = { 0, 1, 2 };
+
+		Mesh* pMesh = new Mesh();
+
+		pMesh->SetVertices(vertices.data(), vertices.size());
+		pMesh->SetFaceIndex(indices.data(), indices.size());
+
+		engine.Scene.GetRootNode()->AddMesh(pMesh);
+
+		engine.Render([]() {
 			glfwPollEvents();
 			});
 

@@ -25,6 +25,7 @@ public:
 
 	std::vector<Mesh*> TraverseMeshes();
 
+	~SceneNode();
 private:
 	SceneNode();
 

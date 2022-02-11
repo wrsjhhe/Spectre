@@ -6,7 +6,7 @@
 #include "VulkanRenderPass.h"
 #include "VulkanPipeline.h"
 
-#include "Vertex.h"
+#include "Geometry/Vertex.h"
 #include <fstream>
 static std::vector<char> readFile(const std::string& filename)
 {

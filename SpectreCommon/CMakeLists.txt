@@ -18,7 +18,6 @@ set(PUBLIC_HDRS ${INC_DIR}CommonDefinitions.h
 				${INC_DIR}Platform.h
 				
 				${INC_DIR}/Geometry/Vertex.h
-				${INC_DIR}/Geometry/Face.h
 				${INC_DIR}/Geometry/Mesh.h
 
 				${INC_DIR}Mutex.h

@@ -2,6 +2,9 @@
 #include "Vulkan/VulkanGraphicTypes.h"
 #include "Engine.h"
 
+#include "Geometry/Vertex.h"
+
+
 USING_NAMESPACE(Spectre)
 
 bool Engine::Init(const EngineCreateInfo& info)
@@ -20,13 +23,30 @@ bool Engine::Init(const EngineCreateInfo& info)
 
 void Engine::Render(onEngineLoopCallback loopCB)
 {
-	auto meshes = m_Scene.GetRootNode()->TraverseMeshes();
+	auto meshes = Scene.GetRootNode()->TraverseMeshes();
 	
+	uint32_t recordVertexIndex = 0;
+	std::vector<Vertex> vertices;
+	std::vector<uint32_t> indices;
 	for (auto& mesh : meshes)
 	{
+		uint32_t curVerticesSize =	vertices.size();
+		uint32_t* pFace = mesh->Faces();
+		for (uint32_t i = 0;i < mesh->FacesCount();++i)
+		{
+			indices.emplace_back(*pFace + vertices.size());
+			++pFace;
+		}
 
+		Vertex* pVertex = mesh->Vertices();
+		for (uint32_t i = 0; i < mesh->FacesCount(); ++i)
+		{
+			vertices.emplace_back(*pVertex);
+			++pVertex;
+		}
+		recordVertexIndex += vertices.size();
 	}
-
+	m_pRenderSystem->CreateMeshBuffers(vertices, indices);
 
 	m_pRenderSystem->Setup();
 	while (!m_Exit)

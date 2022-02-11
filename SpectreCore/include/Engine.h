@@ -12,6 +12,8 @@ class RenderSystemVK;
 class Engine : public Noncopyable
 {
 public:
+	Scene								Scene;
+public:
 	bool Init(const EngineCreateInfo& info);
 
 	void Render(onEngineLoopCallback loopCb);
@@ -26,8 +28,6 @@ public:
 
 private:
 	RenderSystemVK*						m_pRenderSystem = nullptr;
-	Scene								m_Scene;
-
 
 	bool								m_Exit = false;
 };

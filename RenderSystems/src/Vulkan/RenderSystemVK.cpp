@@ -86,8 +86,6 @@ void Spectre::RenderSystemVK::CreateSwapChain(const SwapChainDesc& desc)
 
 void Spectre::RenderSystemVK::Setup()
 {
-	CreateMeshBuffers();
-
 	VkCommandBufferBeginInfo cmdBeginInfo{};
 	cmdBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -138,7 +136,7 @@ void Spectre::RenderSystemVK::Setup()
 		vkCmdBindDescriptorSets(m_RenderCommandBuffers->GetVkCommandBuffers()[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetVkPipelineLayout(), 0, 1, &m_DescriptorSet->GetVkDescriptorSet(), 0, nullptr);
 		vkCmdBindPipeline(m_RenderCommandBuffers->GetVkCommandBuffers()[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetVkPipeline());
 		vkCmdBindVertexBuffers(m_RenderCommandBuffers->GetVkCommandBuffers()[i], 0, 1, &m_VertexBuffer->GetVkBuffer(), offsets);
-		vkCmdBindIndexBuffer(m_RenderCommandBuffers->GetVkCommandBuffers()[i], m_IndicesBuffer->GetVkBuffer(), 0, VK_INDEX_TYPE_UINT16);
+		vkCmdBindIndexBuffer(m_RenderCommandBuffers->GetVkCommandBuffers()[i], m_IndicesBuffer->GetVkBuffer(), 0, VK_INDEX_TYPE_UINT32);
 		vkCmdDrawIndexed(m_RenderCommandBuffers->GetVkCommandBuffers()[i], m_IndicesCount, 1, 0, 0, 0);
 		vkCmdEndRenderPass(m_RenderCommandBuffers->GetVkCommandBuffers()[i]);
 
@@ -241,34 +239,20 @@ void Spectre::RenderSystemVK::CreateCommandBuffers()
 	m_RenderCommandBuffers = VulkanCommandBuffers::CreataGraphicBuffers(*m_Device, *m_CommandPool, m_SwapChain->GetImageCount());
 }
 
-void Spectre::RenderSystemVK::CreateMeshBuffers(const std::vector<Vertex> vertices,const std::vector<uint16_t> indices)
+void Spectre::RenderSystemVK::CreateMeshBuffers(const std::vector<Vertex> vertices,const std::vector<uint32_t> indices)
 {
 	VkDevice device = m_Device->GetVkDevice();
 	VulkanQueue queue = m_Device->GetGraphicQueue();
 
-	//// 顶点数据
-	//std::vector<Vertex> vertices = {
-	//	{
-	//		{  1.0f,  1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }
-	//	},
-	//	{
-	//		{ -1.0f,  1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }
-	//	},
-	//	{
-	//		{  0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }
-	//	}
-	//};
 
-	//// 索引数据
-	//std::vector<uint16_t> indices = { 0, 1, 2 };
 	m_IndicesCount = (uint32_t)indices.size();
 
 	uint32_t vertexBufferSize = vertices.size() * sizeof(Vertex);
-	uint32_t indexBufferSize = (uint32_t)indices.size() * sizeof(uint16_t);
+	uint32_t indexBufferSize = (uint32_t)indices.size() * sizeof(uint32_t);
 
 
 	auto tempVertexBuffer = VulkanBuffer::CreateHostBuffer(*m_Device,vertices.data(), vertices.size() * sizeof(Vertex));
-	auto tempIndexBuffer = VulkanBuffer::CreateHostBuffer(*m_Device, indices.data(), m_IndicesCount * sizeof(uint16_t));
+	auto tempIndexBuffer = VulkanBuffer::CreateHostBuffer(*m_Device, indices.data(), m_IndicesCount * sizeof(uint32_t));
 
 	m_VertexBuffer = VulkanBuffer::CreateDeviceVertexBuffer(*m_Device, vertexBufferSize);
 	m_IndicesBuffer = VulkanBuffer::CreateDeviceIndexBuffer(*m_Device, indexBufferSize);
