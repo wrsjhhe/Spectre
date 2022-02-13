@@ -6,8 +6,11 @@
 #include "MathDef.h"
 #include "NativeWindow.h"
 #include "VulkanGraphicTypes.h"
+#include "Geometry/Vertex.h"
+
 namespace Spectre
 {
+	class VulkanSurface;
 	class VulkanSwapChain;
 	class VulkanInstance;
 	class VulkanDevice;
@@ -37,13 +40,17 @@ namespace Spectre
 	public:
 		void CreateRenderContext();
 
-		void CreateSwapChain(const NativeWindow& wnd,  const SwapChainDesc& desc);
+		void CreateSurface(const NativeWindow& wnd);
+
+		void CreateSwapChain(const SwapChainDesc& desc);
+
+		void CreateMeshBuffers(const std::vector<Vertex> vertices,const std::vector<uint32_t> indices);
 
 		void Setup();
 
 		void Draw();
 
-		void ReceateSwapchain(const NativeWindow& wnd, const SwapChainDesc& desc);
+		void ReceateSwapchain( const SwapChainDesc& desc);
 	private:
 		void CreateDepthStencil();
 		void CreateRenderPass();
@@ -52,7 +59,7 @@ namespace Spectre
 		void CreateFences();
 		void CreateCommandPool();
 		void CreateCommandBuffers();
-		void CreateMeshBuffers();
+
 		void CreateUniformBuffers();
 		void CreateDescriptorPool();
 		void CreateDescriptorSetLayout();
@@ -66,9 +73,9 @@ namespace Spectre
 	private:
 		uint32_t                                m_Width = 1400;
 		uint32_t                                m_Height = 900;
-		NativeWindow                            m_Window;
 		std::shared_ptr<VulkanInstance>			m_Instance;
 		std::shared_ptr<VulkanDevice>			m_Device;
+		std::shared_ptr<VulkanSurface>          m_Surface;
 		std::shared_ptr<VulkanSwapChain>		m_SwapChain;
 		std::shared_ptr<VulkanCommandPool>		m_CommandPool;
 

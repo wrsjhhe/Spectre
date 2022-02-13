@@ -2,6 +2,7 @@
 #include "VulkanInstance.h"
 #include "VulkanPhysicalDevice.h"
 #include "VulkanDevice.h"
+#include "VulkanSurface.h"
 #include "VulkanSwapchain.h"
 #include "VulkanCommandPool.h"
 #include "VulkanCommandBuffers.h"
@@ -17,7 +18,7 @@
 #include "VulkanPipeline.h"
 #include "RenderSystemVK.h"
 
-#include "Vertex.h"
+#include "Geometry/Vertex.h"
 
 
 USING_NAMESPACE(Spectre)
@@ -41,47 +42,50 @@ void RenderSystemVK::CreateRenderContext()
 
 	m_Device = VulkanDevice::Create(physicalDevice);
 
-	//CreateSemaphores();
-	//CreateUniformBuffers();
-	//CreateDescriptorPool();
-	//CreateDescriptorSetLayout();
-	//CreateDescriptorSet();
-
-
-}
-
-void Spectre::RenderSystemVK::CreateSwapChain(const NativeWindow& wnd,const SwapChainDesc& desc)
-{
-	m_Window = wnd;
-	m_Width = desc.Width;
-	m_Height = desc.Height;
-	m_SwapChain = std::make_shared<VulkanSwapChain>(m_Instance->GetSharedPtr(), m_Device->GetSharedPtr(), wnd, desc);
-
-	CreateDepthStencil();
-	CreateRenderPass();
-	CreateSemaphores();
-	CreateFences();
-	CreateFrameBuffer();
 	CreateCommandPool();
-	CreateMeshBuffers();
+	CreateSemaphores();
 	CreateUniformBuffers();
 	CreateDescriptorPool();
 	CreateDescriptorSetLayout();
 	CreateDescriptorSet();
-	CreatePipelines();
-	CreateCommandBuffers();
+
+
+}
+
+void Spectre::RenderSystemVK::CreateSurface(const NativeWindow& wnd)
+{
+	m_Surface = VulkanSurface::CreateSurface(*m_Instance, wnd);
+}
+
+void Spectre::RenderSystemVK::CreateSwapChain(const SwapChainDesc& desc)
+{
+	m_Width = desc.Width;
+	m_Height = desc.Height;
+	m_SwapChain = std::make_shared<VulkanSwapChain>(*m_Instance, *m_Device,*m_Surface, desc);
+
 	//CreateDepthStencil();
 	//CreateRenderPass();
-	//CreateFrameBuffer();
+	//CreateSemaphores();
 	//CreateFences();
-	//CreateCommandBuffers();
+	//CreateFrameBuffer();
+	//CreateCommandPool();
+	//CreateMeshBuffers();
+	//CreateUniformBuffers();
+	//CreateDescriptorPool();
+	//CreateDescriptorSetLayout();
+	//CreateDescriptorSet();
 	//CreatePipelines();
+	//CreateCommandBuffers();
+	CreateDepthStencil();
+	CreateRenderPass();
+	CreateFrameBuffer();
+	CreateFences();
+	CreateCommandBuffers();
+	CreatePipelines();
 }
 
 void Spectre::RenderSystemVK::Setup()
 {
-	//CreateMeshBuffers();
-
 	VkCommandBufferBeginInfo cmdBeginInfo{};
 	cmdBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -132,7 +136,7 @@ void Spectre::RenderSystemVK::Setup()
 		vkCmdBindDescriptorSets(m_RenderCommandBuffers->GetVkCommandBuffers()[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetVkPipelineLayout(), 0, 1, &m_DescriptorSet->GetVkDescriptorSet(), 0, nullptr);
 		vkCmdBindPipeline(m_RenderCommandBuffers->GetVkCommandBuffers()[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetVkPipeline());
 		vkCmdBindVertexBuffers(m_RenderCommandBuffers->GetVkCommandBuffers()[i], 0, 1, &m_VertexBuffer->GetVkBuffer(), offsets);
-		vkCmdBindIndexBuffer(m_RenderCommandBuffers->GetVkCommandBuffers()[i], m_IndicesBuffer->GetVkBuffer(), 0, VK_INDEX_TYPE_UINT16);
+		vkCmdBindIndexBuffer(m_RenderCommandBuffers->GetVkCommandBuffers()[i], m_IndicesBuffer->GetVkBuffer(), 0, VK_INDEX_TYPE_UINT32);
 		vkCmdDrawIndexed(m_RenderCommandBuffers->GetVkCommandBuffers()[i], m_IndicesCount, 1, 0, 0, 0);
 		vkCmdEndRenderPass(m_RenderCommandBuffers->GetVkCommandBuffers()[i]);
 
@@ -150,7 +154,7 @@ void Spectre::RenderSystemVK::Draw()
 	int32_t backBufferIndex = m_SwapChain->AcquireImageIndex(m_PresentComplete);
 	if (backBufferIndex < 0)
 	{
-		ReceateSwapchain(m_Window, { m_Width,m_Height });
+		ReceateSwapchain({ m_Width,m_Height });
 		return;
 	}
 
@@ -180,7 +184,7 @@ void Spectre::RenderSystemVK::Draw()
 
 void Spectre::RenderSystemVK::CreateDepthStencil()
 {
-	m_DepthStencilImage = VulkanImages::CreateDepthStencilImage(*m_Device, m_SwapChain->GetWidth(), m_SwapChain->GetHeight());
+	m_DepthStencilImage = VulkanImages::CreateDepthStencilImage(*m_Device, m_Width, m_Height);
 }
 
 void Spectre::RenderSystemVK::CreateRenderPass()
@@ -235,34 +239,20 @@ void Spectre::RenderSystemVK::CreateCommandBuffers()
 	m_RenderCommandBuffers = VulkanCommandBuffers::CreataGraphicBuffers(*m_Device, *m_CommandPool, m_SwapChain->GetImageCount());
 }
 
-void Spectre::RenderSystemVK::CreateMeshBuffers()
+void Spectre::RenderSystemVK::CreateMeshBuffers(const std::vector<Vertex> vertices,const std::vector<uint32_t> indices)
 {
 	VkDevice device = m_Device->GetVkDevice();
 	VulkanQueue queue = m_Device->GetGraphicQueue();
 
-	// 顶点数据
-	std::vector<Vertex> vertices = {
-		{
-			{  1.0f,  1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }
-		},
-		{
-			{ -1.0f,  1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }
-		},
-		{
-			{  0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }
-		}
-	};
 
-	// 索引数据
-	std::vector<uint16_t> indices = { 0, 1, 2 };
 	m_IndicesCount = (uint32_t)indices.size();
 
 	uint32_t vertexBufferSize = vertices.size() * sizeof(Vertex);
-	uint32_t indexBufferSize = (uint32_t)indices.size() * sizeof(uint16_t);
+	uint32_t indexBufferSize = (uint32_t)indices.size() * sizeof(uint32_t);
 
 
 	auto tempVertexBuffer = VulkanBuffer::CreateHostBuffer(*m_Device,vertices.data(), vertices.size() * sizeof(Vertex));
-	auto tempIndexBuffer = VulkanBuffer::CreateHostBuffer(*m_Device, indices.data(), m_IndicesCount * sizeof(uint16_t));
+	auto tempIndexBuffer = VulkanBuffer::CreateHostBuffer(*m_Device, indices.data(), m_IndicesCount * sizeof(uint32_t));
 
 	m_VertexBuffer = VulkanBuffer::CreateDeviceVertexBuffer(*m_Device, vertexBufferSize);
 	m_IndicesBuffer = VulkanBuffer::CreateDeviceIndexBuffer(*m_Device, indexBufferSize);
@@ -354,12 +344,14 @@ void Spectre::RenderSystemVK::CreatePipelines()
 
 void Spectre::RenderSystemVK::UpdateUniformBuffers()
 {
+	m_MVPData.projection.SetIdentity();
+	m_MVPData.projection.Perspective(DegreesToRadians(75.0f), m_Width, m_Height, 0.01f, 3000.0f);
 	VkDevice device = m_Device->GetVkDevice();
 	//m_MVPData.model.AppendRotation(90.0f * delta, Vector3::UpVector);
 	m_MVPBuffer->UpdateHostBuffer(&m_MVPData);
 }
 
-void Spectre::RenderSystemVK::ReceateSwapchain(const NativeWindow& wnd, const SwapChainDesc& desc)
+void Spectre::RenderSystemVK::ReceateSwapchain(const SwapChainDesc& desc)
 {
 	vkDeviceWaitIdle(m_Device->GetVkDevice());
 
@@ -367,7 +359,7 @@ void Spectre::RenderSystemVK::ReceateSwapchain(const NativeWindow& wnd, const Sw
 	m_Width = desc.Width;
 	m_Height = desc.Height;
 	
-	m_SwapChain = std::make_shared<VulkanSwapChain>(m_Instance->GetSharedPtr(), m_Device->GetSharedPtr(), wnd, desc);
+	m_SwapChain = std::make_shared<VulkanSwapChain>(*m_Instance, *m_Device,*m_Surface, desc);
 	CreateDepthStencil();
 	CreateSemaphores();
 	CreateRenderPass();

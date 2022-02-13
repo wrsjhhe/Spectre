@@ -19,7 +19,7 @@ template <typename SSType, typename FirstArgType, typename... RestArgsType>
 void FormatStrSS(SSType& ss, const FirstArgType& FirstArg, const RestArgsType&... RestArgs)
 {
     FormatStrSS(ss, FirstArg);
-    FormatStrSS(ss, RestArgs...); // recursive call using pack expansion syntax
+    FormatStrSS(ss, RestArgs...); 
 }
 
 template <typename... RestArgsType>

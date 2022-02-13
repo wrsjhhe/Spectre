@@ -1,6 +1,7 @@
 #include "VulkanCommon.h"
 #include "VulkanInstance.h"
 #include "VulkanDevice.h"
+#include "VulkanSurface.h"
 #include "VulkanSemaphore.h"
 #include "VulkanSwapchain.h"
 #include "MathDef.h"
@@ -39,19 +40,16 @@ VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR> avail
 }
 
 
-VulkanSwapChain::VulkanSwapChain(std::shared_ptr<const VulkanInstance> vulkanInstance,
-	std::shared_ptr<const VulkanDevice> vulkanDevice,
-	const NativeWindow& window, const SwapChainDesc& desc):
-	m_VulkanInstance(vulkanInstance),
-	m_VulkanDevice(vulkanDevice),
-	m_Window(window),
+VulkanSwapChain::VulkanSwapChain(const VulkanInstance& vulkanInstance,const VulkanDevice& vulkanDevice,
+	const VulkanSurface& vulkanSurface, const SwapChainDesc& desc):
+	m_Instance(vulkanInstance),
+	m_Device(vulkanDevice),
+	m_Surface(vulkanSurface),
 	m_Width(desc.Width),
 	m_Height(desc.Height)
 {
-	CreateSurface();
-
-	VkDevice device = m_VulkanDevice->GetVkDevice();
-	VkPhysicalDevice physicalDevice = m_VulkanDevice->GetPhysicalDevice().GetVkPhysicalDevice();
+	VkDevice device = m_Device.GetVkDevice();
+	VkPhysicalDevice physicalDevice = m_Device.GetPhysicalDevice().GetVkPhysicalDevice();
 
 	SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(physicalDevice);
 
@@ -67,7 +65,7 @@ VulkanSwapChain::VulkanSwapChain(std::shared_ptr<const VulkanInstance> vulkanIns
 
 	VkSwapchainCreateInfoKHR createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-	createInfo.surface = m_VkSurface;
+	createInfo.surface = m_Surface.GetVkSurface();
 
 	createInfo.minImageCount = m_ImageCount;
 	createInfo.imageFormat = surfaceFormat.format;
@@ -95,27 +93,26 @@ VulkanSwapChain::VulkanSwapChain(std::shared_ptr<const VulkanInstance> vulkanIns
 
 	VK_CHECK(vkCreateSwapchainKHR(device, &createInfo, nullptr, &m_VkSwapChain), "Failed to create swap chain!");
 
-	m_Images = VulkanImages::CreateSwapChainImage(*vulkanDevice, *this);
+	m_Images = VulkanImages::CreateSwapChainImage(m_Device, *this);
 	m_ImageAcquiredSemaphore.resize(m_ImageCount);
 	for (uint32_t i = 0;i < m_ImageCount;++i)
 	{
-		m_ImageAcquiredSemaphore[i] = VulkanSemaphore::CreateSemaphore(*m_VulkanDevice);
+		m_ImageAcquiredSemaphore[i] = VulkanSemaphore::CreateSemaphore(m_Device);
 	}
 }
 
 VulkanSwapChain::~VulkanSwapChain()
 {
 	m_Images = nullptr;
-	VkDevice device = m_VulkanDevice->GetVkDevice();
+	VkDevice device = m_Device.GetVkDevice();
 
 	vkDestroySwapchainKHR(device, m_VkSwapChain, nullptr);
-	vkDestroySurfaceKHR(m_VulkanInstance->GetVkInstance(), m_VkSurface, nullptr);
 }
 
 uint32_t VulkanSwapChain::AcquireImageIndex(std::shared_ptr<VulkanSemaphore>& outSemaphore)
 {
 	uint32_t imageIndex = 0;
-	VkDevice device = m_VulkanDevice->GetVkDevice();
+	VkDevice device = m_Device.GetVkDevice();
 	const uint32_t prev = m_SemaphoreIndex;
 
 	m_SemaphoreIndex = (m_SemaphoreIndex + 1) % m_ImageAcquiredSemaphore.size();
@@ -168,28 +165,7 @@ VulkanSwapChain::SwapStatus VulkanSwapChain::Present(VkQueue presentQueue, VkSem
 	return SwapStatus::Healthy;
 }
 
-void VulkanSwapChain::Destory()
-{
 
-	//m_Images = nullptr;
-}
-
-void VulkanSwapChain::CreateSurface()
-{
-	if (m_VkSurface != VK_NULL_HANDLE)
-	{
-		vkDestroySurfaceKHR(m_VulkanInstance->GetVkInstance(), m_VkSurface, NULL);
-		m_VkSurface = VK_NULL_HANDLE;
-	}
-
-	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
-	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-	surfaceCreateInfo.hinstance = GetModuleHandle(NULL);
-	surfaceCreateInfo.hwnd = (HWND)m_Window.hWnd;
-	VkResult err = vkCreateWin32SurfaceKHR(m_VulkanInstance->GetVkInstance(), &surfaceCreateInfo, nullptr, &m_VkSurface);
-
-	VK_CHECK(err,"Failed create surface!")
-}
 
 VkExtent2D VulkanSwapChain::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
 {
@@ -198,7 +174,7 @@ VkExtent2D VulkanSwapChain::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& cap
 	}
 	else {
 		VkSurfaceCapabilitiesKHR surfProperties;
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_VulkanDevice->GetPhysicalDevice().GetVkPhysicalDevice(), m_VkSurface, &surfProperties);
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_Device.GetPhysicalDevice().GetVkPhysicalDevice(), m_Surface.GetVkSurface(), &surfProperties);
 
 
 		VkExtent2D actualExtent = {
@@ -216,22 +192,22 @@ VulkanSwapChain::SwapChainSupportDetails VulkanSwapChain::QuerySwapChainSupport(
 {
 	SwapChainSupportDetails details{};
 
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, m_VkSurface, &details.capabilities);
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, m_Surface.GetVkSurface(), &details.capabilities);
 
 	uint32_t formatCount;
-	vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_VkSurface, &formatCount, nullptr);
+	vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_Surface.GetVkSurface(), &formatCount, nullptr);
 
 	if (formatCount != 0) {
 		details.formats.resize(formatCount);
-		vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_VkSurface, &formatCount, details.formats.data());
+		vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_Surface.GetVkSurface(), &formatCount, details.formats.data());
 	}
 
 	uint32_t presentModeCount;
-	vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_VkSurface, &presentModeCount, nullptr);
+	vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_Surface.GetVkSurface(), &presentModeCount, nullptr);
 
 	if (presentModeCount != 0) {
 		details.presentModes.resize(presentModeCount);
-		vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_VkSurface, &presentModeCount, details.presentModes.data());
+		vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_Surface.GetVkSurface(), &presentModeCount, details.presentModes.data());
 	}
 
 	return details;
@@ -254,7 +230,7 @@ VulkanSwapChain::QueueFamilyIndices VulkanSwapChain::FindQueueFamilies(VkPhysica
 		}
 
 		VkBool32 presentSupport = false;
-		vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_VkSurface, &presentSupport);
+		vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_Surface.GetVkSurface(), &presentSupport);
 
 		if (queueFamily.queueCount > 0 && presentSupport) {
 			indices.presentFamily = i;
