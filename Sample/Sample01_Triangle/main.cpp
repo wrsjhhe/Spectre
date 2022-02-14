@@ -51,11 +51,14 @@ public:
 		pMesh->SetVertices(vertices.data(), vertices.size());
 		pMesh->SetFaceIndex(indices.data(), indices.size());
 
-		engine.Scene.GetRootNode()->AddMesh(pMesh);
-
-		engine.Render([]() {
+		engine.GetScene().GetRootNode()->AddMesh(pMesh);
+		engine.SetEngineLoopCallback([]() {
 			glfwPollEvents();
 			});
+		engine.SetEngineSleepCallback([]() {
+			glfwWaitEvents();
+			});
+		engine.Render();
 
 		glfwDestroyWindow(window);
 		glfwTerminate();
@@ -64,6 +67,16 @@ public:
 	void Resize(uint32_t width, uint32_t height)
 	{
 		engine.Resize(width, height);
+	}
+
+	void Sleep()
+	{
+		engine.Sleep();
+	}
+
+	void Awake()
+	{
+		engine.Awake();
 	}
 
 	void Exit()
@@ -89,10 +102,18 @@ static void OnButton(GLFWwindow* window, int key, int scancode, int action, int 
 }
 
 static void onWindowResized(GLFWwindow* window, int width, int height) {
-	if (width == 0 || height == 0) return;
 
 	Sample01_Triangle* app = reinterpret_cast<Sample01_Triangle*>(glfwGetWindowUserPointer(window));
-	app->Resize(width, height);
+
+	if (width == 0 || height == 0)
+	{
+		app->Sleep();
+	}
+	else
+	{
+		app->Awake();
+		app->Resize(width, height);
+	}
 }
 
 int main()

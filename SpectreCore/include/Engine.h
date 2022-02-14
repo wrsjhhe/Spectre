@@ -6,21 +6,31 @@
 
 BEGIN_NAMESPACE_SPECTRE
 
-typedef void (*onEngineLoopCallback)();
+typedef void (*OnEngineLoopCallback)();
+
+typedef void (*OnEngineSleepCallback)();
 
 class RenderSystemVK;
 class Engine : public Noncopyable
 {
-public:
-	Scene								Scene;
+
 public:
 	bool Init(const EngineCreateInfo& info);
 
-	void Render(onEngineLoopCallback loopCb);
+	Scene& GetScene() { return m_Scene; }
+
+	void Render();
 
 	void Resize(uint32_t width,uint32_t height);
 
+	void Sleep() { m_Sleep = true; }
+
+	void Awake() { m_Sleep = false; }
+
 	void Exit();
+
+	void SetEngineLoopCallback(OnEngineLoopCallback loopCb) { m_onLoop = loopCb; }
+	void SetEngineSleepCallback(OnEngineSleepCallback sleepCb) { m_onSleep = sleepCb; }
 
 	Engine();
 
@@ -28,8 +38,13 @@ public:
 
 private:
 	RenderSystemVK*						m_pRenderSystem = nullptr;
+	Scene								m_Scene;
+	bool                                m_Sleep = false;
 
 	bool								m_Exit = false;
+private:
+	OnEngineLoopCallback                m_onLoop;
+	OnEngineSleepCallback               m_onSleep;
 };
 
 END_NAMESPACE_SPECTRE

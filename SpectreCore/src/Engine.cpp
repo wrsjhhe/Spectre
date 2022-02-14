@@ -21,9 +21,9 @@ bool Engine::Init(const EngineCreateInfo& info)
 	return true;
 }
 
-void Engine::Render(onEngineLoopCallback loopCB)
+void Engine::Render()
 {
-	auto meshes = Scene.GetRootNode()->TraverseMeshes();
+	auto meshes = m_Scene.GetRootNode()->TraverseMeshes();
 	
 	uint32_t recordVertexIndex = 0;
 	std::vector<Vertex> vertices;
@@ -51,8 +51,13 @@ void Engine::Render(onEngineLoopCallback loopCB)
 	m_pRenderSystem->Setup();
 	while (!m_Exit)
 	{
-		if (loopCB != nullptr)
-			loopCB();
+		if (m_Sleep && m_onSleep!=nullptr)
+		{
+			m_onSleep();
+			continue;
+		}
+		if (m_onLoop != nullptr)
+			m_onLoop();
 		m_pRenderSystem->Draw();
 	}
 }
