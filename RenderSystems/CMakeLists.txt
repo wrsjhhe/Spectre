@@ -10,8 +10,6 @@ include_directories(${VULKANSDK_DIR})
 set(SPECTRE_COMMON_DIR ../SpectreCommon/include/)
 include_directories(${SPECTRE_COMMON_DIR})
 
-set(SPDLOG_DIR ../ThirdParty/spdlog/include)
-include_directories(${SPDLOG_DIR})
 # ==================================================================================================
 # 项目头文件设置
 # ==================================================================================================
