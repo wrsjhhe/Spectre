@@ -20,6 +20,7 @@ set(PUBLIC_HDRS ${INC_DIR}Engine.h
 				${INC_DIR}Scene.h
 				${INC_DIR}Material.h
 				${INC_DIR}ShaderTool.h
+				${INC_DIR}Entity.h
 )
 
 set(PRIVATE_HDRS )
@@ -35,6 +36,7 @@ set(SRCS ${SRC_DIR}Engine.cpp
 		 ${SRC_DIR}Scene.cpp
 		 ${SRC_DIR}Material.cpp
 		 ${SRC_DIR}ShaderTool.cpp
+		 ${SRC_DIR}Entity.cpp
 )
 
 

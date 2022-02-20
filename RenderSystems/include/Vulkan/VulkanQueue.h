@@ -9,6 +9,8 @@ public:
 	explicit VulkanQueue(const VkDevice& device, uint32_t familyIndex);
 	VulkanQueue(const VulkanQueue& other);
 
+	VkQueue GetVkQueue() { return m_VkQueue; }
+
 
 	int32_t   m_QueueFamilyIndex = -1;
 	VkQueue    m_VkQueue = VK_NULL_HANDLE;

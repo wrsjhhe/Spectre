@@ -16,7 +16,7 @@ namespace Spectre
 	class VulkanDevice;
 	class VulkanBuffer;
 	class VulkanCommandPool;
-	class VulkanCommandBuffers;
+	class VulkanCommandBuffer;
 	class VulkanImages;
 	class VulkanRenderPass;
 	class VulkanFrameBuffer;
@@ -26,6 +26,8 @@ namespace Spectre
 	class VulkanDescriptorSetLayout;
 	class VulkanDescriptorSet;
 	class VulkanPipeline;
+
+	typedef std::shared_ptr<VulkanCommandBuffer> VulkanCommandBufferPtr;
 
 	class RenderSystemVK
 	{
@@ -58,7 +60,6 @@ namespace Spectre
 		void CreateSemaphores();
 		void CreateFences();
 		void CreateCommandPool();
-		void CreateCommandBuffers();
 
 		void CreateUniformBuffers();
 		void CreateDescriptorPool();
@@ -96,7 +97,7 @@ namespace Spectre
 		std::shared_ptr<VulkanBuffer>			m_MVPBuffer;
 		UBOData									m_MVPData;
 
-		std::shared_ptr<VulkanCommandBuffers>	m_RenderCommandBuffers;
+		std::vector<VulkanCommandBufferPtr>		m_RenderCommandBuffers;
 
 		std::shared_ptr<VulkanDescriptorPool>	m_DescriptorPool;
 

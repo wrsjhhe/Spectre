@@ -11,7 +11,7 @@ std::vector<uint32_t> compile_file(const std::string& source_name,
 	shaderc::CompileOptions options;
 
 	// Like -DMY_DEFINE=1
-	options.AddMacroDefinition("MY_DEFINE", "1");
+	//options.AddMacroDefinition("MY_DEFINE", "1");
 	if (optimize) options.SetOptimizationLevel(shaderc_optimization_level_size);
 
 	shaderc::SpvCompilationResult module =

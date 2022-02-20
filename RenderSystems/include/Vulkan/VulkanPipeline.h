@@ -1,4 +1,5 @@
 #pragma once
+#include <map>
 
 BEGIN_NAMESPACE_SPECTRE
 
@@ -20,6 +21,7 @@ private:
 	VkPipelineLayout					m_VkPipelineLayout = VK_NULL_HANDLE;
 	VkPipeline							m_VkPipeline = VK_NULL_HANDLE;
 	VkPipelineCache						m_VkPipelineCache = VK_NULL_HANDLE;
+	std::map<std::string, std::vector<uint32_t>> m_Shaders;
 };
 
 END_NAMESPACE_SPECTRE

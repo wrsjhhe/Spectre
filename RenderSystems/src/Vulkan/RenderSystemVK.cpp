@@ -5,7 +5,7 @@
 #include "VulkanSurface.h"
 #include "VulkanSwapchain.h"
 #include "VulkanCommandPool.h"
-#include "VulkanCommandBuffers.h"
+#include "VulkanCommandBuffer.h"
 #include "VulkanBuffer.h"
 #include "VulkanImages.h"
 #include "VulkanRenderPass.h"
@@ -63,24 +63,10 @@ void Spectre::RenderSystemVK::CreateSwapChain(const SwapChainDesc& desc)
 	m_Height = desc.Height;
 	m_SwapChain = std::make_shared<VulkanSwapChain>(*m_Instance, *m_Device,*m_Surface, desc);
 
-	//CreateDepthStencil();
-	//CreateRenderPass();
-	//CreateSemaphores();
-	//CreateFences();
-	//CreateFrameBuffer();
-	//CreateCommandPool();
-	//CreateMeshBuffers();
-	//CreateUniformBuffers();
-	//CreateDescriptorPool();
-	//CreateDescriptorSetLayout();
-	//CreateDescriptorSet();
-	//CreatePipelines();
-	//CreateCommandBuffers();
 	CreateDepthStencil();
 	CreateRenderPass();
 	CreateFrameBuffer();
 	CreateFences();
-	CreateCommandBuffers();
 	CreatePipelines();
 }
 
@@ -108,7 +94,8 @@ void Spectre::RenderSystemVK::Setup()
 	renderPassBeginInfo.renderArea.extent.width = fwidth;
 	renderPassBeginInfo.renderArea.extent.height = fheight;
 
-	for (uint32_t i = 0; i < m_RenderCommandBuffers->GetVkCommandBuffers().size(); ++i)
+	m_RenderCommandBuffers = VulkanCommandBuffer::CreataGraphicBuffers(*m_Device, *m_CommandPool, m_SwapChain->GetImageCount());
+	for (uint32_t i = 0; i < m_RenderCommandBuffers.size(); ++i)
 	{
 		renderPassBeginInfo.framebuffer = m_FrameBuffers[i]->GetVkFrameBuffer();
 
@@ -128,19 +115,18 @@ void Spectre::RenderSystemVK::Setup()
 
 		VkDeviceSize offsets[1] = { 0 };
 
-		vkBeginCommandBuffer(m_RenderCommandBuffers->GetVkCommandBuffers()[i], &cmdBeginInfo);
+		m_RenderCommandBuffers[i]->RecordCommond([&](VkCommandBuffer cmdBuffer) {
+			vkCmdBeginRenderPass(cmdBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+			vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
+			vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
+			vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetVkPipelineLayout(), 0, 1, &m_DescriptorSet->GetVkDescriptorSet(), 0, nullptr);
+			vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetVkPipeline());
+			vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &m_VertexBuffer->GetVkBuffer(), offsets);
+			vkCmdBindIndexBuffer(cmdBuffer, m_IndicesBuffer->GetVkBuffer(), 0, VK_INDEX_TYPE_UINT32);
+			vkCmdDrawIndexed(cmdBuffer, m_IndicesCount, 1, 0, 0, 0);
+			vkCmdEndRenderPass(cmdBuffer);		
+		});
 
-		vkCmdBeginRenderPass(m_RenderCommandBuffers->GetVkCommandBuffers()[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-		vkCmdSetViewport(m_RenderCommandBuffers->GetVkCommandBuffers()[i], 0, 1, &viewport);
-		vkCmdSetScissor(m_RenderCommandBuffers->GetVkCommandBuffers()[i], 0, 1, &scissor);
-		vkCmdBindDescriptorSets(m_RenderCommandBuffers->GetVkCommandBuffers()[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetVkPipelineLayout(), 0, 1, &m_DescriptorSet->GetVkDescriptorSet(), 0, nullptr);
-		vkCmdBindPipeline(m_RenderCommandBuffers->GetVkCommandBuffers()[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetVkPipeline());
-		vkCmdBindVertexBuffers(m_RenderCommandBuffers->GetVkCommandBuffers()[i], 0, 1, &m_VertexBuffer->GetVkBuffer(), offsets);
-		vkCmdBindIndexBuffer(m_RenderCommandBuffers->GetVkCommandBuffers()[i], m_IndicesBuffer->GetVkBuffer(), 0, VK_INDEX_TYPE_UINT32);
-		vkCmdDrawIndexed(m_RenderCommandBuffers->GetVkCommandBuffers()[i], m_IndicesCount, 1, 0, 0, 0);
-		vkCmdEndRenderPass(m_RenderCommandBuffers->GetVkCommandBuffers()[i]);
-
-		vkEndCommandBuffer(m_RenderCommandBuffers->GetVkCommandBuffers()[i]);
 	}
 	vkDeviceWaitIdle(m_Device->GetVkDevice());
 }
@@ -158,26 +144,18 @@ void Spectre::RenderSystemVK::Draw()
 		return;
 	}
 
+	// 提交绘制命令
 	VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
-	VkSubmitInfo submitInfo = {};
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submitInfo.pWaitDstStageMask = &waitStageMask;
-	submitInfo.pWaitSemaphores = &m_PresentComplete->GetVkSemaphore();
-	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = &m_RenderComplete->GetVkSemaphore();
-	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pCommandBuffers = &(m_RenderCommandBuffers->GetVkCommandBuffers()[backBufferIndex]);
-	submitInfo.commandBufferCount = 1;
+	m_RenderCommandBuffers[backBufferIndex]->SignalSemaphore = { m_RenderComplete->GetVkSemaphore() };
+	m_RenderCommandBuffers[backBufferIndex]->WaitSemaphore = { m_PresentComplete->GetVkSemaphore() };
+	m_RenderCommandBuffers[backBufferIndex]->WaitStageMask = { waitStageMask };
 
-	// 提交绘制命令
-	vkResetFences(device, 1, &(m_Fences[backBufferIndex]->GetVkFence()));
-	vkQueueSubmit(queue.m_VkQueue, 1, &submitInfo, m_Fences[backBufferIndex]->GetVkFence());
-	vkWaitForFences(device, 1, &(m_Fences[backBufferIndex]->GetVkFence()), true, 200 * 1000 * 1000);
+	m_RenderCommandBuffers[backBufferIndex]->Submit(queue);
 
 	// present
 	m_SwapChain->Present(
-		queue.m_VkQueue,
+		queue.GetVkQueue(),
 		&m_RenderComplete->GetVkSemaphore()
 	);
 }
@@ -234,10 +212,6 @@ void Spectre::RenderSystemVK::CreateCommandPool()
 	m_CommandPool = VulkanCommandPool::CreateCommandPool(*m_Device);
 }
 
-void Spectre::RenderSystemVK::CreateCommandBuffers()
-{
-	m_RenderCommandBuffers = VulkanCommandBuffers::CreataGraphicBuffers(*m_Device, *m_CommandPool, m_SwapChain->GetImageCount());
-}
 
 void Spectre::RenderSystemVK::CreateMeshBuffers(const std::vector<Vertex> vertices,const std::vector<uint32_t> indices)
 {
@@ -257,36 +231,37 @@ void Spectre::RenderSystemVK::CreateMeshBuffers(const std::vector<Vertex> vertic
 	m_VertexBuffer = VulkanBuffer::CreateDeviceVertexBuffer(*m_Device, vertexBufferSize);
 	m_IndicesBuffer = VulkanBuffer::CreateDeviceIndexBuffer(*m_Device, indexBufferSize);
 
-	auto xferCmdBuffer = VulkanCommandBuffers::CreataGraphicBuffers(*m_Device, *m_CommandPool, 1);
-	VkCommandBuffer vkCmdBuffer = xferCmdBuffer->GetVkCommandBuffers()[0];
+	auto xferCmdBuffer = VulkanCommandBuffer::CreataGraphicBuffers(*m_Device, *m_CommandPool, 1)[0];
+	//VkCommandBuffer vkCmdBuffer = xferCmdBuffer->GetVkCommandBuffer();
 
 	// 开始录制命令
-	VkCommandBufferBeginInfo cmdBufferBeginInfo{};
-	cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	vkBeginCommandBuffer(vkCmdBuffer, &cmdBufferBeginInfo);
+	//VkCommandBufferBeginInfo cmdBufferBeginInfo{};
+	//cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	//vkBeginCommandBuffer(vkCmdBuffer, &cmdBufferBeginInfo);
 
-	tempVertexBuffer->MapToDevice(*m_VertexBuffer, vkCmdBuffer);
-	tempIndexBuffer->MapToDevice(*m_IndicesBuffer, vkCmdBuffer);
+	tempVertexBuffer->MapToDevice(*m_VertexBuffer, xferCmdBuffer->GetVkCommandBuffer());
+	tempIndexBuffer->MapToDevice(*m_IndicesBuffer, xferCmdBuffer->GetVkCommandBuffer());
 
+	xferCmdBuffer->Submit(queue);
 	// 结束录制
-	vkEndCommandBuffer(vkCmdBuffer);
+	//vkEndCommandBuffer(vkCmdBuffer);
 
 	// 提交命令，并且等待命令执行完毕。
-	VkSubmitInfo submitInfo{};
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &vkCmdBuffer;
+	//VkSubmitInfo submitInfo{};
+	//submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	//submitInfo.commandBufferCount = 1;
+	//submitInfo.pCommandBuffers = &vkCmdBuffer;
 
-	VkFenceCreateInfo fenceInfo{};
-	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	fenceInfo.flags = 0;
+	//VkFenceCreateInfo fenceInfo{};
+	//fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	//fenceInfo.flags = 0;
 
-	VkFence fence = VK_NULL_HANDLE;
-	vkCreateFence(device, &fenceInfo, nullptr, &fence);
-	vkQueueSubmit(queue.m_VkQueue, 1, &submitInfo, fence);
-	vkWaitForFences(device, 1, &fence, VK_TRUE, MAX_int64);
+	//VkFence fence = VK_NULL_HANDLE;
+	//vkCreateFence(device, &fenceInfo, nullptr, &fence);
+	//vkQueueSubmit(queue.GetVkQueue(), 1, &submitInfo, fence);
+	//vkWaitForFences(device, 1, &fence, VK_TRUE, MAX_int64);
 
-	vkDestroyFence(device, fence, nullptr);
+	//vkDestroyFence(device, fence, nullptr);
 }
 
 
@@ -365,7 +340,7 @@ void Spectre::RenderSystemVK::ReceateSwapchain(const SwapChainDesc& desc)
 	CreateRenderPass();
 	CreatePipelines();
 	CreateFrameBuffer();
-	CreateCommandBuffers();
+	//CreateCommandBuffers();
 	Setup();
 }
 
@@ -375,7 +350,7 @@ void Spectre::RenderSystemVK::DestorySwapchain()
 
 	m_DepthStencilImage = nullptr;
 
-	m_RenderCommandBuffers = nullptr;
+	m_RenderCommandBuffers.clear();
 
 	m_Pipeline = nullptr;
 
