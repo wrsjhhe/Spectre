@@ -25,7 +25,7 @@ VulkanDescriptorPool::VulkanDescriptorPool(const VulkanDevice& vulkanDevice):
 {
 	VkDescriptorPoolSize poolSize = {};
 	poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	poolSize.descriptorCount = 1;
+	poolSize.descriptorCount = DESCRIPTOR_TYPE_COUNT;
 
 	VkDescriptorPoolCreateInfo descriptorPoolInfo{};
 	descriptorPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;

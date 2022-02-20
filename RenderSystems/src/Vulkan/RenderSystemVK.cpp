@@ -338,9 +338,7 @@ void Spectre::RenderSystemVK::ReceateSwapchain(const SwapChainDesc& desc)
 	CreateDepthStencil();
 	CreateSemaphores();
 	CreateRenderPass();
-	CreatePipelines();
 	CreateFrameBuffer();
-	//CreateCommandBuffers();
 	Setup();
 }
 
@@ -351,8 +349,6 @@ void Spectre::RenderSystemVK::DestorySwapchain()
 	m_DepthStencilImage = nullptr;
 
 	m_RenderCommandBuffers.clear();
-
-	m_Pipeline = nullptr;
 
 	m_RenderPass = nullptr;
 
