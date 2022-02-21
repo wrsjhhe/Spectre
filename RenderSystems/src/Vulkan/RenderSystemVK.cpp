@@ -240,36 +240,11 @@ void Spectre::RenderSystemVK::CreateMeshBuffers(const std::vector<Vertex> vertic
 	m_IndicesBuffer = VulkanBuffer::CreateDeviceIndexBuffer(*m_Device, indexBufferSize);
 
 	auto xferCmdBuffer = VulkanCommandBuffer::CreataGraphicBuffers(*m_Device, *m_CommandPool, 1)[0];
-	//VkCommandBuffer vkCmdBuffer = xferCmdBuffer->GetVkCommandBuffer();
-
-	// 开始录制命令
-	//VkCommandBufferBeginInfo cmdBufferBeginInfo{};
-	//cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	//vkBeginCommandBuffer(vkCmdBuffer, &cmdBufferBeginInfo);
 
 	tempVertexBuffer->MapToDevice(*m_VertexBuffer, xferCmdBuffer->GetVkCommandBuffer());
 	tempIndexBuffer->MapToDevice(*m_IndicesBuffer, xferCmdBuffer->GetVkCommandBuffer());
 
 	xferCmdBuffer->Submit(queue);
-	// 结束录制
-	//vkEndCommandBuffer(vkCmdBuffer);
-
-	// 提交命令，并且等待命令执行完毕。
-	//VkSubmitInfo submitInfo{};
-	//submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	//submitInfo.commandBufferCount = 1;
-	//submitInfo.pCommandBuffers = &vkCmdBuffer;
-
-	//VkFenceCreateInfo fenceInfo{};
-	//fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	//fenceInfo.flags = 0;
-
-	//VkFence fence = VK_NULL_HANDLE;
-	//vkCreateFence(device, &fenceInfo, nullptr, &fence);
-	//vkQueueSubmit(queue.GetVkQueue(), 1, &submitInfo, fence);
-	//vkWaitForFences(device, 1, &fence, VK_TRUE, MAX_int64);
-
-	//vkDestroyFence(device, fence, nullptr);
 }
 
 
