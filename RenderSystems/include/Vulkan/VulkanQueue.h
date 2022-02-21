@@ -12,7 +12,7 @@ public:
 	VkQueue GetVkQueue() { return m_VkQueue; }
 
 
-	int32_t   m_QueueFamilyIndex = -1;
+	uint32_t   m_QueueFamilyIndex = -1;
 	VkQueue    m_VkQueue = VK_NULL_HANDLE;
 };
 

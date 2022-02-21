@@ -10,9 +10,7 @@ USING_NAMESPACE(Spectre)
 bool Engine::Init(const EngineCreateInfo& info)
 {
 	m_pRenderSystem = new RenderSystemVK();
-	m_pRenderSystem->CreateRenderContext();
-
-	m_pRenderSystem->CreateSurface(info.Wnd);
+	m_pRenderSystem->CreateRenderContext(info.Wnd);
 
 	SwapChainDesc swapChainDesc;
 	swapChainDesc.Width = info.Width;

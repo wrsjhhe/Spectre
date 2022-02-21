@@ -1,6 +1,5 @@
 #pragma once
 
-
 struct SwapChainDesc
 {
 	uint32_t                  Width = 0;

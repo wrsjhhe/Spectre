@@ -10,7 +10,8 @@
 
 namespace Spectre
 {
-	class VulkanSurface;
+	class VulkanPhysicalDevice;
+	class VulkanContext;
 	class VulkanSwapChain;
 	class VulkanInstance;
 	class VulkanDevice;
@@ -40,9 +41,9 @@ namespace Spectre
 		};
 
 	public:
-		void CreateRenderContext();
-
-		void CreateSurface(const NativeWindow& wnd);
+		RenderSystemVK() noexcept;
+		~RenderSystemVK();
+		void CreateRenderContext(const NativeWindow& wnd);
 
 		void CreateSwapChain(const SwapChainDesc& desc);
 
@@ -58,7 +59,6 @@ namespace Spectre
 		void CreateRenderPass();
 		void CreateFrameBuffer();
 		void CreateSemaphores();
-		void CreateFences();
 		void CreateCommandPool();
 
 		void CreateUniformBuffers();
@@ -75,8 +75,9 @@ namespace Spectre
 		uint32_t                                m_Width = 1400;
 		uint32_t                                m_Height = 900;
 		std::shared_ptr<VulkanInstance>			m_Instance;
+		std::shared_ptr<VulkanPhysicalDevice>	m_PhysicalDevice;
 		std::shared_ptr<VulkanDevice>			m_Device;
-		std::shared_ptr<VulkanSurface>          m_Surface;
+		std::shared_ptr<VulkanContext>			m_ContextPtr;
 		std::shared_ptr<VulkanSwapChain>		m_SwapChain;
 		std::shared_ptr<VulkanCommandPool>		m_CommandPool;
 

@@ -1,8 +1,8 @@
 #include "VulkanCommon.h"
+#include "VulkanContext.h"
 #include "VulkanInstance.h"
 #include "VulkanPhysicalDevice.h"
 #include "VulkanDevice.h"
-#include "VulkanSurface.h"
 #include "VulkanSwapchain.h"
 #include "VulkanCommandPool.h"
 #include "VulkanCommandBuffer.h"
@@ -22,13 +22,8 @@
 
 
 USING_NAMESPACE(Spectre)
-struct UBOData
-{
-	Matrix4x4 model;
-	Matrix4x4 view;
-	Matrix4x4 projection;
-};
-void RenderSystemVK::CreateRenderContext()
+
+Spectre::RenderSystemVK::RenderSystemVK() noexcept
 {
 	VulkanInstance::CreateInfo instanceCI;
 #ifdef VKB_DEBUG
@@ -38,9 +33,38 @@ void RenderSystemVK::CreateRenderContext()
 	m_Instance = VulkanInstance::Create(instanceCI);
 	VkPhysicalDevice vkPhysicalDevice = m_Instance->GetVkPhysicalDevices().at(0);
 
-	std::shared_ptr<VulkanPhysicalDevice> physicalDevice = VulkanPhysicalDevice::Create(vkPhysicalDevice, *m_Instance->GetSharedPtr());
+	m_PhysicalDevice = VulkanPhysicalDevice::Create(vkPhysicalDevice, *m_Instance->GetSharedPtr());
 
-	m_Device = VulkanDevice::Create(physicalDevice);
+	m_Device = VulkanDevice::Create(m_PhysicalDevice);
+
+	m_ContextPtr = std::make_shared<VulkanContext>();
+	m_ContextPtr->m_VkInstance = m_Instance->GetVkInstance();
+	m_ContextPtr->m_VkPhysicalDevice = m_PhysicalDevice->GetVkPhysicalDevice();
+}
+
+Spectre::RenderSystemVK::~RenderSystemVK()
+{
+	
+}
+
+void RenderSystemVK::CreateRenderContext(const NativeWindow& wnd)
+{
+	//´´½¨Surface
+	if (m_ContextPtr->m_VkSurface != VK_NULL_HANDLE)
+	{
+		vkDestroySurfaceKHR(m_Instance->GetVkInstance(), m_ContextPtr->m_VkSurface, NULL);
+		m_ContextPtr->m_VkSurface = VK_NULL_HANDLE;
+	}
+
+	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
+	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+	surfaceCreateInfo.hinstance = GetModuleHandle(NULL);
+	surfaceCreateInfo.hwnd = (HWND)wnd.hWnd;
+	VkResult err = vkCreateWin32SurfaceKHR(m_Instance->GetVkInstance(), &surfaceCreateInfo, nullptr, &m_ContextPtr->m_VkSurface);
+
+	VK_CHECK(err, "Failed create surface!");
+
+	m_ContextPtr->Init();
 
 	CreateCommandPool();
 	CreateSemaphores();
@@ -52,21 +76,16 @@ void RenderSystemVK::CreateRenderContext()
 
 }
 
-void Spectre::RenderSystemVK::CreateSurface(const NativeWindow& wnd)
-{
-	m_Surface = VulkanSurface::CreateSurface(*m_Instance, wnd);
-}
 
 void Spectre::RenderSystemVK::CreateSwapChain(const SwapChainDesc& desc)
 {
 	m_Width = desc.Width;
 	m_Height = desc.Height;
-	m_SwapChain = std::make_shared<VulkanSwapChain>(*m_Instance, *m_Device,*m_Surface, desc);
+	m_SwapChain = std::make_shared<VulkanSwapChain>(*m_Device,*m_ContextPtr, desc);
 
 	CreateDepthStencil();
 	CreateRenderPass();
 	CreateFrameBuffer();
-	CreateFences();
 	CreatePipelines();
 }
 
@@ -167,7 +186,7 @@ void Spectre::RenderSystemVK::CreateDepthStencil()
 
 void Spectre::RenderSystemVK::CreateRenderPass()
 {
-	m_RenderPass = VulkanRenderPass::CreateCommonRenderPass(*m_Device, m_SwapChain->GetSwapChainFormat());
+	m_RenderPass = VulkanRenderPass::CreateCommonRenderPass(*m_Device, m_ContextPtr->m_VkSwapChainFormat);
 }
 
 void Spectre::RenderSystemVK::CreateFrameBuffer()
@@ -317,13 +336,16 @@ void Spectre::RenderSystemVK::UpdateUniformBuffers()
 
 void Spectre::RenderSystemVK::ReceateSwapchain(const SwapChainDesc& desc)
 {
+	SwapChainDesc _desc = desc;
 	vkDeviceWaitIdle(m_Device->GetVkDevice());
 
 	DestorySwapchain();
-	m_Width = desc.Width;
-	m_Height = desc.Height;
-	
-	m_SwapChain = std::make_shared<VulkanSwapChain>(*m_Instance, *m_Device,*m_Surface, desc);
+	m_ContextPtr->Init();
+	m_ContextPtr->CalculateSwapChainExtent(_desc.Width, _desc.Height);
+	m_Width = _desc.Width;
+	m_Height = _desc.Height;
+
+	m_SwapChain = std::make_shared<VulkanSwapChain>(*m_Device,*m_ContextPtr, _desc);
 	CreateDepthStencil();
 	CreateSemaphores();
 	CreateRenderPass();
