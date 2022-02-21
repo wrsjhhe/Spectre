@@ -195,17 +195,6 @@ void Spectre::RenderSystemVK::CreateSemaphores()
 	m_RenderComplete = VulkanSemaphore::CreateSemaphore(*m_Device);
 }
 
-void Spectre::RenderSystemVK::CreateFences()
-{
-	uint32_t frameCount = m_SwapChain->GetImageCount();
-
-
-	m_Fences.resize(frameCount);
-	for (uint32_t i = 0; i < m_Fences.size(); ++i)
-	{
-		m_Fences[i] = VulkanFence::CreateFence(*m_Device);
-	}
-}
 
 void Spectre::RenderSystemVK::CreateCommandPool()
 {

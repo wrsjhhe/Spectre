@@ -87,7 +87,6 @@ namespace Spectre
 		std::vector<std::shared_ptr<VulkanFrameBuffer>>	m_FrameBuffers;
 
 		std::shared_ptr<VulkanSemaphore>		m_RenderComplete;
-		std::vector<std::shared_ptr<VulkanFence>>	m_Fences;
 
 		std::shared_ptr<VulkanBuffer>			m_VertexBuffer;
 

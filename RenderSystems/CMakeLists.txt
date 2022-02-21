@@ -53,6 +53,7 @@ ${SRC_VULKAN_DIR}VulkanDescriptorPool.cpp
 ${SRC_VULKAN_DIR}VulkanDescriptorSetLayout.cpp
 ${SRC_VULKAN_DIR}VulkanDescriptorSet.cpp
 ${SRC_VULKAN_DIR}VulkanPipeline.cpp
+${SRC_VULKAN_DIR}VulkanContext.cpp
 ${SRC_VULKAN_DIR}RenderSystemVK.cpp
 )
 
@@ -77,6 +78,7 @@ ${INC_VULKAN_DIR}VulkanDescriptorPool.h
 ${INC_VULKAN_DIR}VulkanDescriptorSetLayout.h
 ${INC_VULKAN_DIR}VulkanDescriptorSet.h
 ${INC_VULKAN_DIR}VulkanPipeline.h
+${INC_VULKAN_DIR}VulkanContext.h
 ${INC_VULKAN_DIR}RenderSystemVK.h
 )
 
