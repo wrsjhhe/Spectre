@@ -5,7 +5,7 @@
 #include <string>
 #include "MathDef.h"
 #include "NativeWindow.h"
-#include "VulkanGraphicTypes.h"
+#include "RSDefs.h"
 #include "Geometry/Vertex.h"
 
 namespace Spectre
@@ -17,6 +17,7 @@ namespace Spectre
 	class VulkanDevice;
 	class VulkanBuffer;
 	class VulkanIndexBuffer;
+	class VulkanVertexBuffer;
 	class VulkanCommand;
 	class VulkanImages;
 	class VulkanRenderPass;
@@ -46,7 +47,7 @@ namespace Spectre
 
 		void CreateSwapChain(const SwapChainDesc& desc);
 
-		void CreateMeshBuffers(std::vector<Vertex>& vertices,std::vector<uint32_t>& indices);
+		void CreateMeshBuffers(std::vector<float>& vertices,std::vector<uint32_t>& indices);
 
 		void Setup();
 
@@ -86,7 +87,7 @@ namespace Spectre
 
 		std::shared_ptr<VulkanSemaphore>		m_RenderComplete;
 
-		std::shared_ptr<VulkanBuffer>			m_VertexBuffer;
+		std::shared_ptr<VulkanVertexBuffer>		m_VertexBuffer;
 
 		std::shared_ptr<VulkanIndexBuffer>		m_IndicesBuffer;
 

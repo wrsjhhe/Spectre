@@ -4,11 +4,10 @@ project ("RenderSystems")
 # ==================================================================================================
 # 外部引用头文件目录设置
 # ==================================================================================================
-set(VULKANSDK_DIR ../ThirdParty/VulkanSDK/include/)
-include_directories(${VULKANSDK_DIR})
 
-set(SPECTRE_COMMON_DIR ../SpectreCommon/include/)
-include_directories(${SPECTRE_COMMON_DIR})
+include_directories(../ThirdParty/VulkanSDK/include/)
+include_directories(../)
+include_directories(../SpectreCommon/include/)
 
 # ==================================================================================================
 # 项目头文件设置
@@ -52,12 +51,12 @@ ${SRC_VULKAN_DIR}VulkanDescriptorSet.cpp
 ${SRC_VULKAN_DIR}VulkanPipeline.cpp
 ${SRC_VULKAN_DIR}VulkanContext.cpp
 ${SRC_VULKAN_DIR}VulkanIndexBuffer.cpp
+${SRC_VULKAN_DIR}VulkanVertexBuffer.cpp
 ${SRC_VULKAN_DIR}RenderSystemVK.cpp
 )
 
 set(VULKAN_PRIVATE_HDRS
 ${INC_VULKAN_DIR}VulkanCommon.h
-${INC_VULKAN_DIR}VulkanGraphicTypes.h
 ${INC_VULKAN_DIR}VulkanInstance.h
 ${INC_VULKAN_DIR}VulkanPhysicalDevice.h
 ${INC_VULKAN_DIR}VulkanSwapchain.h
@@ -75,6 +74,7 @@ ${INC_VULKAN_DIR}VulkanDescriptorSet.h
 ${INC_VULKAN_DIR}VulkanPipeline.h
 ${INC_VULKAN_DIR}VulkanContext.h
 ${INC_VULKAN_DIR}VulkanIndexBuffer.h
+${INC_VULKAN_DIR}VulkanVertexBuffer.h
 ${INC_VULKAN_DIR}RenderSystemVK.h
 )
 

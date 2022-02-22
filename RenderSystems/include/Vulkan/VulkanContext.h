@@ -1,6 +1,6 @@
 #pragma once
 #include <map>
-#include "VulkanGraphicTypes.h"
+#include "RSDefs.h"
 #include "VulkanDevice.h"
 BEGIN_NAMESPACE_SPECTRE
 

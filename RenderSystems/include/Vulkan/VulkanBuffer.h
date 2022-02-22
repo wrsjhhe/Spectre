@@ -12,7 +12,7 @@ public:
 
 public:
 	static std::shared_ptr<VulkanBuffer> Create(const VulkanDevice& vulkanDevice, uint32_t size, 
-		VkBufferUsageFlagBits usage, VkMemoryPropertyFlags memoryFlags, void* data = nullptr);
+		VkBufferUsageFlagBits usage, VkMemoryPropertyFlags memoryFlags,const void* data = nullptr);
 
 public:
 	VulkanBuffer(const VulkanBuffer&) = delete;
@@ -48,7 +48,7 @@ private:
 	uint32_t                                     m_Size = 0;
 	VkDeviceMemory				                 m_VkMemory = VK_NULL_HANDLE;
 	VkBuffer					                 m_VkbBuffer = VK_NULL_HANDLE;
-	void*										 m_DataPtr;
+	void*										 m_DataPtr = nullptr;
 };
 
 END_NAMESPACE_SPECTRE

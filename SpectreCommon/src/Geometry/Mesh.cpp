@@ -5,10 +5,10 @@
 
 USING_NAMESPACE(Spectre)
 
-void Mesh::SetVertices(const Vertex* vertices, uint32_t count)
+void Mesh::SetVertices(const float* vertices, uint32_t count)
 {
-	uint32_t size = sizeof(Vertex) * count;
-	m_Vertice = (Vertex*)HEAP_ALLOC(size);
+	uint32_t size = sizeof(float) * count;
+	m_Vertice = (float*)HEAP_ALLOC(size);
 	std::memcpy(m_Vertice, vertices, size);
 
 	m_VertexCount = count;

@@ -31,16 +31,10 @@ public:
 		engine.Init(info);
 
 		// 顶点数据
-		std::vector<Vertex> vertices = {
-			{
-				{  1.0f,  1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }
-			},
-			{
-				{ -1.0f,  1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }
-			},
-			{
-				{  0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }
-			}
+		std::vector<float> vertices = {
+				1.0f, 1.0f, 0.0f ,1.0f, 0.0f, 0.0f ,
+				-1.0f,1.0f, 0.0f , 0.0f, 1.0f, 0.0f,
+				 0.0f, -1.0f, 0.0f , 0.0f, 0.0f, 1.0f
 		};
 
 		// 索引数据

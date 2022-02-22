@@ -1,5 +1,5 @@
 #include "Vulkan/RenderSystemVK.h"
-#include "Vulkan/VulkanGraphicTypes.h"
+#include "RSDefs.h"
 #include "Engine.h"
 
 #include "Geometry/Vertex.h"
@@ -24,7 +24,7 @@ void Engine::Render()
 	auto meshes = m_Scene.GetRootNode()->TraverseMeshes();
 	
 	uint32_t recordVertexIndex = 0;
-	std::vector<Vertex> vertices;
+	std::vector<float> vertices;
 	std::vector<uint32_t> indices;
 	for (auto& mesh : meshes)
 	{
@@ -36,8 +36,8 @@ void Engine::Render()
 			++pFace;
 		}
 
-		Vertex* pVertex = mesh->Vertices();
-		for (uint32_t i = 0; i < mesh->FacesCount(); ++i)
+		float* pVertex = mesh->Vertices();
+		for (uint32_t i = 0; i < mesh->VerticesCount(); ++i)
 		{
 			vertices.emplace_back(*pVertex);
 			++pVertex;

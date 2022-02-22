@@ -15,6 +15,7 @@
 #include "VulkanDescriptorSet.h"
 #include "VulkanPipeline.h"
 #include "VulkanIndexBuffer.h"
+#include "VulkanVertexBuffer.h"
 #include "RenderSystemVK.h"
 
 #include "Geometry/Vertex.h"
@@ -134,7 +135,7 @@ void Spectre::RenderSystemVK::Setup()
 			vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
 			vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetVkPipelineLayout(), 0, 1, &m_DescriptorSet->GetVkDescriptorSet(), 0, nullptr);
 			vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetVkPipeline());
-			vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &m_VertexBuffer->GetVkBuffer(), offsets);
+			m_VertexBuffer->CmdBind(cmdBuffer, offsets);
 			m_IndicesBuffer->CmdBind(cmdBuffer);
 			vkCmdDrawIndexed(cmdBuffer, m_IndicesBuffer->GetIndexCount(), 1, 0, 0, 0);
 			vkCmdEndRenderPass(cmdBuffer);		
@@ -210,34 +211,20 @@ void Spectre::RenderSystemVK::CreateSemaphores()
 
 
 
-void Spectre::RenderSystemVK::CreateMeshBuffers(std::vector<Vertex>& vertices,std::vector<uint32_t>& indices)
+void Spectre::RenderSystemVK::CreateMeshBuffers(std::vector<float>& vertices,std::vector<uint32_t>& indices)
 {
 	VkDevice device = m_Device->GetVkDevice();
 	VulkanQueue queue = m_Device->GetGraphicQueue();
 
 	m_IndicesBuffer = VulkanIndexBuffer::Create(*m_Device, indices, VK_INDEX_TYPE_UINT32);
 
-	uint32_t vertexBufferSize = vertices.size() * sizeof(Vertex);
-	uint32_t indexBufferSize = (uint32_t)indices.size() * sizeof(uint32_t);
-
-	auto tempVertexBuffer = VulkanBuffer::Create(*m_Device, vertexBufferSize,
-		VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, vertices.data());
-	auto tempIndexBuffer = VulkanBuffer::Create(*m_Device, indexBufferSize,
-		VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, indices.data());
-	//auto tempVertexBuffer = VulkanBuffer::CreateHostBuffer(*m_Device,vertices.data(), vertices.size() * sizeof(Vertex));
-	//auto tempIndexBuffer = VulkanBuffer::CreateHostBuffer(*m_Device, indices.data(), m_IndicesCount * sizeof(uint32_t));
-
-	m_VertexBuffer = VulkanBuffer::Create(*m_Device, vertexBufferSize,
-		VkBufferUsageFlagBits(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT), VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-	//m_IndicesBuffer = VulkanBuffer::Create(*m_Device, indexBufferSize,
-	//	VkBufferUsageFlagBits(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT), VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-	//m_VertexBuffer = VulkanBuffer::CreateDeviceVertexBuffer(*m_Device, vertexBufferSize);
-	//m_IndicesBuffer = VulkanBuffer::CreateDeviceIndexBuffer(*m_Device, indexBufferSize);
+	std::vector<VertexAttribute> attributes{ VertexAttribute_Position ,VertexAttribute_Color };
+	m_VertexBuffer = VulkanVertexBuffer::Create(*m_Device, vertices, { VertexAttribute_Position ,VertexAttribute_Color });
 
 	auto xferCmdBuffer = VulkanCommand::Create(*m_Device, m_ContextPtr->GetVkGraphicCommandPool(), 1)[0];
 
 	xferCmdBuffer->RecordCommond([&](VkCommandBuffer cmdBuffer) {
-		tempVertexBuffer->CopyTo(*m_VertexBuffer, cmdBuffer);
+		m_VertexBuffer->Synchronize(cmdBuffer);
 		m_IndicesBuffer->Synchronize(cmdBuffer);
 	});
 

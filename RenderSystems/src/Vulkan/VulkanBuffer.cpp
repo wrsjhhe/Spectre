@@ -1,12 +1,12 @@
 #include "VulkanCommon.h"
 #include "VulkanDevice.h"
-#include "VulkanGraphicTypes.h"
+#include "RSDefs.h"
 #include "VulkanBuffer.h"
 
 USING_NAMESPACE(Spectre)
 
 std::shared_ptr<VulkanBuffer> VulkanBuffer::Create(const VulkanDevice& vulkanDevice, uint32_t size,
-	VkBufferUsageFlagBits usage, VkMemoryPropertyFlags memoryFlags, void* data)
+	VkBufferUsageFlagBits usage, VkMemoryPropertyFlags memoryFlags,const void* data)
 {
 	auto* pBuffer = new VulkanBuffer(vulkanDevice);
 

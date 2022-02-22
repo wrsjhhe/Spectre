@@ -29,10 +29,10 @@ BEGIN_NAMESPACE_SPECTRE
 class Mesh
 {
 public:
-	void SetVertices(const Vertex* vertices, uint32_t count);
+	void SetVertices(const float* vertices, uint32_t count);
 	void SetFaceIndex(const uint32_t* faces, uint32_t count);
 
-	Vertex* Vertices() { return m_Vertice; }
+	float* Vertices() { return m_Vertice; }
 	uint32_t* Faces() { return m_Faces; }
 
 	uint32_t VerticesCount() { return m_VertexCount; }
@@ -43,7 +43,7 @@ public:
 
 private:
 	uint32_t			m_VertexCount;
-	Vertex*				m_Vertice = nullptr;
+	float*				m_Vertice = nullptr;
 
 	uint32_t			m_FaceCount;
 	uint32_t*			m_Faces = nullptr;
