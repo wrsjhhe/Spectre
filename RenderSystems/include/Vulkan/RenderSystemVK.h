@@ -6,7 +6,6 @@
 #include "MathDef.h"
 #include "NativeWindow.h"
 #include "RSDefs.h"
-#include "Geometry/Vertex.h"
 
 namespace Spectre
 {

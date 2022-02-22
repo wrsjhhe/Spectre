@@ -287,10 +287,14 @@ void Spectre::RenderSystemVK::CreatePipelines()
 
 void Spectre::RenderSystemVK::UpdateUniformBuffers()
 {
+	static float  delta = 0;
+	delta += 0.00001;
+	if (delta > 6.28)
+		delta = 0;
 	m_MVPData.projection.SetIdentity();
 	m_MVPData.projection.Perspective(DegreesToRadians(75.0f), m_Width, m_Height, 0.01f, 3000.0f);
 	VkDevice device = m_Device->GetVkDevice();
-	//m_MVPData.model.AppendRotation(90.0f * delta, Vector3::UpVector);
+	m_MVPData.model.AppendRotation(90.0f * delta, Vector3(0.f,0.f,1.f));
 	m_MVPBuffer->UpdateHostBuffer(&m_MVPData);
 }
 
