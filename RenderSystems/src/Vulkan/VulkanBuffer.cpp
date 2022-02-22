@@ -1,5 +1,6 @@
 #include "VulkanCommon.h"
 #include "VulkanDevice.h"
+#include "VulkanGraphicTypes.h"
 #include "VulkanBuffer.h"
 
 USING_NAMESPACE(Spectre)

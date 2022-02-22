@@ -1,6 +1,6 @@
 #pragma once
 #include <memory>
-#include "VulkanGraphicTypes.h"
+
 
 BEGIN_NAMESPACE_SPECTRE
 

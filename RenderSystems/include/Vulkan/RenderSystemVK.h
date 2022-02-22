@@ -16,6 +16,7 @@ namespace Spectre
 	class VulkanInstance;
 	class VulkanDevice;
 	class VulkanBuffer;
+	class VulkanIndexBuffer;
 	class VulkanCommand;
 	class VulkanImages;
 	class VulkanRenderPass;
@@ -87,8 +88,7 @@ namespace Spectre
 
 		std::shared_ptr<VulkanBuffer>			m_VertexBuffer;
 
-		uint32_t								m_IndicesCount = 0;
-		std::shared_ptr<VulkanBuffer>			m_IndicesBuffer;
+		std::shared_ptr<VulkanIndexBuffer>		m_IndicesBuffer;
 
 		std::shared_ptr<VulkanBuffer>			m_MVPBuffer;
 		UBOData									m_MVPData;
