@@ -1,28 +1,27 @@
 #include "VulkanCommon.h"
 #include "VulkanDevice.h"
-#include "VulkanCommandPool.h"
 #include "VulkanQueue.h"
-#include "VulkanCommandBuffer.h"
+#include "VulkanCommand.h"
 
 USING_NAMESPACE(Spectre)
 
-std::vector<std::shared_ptr<VulkanCommandBuffer>> VulkanCommandBuffer::CreataGraphicBuffers(const VulkanDevice& vulkanDevice,
-	const VulkanCommandPool& commandPool, uint32_t size)
+std::vector<std::shared_ptr<VulkanCommand>> VulkanCommand::Create(const VulkanDevice& vulkanDevice,
+	const VkCommandPool& commandPool, uint32_t size)
 {
-	std::vector<std::shared_ptr<VulkanCommandBuffer>> buffers;
+	std::vector<std::shared_ptr<VulkanCommand>> buffers;
 
 	std::vector<VkCommandBuffer> vkBuffers(size);
 	VkCommandBufferAllocateInfo cmdBufferInfo{};
 	cmdBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	cmdBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	cmdBufferInfo.commandBufferCount = size;
-	cmdBufferInfo.commandPool = commandPool.GetVkGraphicCommandPool();
+	cmdBufferInfo.commandPool = commandPool;
 
 	vkAllocateCommandBuffers(vulkanDevice.GetVkDevice(), &cmdBufferInfo, vkBuffers.data());
 
 	for (uint32_t i = 0; i < size; ++i)
 	{
-		auto* commandBuffers = new VulkanCommandBuffer(vulkanDevice, commandPool.GetVkGraphicCommandPool(), vkBuffers.at(i));
+		auto* commandBuffers = new VulkanCommand(vulkanDevice, commandPool, vkBuffers.at(i));
 		buffers.emplace_back(commandBuffers);
 	}
 
@@ -30,25 +29,19 @@ std::vector<std::shared_ptr<VulkanCommandBuffer>> VulkanCommandBuffer::CreataGra
 	return buffers;
 }
 
-//std::shared_ptr<VulkanCommandBuffers> VulkanCommandBuffers::CreataTransferBuffers(const VulkanDevice& vulkanDevice, 
-//	const VulkanCommandPool& commandPool, uint32_t size)
-//{
-//	auto* commandBuffers = new VulkanCommandBuffers(vulkanDevice, commandPool.GetVkTransferCommandPool(), size);
-//	return std::shared_ptr<VulkanCommandBuffers>(commandBuffers);
-//}
 
-VulkanCommandBuffer::~VulkanCommandBuffer()
+VulkanCommand::~VulkanCommand()
 {
 	Free();
 }
 
 
-void VulkanCommandBuffer::RecordCommond(std::function<void(VkCommandBuffer)> recordCmd)
+void VulkanCommand::RecordCommond(std::function<void(VkCommandBuffer)> recordCmd)
 {
 	recordCmd(m_VkCommandBuffer);
 }
 
-void VulkanCommandBuffer::Submit(VulkanQueue& queue)
+void VulkanCommand::Submit(VulkanQueue& queue)
 {
 	if (!m_IsEnd)
 	{
@@ -72,7 +65,7 @@ void VulkanCommandBuffer::Submit(VulkanQueue& queue)
 	vkWaitForFences(m_Device.GetVkDevice(), 1, &m_VkFence, true, 0x7fffffffffffffff);
 }
 
-VulkanCommandBuffer::VulkanCommandBuffer(const VulkanDevice& vulkanDevice,
+VulkanCommand::VulkanCommand(const VulkanDevice& vulkanDevice,
 	const VkCommandPool& commandPool, VkCommandBuffer buffer) :
 	m_Device(vulkanDevice),
 	m_CommandPool(commandPool),
@@ -89,7 +82,7 @@ VulkanCommandBuffer::VulkanCommandBuffer(const VulkanDevice& vulkanDevice,
 	vkCreateFence(m_Device.GetVkDevice(), &fenceInfo, nullptr, &m_VkFence);
 }
 
-void VulkanCommandBuffer::Free()
+void VulkanCommand::Free()
 {
 	vkFreeCommandBuffers(m_Device.GetVkDevice(), m_CommandPool, 1, &m_VkCommandBuffer);
 	vkDestroyFence(m_Device.GetVkDevice(), m_VkFence, nullptr);

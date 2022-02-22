@@ -4,14 +4,12 @@
 #include "VulkanPhysicalDevice.h"
 #include "VulkanDevice.h"
 #include "VulkanSwapchain.h"
-#include "VulkanCommandPool.h"
-#include "VulkanCommandBuffer.h"
+#include "VulkanCommand.h"
 #include "VulkanBuffer.h"
 #include "VulkanImages.h"
 #include "VulkanRenderPass.h"
 #include "VulkanFrameBuffer.h"
 #include "VulkanSemaphore.h"
-#include "VulkanFence.h"
 #include "VulkanDescriptorPool.h"
 #include "VulkanDescriptorSetLayout.h"
 #include "VulkanDescriptorSet.h"
@@ -37,9 +35,7 @@ Spectre::RenderSystemVK::RenderSystemVK() noexcept
 
 	m_Device = VulkanDevice::Create(m_PhysicalDevice);
 
-	m_ContextPtr = std::make_shared<VulkanContext>();
-	m_ContextPtr->m_VkInstance = m_Instance->GetVkInstance();
-	m_ContextPtr->m_VkPhysicalDevice = m_PhysicalDevice->GetVkPhysicalDevice();
+	m_ContextPtr = std::make_shared<VulkanContext>(m_Instance->GetVkInstance(), m_PhysicalDevice->GetVkPhysicalDevice(), *m_Device);
 }
 
 Spectre::RenderSystemVK::~RenderSystemVK()
@@ -66,14 +62,11 @@ void RenderSystemVK::CreateRenderContext(const NativeWindow& wnd)
 
 	m_ContextPtr->Init();
 
-	CreateCommandPool();
 	CreateSemaphores();
 	CreateUniformBuffers();
 	CreateDescriptorPool();
 	CreateDescriptorSetLayout();
 	CreateDescriptorSet();
-
-
 }
 
 
@@ -113,7 +106,7 @@ void Spectre::RenderSystemVK::Setup()
 	renderPassBeginInfo.renderArea.extent.width = fwidth;
 	renderPassBeginInfo.renderArea.extent.height = fheight;
 
-	m_RenderCommandBuffers = VulkanCommandBuffer::CreataGraphicBuffers(*m_Device, *m_CommandPool, m_SwapChain->GetImageCount());
+	m_RenderCommandBuffers = VulkanCommand::Create(*m_Device, m_ContextPtr->GetVkGraphicCommandPool(), m_SwapChain->GetImageCount());
 	for (uint32_t i = 0; i < m_RenderCommandBuffers.size(); ++i)
 	{
 		renderPassBeginInfo.framebuffer = m_FrameBuffers[i]->GetVkFrameBuffer();
@@ -215,13 +208,8 @@ void Spectre::RenderSystemVK::CreateSemaphores()
 }
 
 
-void Spectre::RenderSystemVK::CreateCommandPool()
-{
-	m_CommandPool = VulkanCommandPool::CreateCommandPool(*m_Device);
-}
 
-
-void Spectre::RenderSystemVK::CreateMeshBuffers(const std::vector<Vertex> vertices,const std::vector<uint32_t> indices)
+void Spectre::RenderSystemVK::CreateMeshBuffers(std::vector<Vertex>& vertices,std::vector<uint32_t>& indices)
 {
 	VkDevice device = m_Device->GetVkDevice();
 	VulkanQueue queue = m_Device->GetGraphicQueue();
@@ -232,17 +220,26 @@ void Spectre::RenderSystemVK::CreateMeshBuffers(const std::vector<Vertex> vertic
 	uint32_t vertexBufferSize = vertices.size() * sizeof(Vertex);
 	uint32_t indexBufferSize = (uint32_t)indices.size() * sizeof(uint32_t);
 
+	auto tempVertexBuffer = VulkanBuffer::Create(*m_Device, vertices.size() * sizeof(Vertex),
+		VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, vertices.data());
+	auto tempIndexBuffer = VulkanBuffer::Create(*m_Device, m_IndicesCount * sizeof(uint32_t),
+		VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, indices.data());
+	//auto tempVertexBuffer = VulkanBuffer::CreateHostBuffer(*m_Device,vertices.data(), vertices.size() * sizeof(Vertex));
+	//auto tempIndexBuffer = VulkanBuffer::CreateHostBuffer(*m_Device, indices.data(), m_IndicesCount * sizeof(uint32_t));
 
-	auto tempVertexBuffer = VulkanBuffer::CreateHostBuffer(*m_Device,vertices.data(), vertices.size() * sizeof(Vertex));
-	auto tempIndexBuffer = VulkanBuffer::CreateHostBuffer(*m_Device, indices.data(), m_IndicesCount * sizeof(uint32_t));
+	m_VertexBuffer = VulkanBuffer::Create(*m_Device, vertices.size() * sizeof(Vertex),
+		VkBufferUsageFlagBits(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT), VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	m_VertexBuffer = VulkanBuffer::Create(*m_Device, vertices.size() * sizeof(Vertex),
+		VkBufferUsageFlagBits(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT), VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	//m_VertexBuffer = VulkanBuffer::CreateDeviceVertexBuffer(*m_Device, vertexBufferSize);
+	//m_IndicesBuffer = VulkanBuffer::CreateDeviceIndexBuffer(*m_Device, indexBufferSize);
 
-	m_VertexBuffer = VulkanBuffer::CreateDeviceVertexBuffer(*m_Device, vertexBufferSize);
-	m_IndicesBuffer = VulkanBuffer::CreateDeviceIndexBuffer(*m_Device, indexBufferSize);
+	auto xferCmdBuffer = VulkanCommand::Create(*m_Device, m_ContextPtr->GetVkGraphicCommandPool(), 1)[0];
 
-	auto xferCmdBuffer = VulkanCommandBuffer::CreataGraphicBuffers(*m_Device, *m_CommandPool, 1)[0];
-
-	tempVertexBuffer->MapToDevice(*m_VertexBuffer, xferCmdBuffer->GetVkCommandBuffer());
-	tempIndexBuffer->MapToDevice(*m_IndicesBuffer, xferCmdBuffer->GetVkCommandBuffer());
+	xferCmdBuffer->RecordCommond([&](VkCommandBuffer cmdBuffer) {
+		tempVertexBuffer->CopyTo(*m_VertexBuffer, cmdBuffer);
+		tempIndexBuffer->CopyTo(*m_IndicesBuffer, cmdBuffer);
+	});
 
 	xferCmdBuffer->Submit(queue);
 }
@@ -250,7 +247,8 @@ void Spectre::RenderSystemVK::CreateMeshBuffers(const std::vector<Vertex> vertic
 
 void Spectre::RenderSystemVK::CreateUniformBuffers()
 {
-	m_MVPBuffer = VulkanBuffer::CreateHostUniformBuffer(*m_Device,nullptr, sizeof(UBOData));
+	m_MVPBuffer = VulkanBuffer::Create(*m_Device, sizeof(UBOData), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
 	m_MVPData.model.SetIdentity();
 	m_MVPData.model.SetOrigin(0, 0, 0);
@@ -315,7 +313,7 @@ void Spectre::RenderSystemVK::ReceateSwapchain(const SwapChainDesc& desc)
 	vkDeviceWaitIdle(m_Device->GetVkDevice());
 
 	DestorySwapchain();
-	m_ContextPtr->Init();
+	m_ContextPtr->InitSwapchainParamaters();
 	m_ContextPtr->CalculateSwapChainExtent(_desc.Width, _desc.Height);
 	m_Width = _desc.Width;
 	m_Height = _desc.Height;

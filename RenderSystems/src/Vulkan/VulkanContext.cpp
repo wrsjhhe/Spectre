@@ -34,12 +34,54 @@ static VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR
 	return bestMode;
 }
 
+VulkanContext::VulkanContext(VkInstance instance, VkPhysicalDevice physicalDevice, const VulkanDevice& device):
+	m_VkInstance(instance),
+	m_VkPhysicalDevice(physicalDevice),
+	m_Device(device)
+{
+
+}
+
 VulkanContext::~VulkanContext()
 {
 	vkDestroySurfaceKHR(m_VkInstance, m_VkSurface, nullptr);
+
+	for (auto& kv : m_VkCommandPools)
+	{
+		if (kv.second != VK_NULL_HANDLE)
+		{
+			vkDestroyCommandPool(m_Device.GetVkDevice(), kv.second, nullptr);
+			kv.second = VK_NULL_HANDLE;
+		}
+	}
+	m_VkCommandPools.clear();
 }
 
 void VulkanContext::Init()
+{
+	InitCommandPool();
+	InitSwapchainParamaters();
+}
+
+void VulkanContext::CalculateSwapChainExtent(uint32_t& width, uint32_t& height)
+{
+	if (m_VkSurfaceCapabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) 
+	{
+		width = m_VkSurfaceCapabilities.currentExtent.width;
+		height = m_VkSurfaceCapabilities.currentExtent.height;
+		return ;
+	}
+	else 
+	{
+		VkSurfaceCapabilitiesKHR surfProperties;
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_VkPhysicalDevice, m_VkSurface, &surfProperties);
+
+		width = std::max(m_VkSurfaceCapabilities.minImageExtent.width, std::min(m_VkSurfaceCapabilities.maxImageExtent.width, width));
+		height = std::max(m_VkSurfaceCapabilities.minImageExtent.height, std::min(m_VkSurfaceCapabilities.maxImageExtent.height, height));
+	}
+}
+
+void VulkanContext::InitSwapchainParamaters()
 {
 	//—°‘ÒSurfaceFormat
 	uint32_t formatCount;
@@ -63,20 +105,60 @@ void VulkanContext::Init()
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_VkPhysicalDevice, m_VkSurface, &m_VkSurfaceCapabilities);
 }
 
-void VulkanContext::CalculateSwapChainExtent(uint32_t& width, uint32_t& height)
+void VulkanContext::InitCommandPool()
 {
-	if (m_VkSurfaceCapabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) 
-	{
-		width = m_VkSurfaceCapabilities.currentExtent.width;
-		height = m_VkSurfaceCapabilities.currentExtent.height;
-		return ;
-	}
-	else 
-	{
-		VkSurfaceCapabilitiesKHR surfProperties;
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_VkPhysicalDevice, m_VkSurface, &surfProperties);
+	const VulkanQueue& graphicQueue = m_Device.GetGraphicQueue();
+	const VulkanQueue& computeQueue = m_Device.GetComputeQueue();
+	const VulkanQueue& transferQueue = m_Device.GetTransferQueue();
 
-		width = std::max(m_VkSurfaceCapabilities.minImageExtent.width, std::min(m_VkSurfaceCapabilities.maxImageExtent.width, width));
-		height = std::max(m_VkSurfaceCapabilities.minImageExtent.height, std::min(m_VkSurfaceCapabilities.maxImageExtent.height, height));
+	VkCommandPool vkCommandPool;
+	VkCommandPoolCreateInfo cmdPoolInfo{};
+	cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	cmdPoolInfo.queueFamilyIndex = graphicQueue.m_QueueFamilyIndex;
+	cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+	VK_CHECK(vkCreateCommandPool(m_Device.GetVkDevice(), &cmdPoolInfo, nullptr, &vkCommandPool), "Failed created VkCommandPool!");
+
+	m_VkCommandPools[CommandPool_Type_Graphics] = vkCommandPool;
+
+	if (graphicQueue.m_QueueFamilyIndex != computeQueue.m_QueueFamilyIndex)
+	{
+		vkCommandPool = VK_NULL_HANDLE;
+		cmdPoolInfo.queueFamilyIndex = computeQueue.m_QueueFamilyIndex;
+		VK_CHECK(vkCreateCommandPool(m_Device.GetVkDevice(), &cmdPoolInfo, nullptr, &vkCommandPool), "Failed created VkCommandPool!");
+		m_VkCommandPools[CommandPool_Type_Compute] = vkCommandPool;
 	}
+
+
+	if (graphicQueue.m_QueueFamilyIndex != transferQueue.m_QueueFamilyIndex)
+	{
+		vkCommandPool = VK_NULL_HANDLE;
+		cmdPoolInfo.queueFamilyIndex = transferQueue.m_QueueFamilyIndex;
+		VK_CHECK(vkCreateCommandPool(m_Device.GetVkDevice(), &cmdPoolInfo, nullptr, &vkCommandPool), "Failed created VkCommandPool!");
+		m_VkCommandPools[CommandPool_Type_Transfer] = vkCommandPool;
+	}
+
+}
+
+
+VkCommandPool VulkanContext::GetVkGraphicCommandPool() const
+{
+	return m_VkCommandPools.at(CommandPool_Type_Graphics);
+}
+
+VkCommandPool VulkanContext::GetVkComputeCommandPool() const
+{
+	if (m_VkCommandPools.find(CommandPool_Type_Compute) != m_VkCommandPools.end())
+	{
+		return m_VkCommandPools.at(CommandPool_Type_Compute);
+	}
+	return m_VkCommandPools.at(CommandPool_Type_Graphics);
+}
+
+VkCommandPool VulkanContext::GetVkTransferCommandPool() const
+{
+	if (m_VkCommandPools.find(CommandPool_Type_Transfer) != m_VkCommandPools.end())
+	{
+		return m_VkCommandPools.at(CommandPool_Type_Transfer);
+	}
+	return m_VkCommandPools.at(CommandPool_Type_Graphics);
 }

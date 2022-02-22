@@ -8,16 +8,14 @@ BEGIN_NAMESPACE_SPECTRE
 
 class VulkanCommandPool;
 
-class VulkanCommandBuffer: public Noncopyable
+class VulkanCommand : public Noncopyable
 {
 public:
-	static std::vector<std::shared_ptr<VulkanCommandBuffer>> CreataGraphicBuffers(const VulkanDevice& vulkanDevice,
-		const VulkanCommandPool& commandPool, uint32_t size);
-	//static std::shared_ptr<VulkanCommandBuffers> CreataTransferBuffers(const VulkanDevice& vulkanDevice,
-	//	const VulkanCommandPool& commandPool, uint32_t size);
+	static std::vector<std::shared_ptr<VulkanCommand>> Create(const VulkanDevice& vulkanDevice,
+		const VkCommandPool& commandPool, uint32_t size);
 
 public:
-	~VulkanCommandBuffer();
+	~VulkanCommand();
 	VkCommandBuffer& GetVkCommandBuffer() { return m_VkCommandBuffer; }
 
 	void RecordCommond(std::function<void(VkCommandBuffer)> recordCmd);
@@ -26,7 +24,7 @@ public:
 
 	void Free();
 private:
-	VulkanCommandBuffer(const VulkanDevice& vulkanDevice, const VkCommandPool& commandPool, VkCommandBuffer buffer);
+	VulkanCommand(const VulkanDevice& vulkanDevice, const VkCommandPool& commandPool, VkCommandBuffer buffer);
 public:
 	std::vector<VkSemaphore> SignalSemaphore;
 	std::vector < VkPipelineStageFlags> WaitStageMask;

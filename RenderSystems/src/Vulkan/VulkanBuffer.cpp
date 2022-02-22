@@ -4,9 +4,18 @@
 
 USING_NAMESPACE(Spectre)
 
-VulkanBuffer::VulkanBuffer(const VulkanDevice& vulkanDevice, BufferType bufferType):
-	m_Device(vulkanDevice),
-	m_BufferType(bufferType)
+std::shared_ptr<VulkanBuffer> VulkanBuffer::Create(const VulkanDevice& vulkanDevice, uint32_t size,
+	VkBufferUsageFlagBits usage, VkMemoryPropertyFlags memoryFlags, void* data)
+{
+	auto* pBuffer = new VulkanBuffer(vulkanDevice);
+
+	pBuffer->CreateBuffer(data, size, usage, memoryFlags);
+
+	return std::shared_ptr<VulkanBuffer>{pBuffer};
+}
+
+VulkanBuffer::VulkanBuffer(const VulkanDevice& vulkanDevice):
+	m_Device(vulkanDevice)
 {
 
 }
@@ -16,49 +25,34 @@ VulkanBuffer::~VulkanBuffer()
 	Destroy();
 }
 
-std::shared_ptr<VulkanBuffer> VulkanBuffer::CreateHostBuffer(const VulkanDevice& vulkanDevice, const void* ptr, uint32_t size)
+
+void VulkanBuffer::CopyTo(VulkanBuffer& dstBuffer ,const VkCommandBuffer& commandBuffer)
 {
-	auto* pBuffer = new VulkanBuffer(vulkanDevice, Buffer_Type_Host);
-
-	pBuffer->CreateBuffer(ptr, size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-	return std::shared_ptr<VulkanBuffer>{pBuffer};
-}
-
-
-std::shared_ptr<VulkanBuffer> VulkanBuffer::CreateHostUniformBuffer(const VulkanDevice& vulkanDevice, const void* ptr, uint32_t size)
-{
-	auto* pBuffer = new VulkanBuffer(vulkanDevice, Buffer_Type_Host);
-
-	pBuffer->CreateBuffer(ptr, size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-	return std::shared_ptr<VulkanBuffer>{pBuffer};
-}
-
-std::shared_ptr<VulkanBuffer> VulkanBuffer::CreateDeviceVertexBuffer(const VulkanDevice& vulkanDevice, uint32_t size)
-{
-	auto* pBuffer = new VulkanBuffer(vulkanDevice, Buffer_Type_Device);
-	pBuffer->CreateBuffer(nullptr, size, VkBufferUsageFlagBits(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT),
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-	return std::shared_ptr<VulkanBuffer>{pBuffer};
-}
-
-std::shared_ptr<VulkanBuffer> VulkanBuffer::CreateDeviceIndexBuffer(const VulkanDevice& vulkanDevice, uint32_t size)
-{
-	auto* pBuffer = new VulkanBuffer(vulkanDevice, Buffer_Type_Device);
-	pBuffer->CreateBuffer(nullptr, size, VkBufferUsageFlagBits(VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT),
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-	return std::shared_ptr<VulkanBuffer>{pBuffer};
-}
-
-void VulkanBuffer::MapToDevice(VulkanBuffer& dstBuffer ,const VkCommandBuffer& commandBuffer)
-{
-	EXP_CHECK(dstBuffer.m_BufferType == Buffer_Type_Device, "dstBuffer type is not Buffer_Type_Device!");
 	VkDevice device = m_Device.GetVkDevice();
 
 	VkBufferCopy copyRegion = {};
 	copyRegion.size = m_Size;
 	vkCmdCopyBuffer(commandBuffer, m_VkbBuffer, dstBuffer.m_VkbBuffer, 1, &copyRegion);
+}
+
+VkResult VulkanBuffer::Map(VkDeviceSize size, VkDeviceSize offset)
+{
+	if (m_DataPtr)
+	{
+		return VK_ERROR_MEMORY_MAP_FAILED;
+	}
+
+	return vkMapMemory(m_Device.GetVkDevice(), m_VkMemory, offset, size, 0, &m_DataPtr);
+}
+
+void VulkanBuffer::UnMap()
+{
+	if (!m_DataPtr)
+	{
+		return;
+	}
+	vkUnmapMemory(m_Device.GetVkDevice(), m_VkMemory);
+	m_DataPtr = nullptr;
 }
 
 void VulkanBuffer::UpdateHostBuffer(const void* ptr)
@@ -107,9 +101,22 @@ void VulkanBuffer::CreateBuffer(const void* ptr, uint32_t size, VkBufferUsageFla
 
 	if (ptr!=nullptr)
 	{
-		void* dataPtr = nullptr;
-		vkMapMemory(device, m_VkMemory, 0, memAllocInfo.allocationSize, 0, &dataPtr);
-		std::memcpy(dataPtr, ptr, size);
-		vkUnmapMemory(device, m_VkMemory);
+		Map();
+		std::memcpy(m_DataPtr, ptr, size);
+		if ((memoryFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) == 0)
+		{
+			Flush();
+		}
+		UnMap();
 	}
+}
+
+VkResult VulkanBuffer::Flush(VkDeviceSize size, VkDeviceSize offset)
+{
+	VkMappedMemoryRange mappedRange = {};
+	mappedRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+	mappedRange.memory = m_VkMemory;
+	mappedRange.offset = offset;
+	mappedRange.size = size;
+	return vkFlushMappedMemoryRanges(m_Device.GetVkDevice(), 1, &mappedRange);
 }

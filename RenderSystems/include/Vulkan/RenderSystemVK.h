@@ -16,19 +16,17 @@ namespace Spectre
 	class VulkanInstance;
 	class VulkanDevice;
 	class VulkanBuffer;
-	class VulkanCommandPool;
-	class VulkanCommandBuffer;
+	class VulkanCommand;
 	class VulkanImages;
 	class VulkanRenderPass;
 	class VulkanFrameBuffer;
 	class VulkanSemaphore;
-	class VulkanFence;
 	class VulkanDescriptorPool;
 	class VulkanDescriptorSetLayout;
 	class VulkanDescriptorSet;
 	class VulkanPipeline;
 
-	typedef std::shared_ptr<VulkanCommandBuffer> VulkanCommandBufferPtr;
+	typedef std::shared_ptr<VulkanCommand> VulkanCommandPtr;
 
 	class RenderSystemVK
 	{
@@ -47,7 +45,7 @@ namespace Spectre
 
 		void CreateSwapChain(const SwapChainDesc& desc);
 
-		void CreateMeshBuffers(const std::vector<Vertex> vertices,const std::vector<uint32_t> indices);
+		void CreateMeshBuffers(std::vector<Vertex>& vertices,std::vector<uint32_t>& indices);
 
 		void Setup();
 
@@ -59,7 +57,6 @@ namespace Spectre
 		void CreateRenderPass();
 		void CreateFrameBuffer();
 		void CreateSemaphores();
-		void CreateCommandPool();
 
 		void CreateUniformBuffers();
 		void CreateDescriptorPool();
@@ -79,7 +76,6 @@ namespace Spectre
 		std::shared_ptr<VulkanDevice>			m_Device;
 		std::shared_ptr<VulkanContext>			m_ContextPtr;
 		std::shared_ptr<VulkanSwapChain>		m_SwapChain;
-		std::shared_ptr<VulkanCommandPool>		m_CommandPool;
 
 		std::shared_ptr<VulkanImages>			m_DepthStencilImage;
 
@@ -97,7 +93,7 @@ namespace Spectre
 		std::shared_ptr<VulkanBuffer>			m_MVPBuffer;
 		UBOData									m_MVPData;
 
-		std::vector<VulkanCommandBufferPtr>		m_RenderCommandBuffers;
+		std::vector<VulkanCommandPtr>			m_RenderCommandBuffers;
 
 		std::shared_ptr<VulkanDescriptorPool>	m_DescriptorPool;
 
