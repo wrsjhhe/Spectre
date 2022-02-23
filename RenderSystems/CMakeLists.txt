@@ -15,7 +15,7 @@ include_directories(../SpectreCommon/include/)
 set(INC_DIR ./include/)
 include_directories(${INC_DIR})
 set(PUBLIC_HDRS 
-${INC_DIR}NativeWindow.h
+${INC_DIR}RenderContextDesc.h
 )
 
 set(INTERFACEE_DIR ./interface/)
@@ -45,10 +45,7 @@ ${SRC_VULKAN_DIR}VulkanImages.cpp
 ${SRC_VULKAN_DIR}VulkanRenderPass.cpp
 ${SRC_VULKAN_DIR}VulkanFrameBuffer.cpp
 ${SRC_VULKAN_DIR}VulkanSemaphore.cpp
-${SRC_VULKAN_DIR}VulkanDescriptorPool.cpp
-${SRC_VULKAN_DIR}VulkanDescriptorSetLayout.cpp
-${SRC_VULKAN_DIR}VulkanDescriptorSet.cpp
-${SRC_VULKAN_DIR}VulkanPipeline.cpp
+${SRC_VULKAN_DIR}VulkanPipelineCache.cpp
 ${SRC_VULKAN_DIR}VulkanContext.cpp
 ${SRC_VULKAN_DIR}VulkanIndexBuffer.cpp
 ${SRC_VULKAN_DIR}VulkanVertexBuffer.cpp
@@ -68,10 +65,7 @@ ${INC_VULKAN_DIR}VulkanImages.h
 ${INC_VULKAN_DIR}VulkanRenderPass.h
 ${INC_VULKAN_DIR}VulkanFrameBuffer.h
 ${INC_VULKAN_DIR}VulkanSemaphore.h
-${INC_VULKAN_DIR}VulkanDescriptorPool.h
-${INC_VULKAN_DIR}VulkanDescriptorSetLayout.h
-${INC_VULKAN_DIR}VulkanDescriptorSet.h
-${INC_VULKAN_DIR}VulkanPipeline.h
+${INC_VULKAN_DIR}VulkanPipelineCache.h
 ${INC_VULKAN_DIR}VulkanContext.h
 ${INC_VULKAN_DIR}VulkanIndexBuffer.h
 ${INC_VULKAN_DIR}VulkanVertexBuffer.h
@@ -79,6 +73,6 @@ ${INC_VULKAN_DIR}RenderSystemVK.h
 )
 
 
-add_library (RenderSystems STATIC ${VULKAN_PUBLIC_HDRS} ${VULKAN_PRIVATE_HDRS} ${VULKAN_SRCS})
+add_library (RenderSystems STATIC ${PUBLIC_HDRS} ${VULKAN_PUBLIC_HDRS} ${VULKAN_PRIVATE_HDRS} ${VULKAN_SRCS})
 target_link_libraries(RenderSystems PRIVATE SpectreCommon)
 target_link_libraries(RenderSystems PRIVATE vulkan-1)

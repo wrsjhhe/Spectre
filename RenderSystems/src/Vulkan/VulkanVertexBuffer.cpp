@@ -5,15 +5,15 @@
 
 USING_NAMESPACE(Spectre)
 
+
 std::shared_ptr<VulkanVertexBuffer> VulkanVertexBuffer::Create(const VulkanDevice& vulkanDevice,
-	const std::vector<float>& vertices, const std::vector<VertexAttribute>& attributes)
+	const std::vector<float>& vertices)
 {
-	auto* pBuffer = new VulkanVertexBuffer(vulkanDevice, vertices, attributes);
+	auto* pBuffer = new VulkanVertexBuffer(vulkanDevice, vertices);
 	return std::shared_ptr<VulkanVertexBuffer>(pBuffer);
 }
 
-VulkanVertexBuffer::VulkanVertexBuffer(const VulkanDevice& vulkanDevice, const std::vector<float>& vertices,
-	const std::vector<VertexAttribute>& attributes)
+VulkanVertexBuffer::VulkanVertexBuffer(const VulkanDevice& vulkanDevice, const std::vector<float>& vertices)
 {
 	uint32_t bufferSize = vertices.size() * sizeof(float);
 	m_HostBuffer = VulkanBuffer::Create(vulkanDevice, bufferSize,
@@ -33,3 +33,4 @@ void VulkanVertexBuffer::CmdBind(const VkCommandBuffer& commandBuffer, const VkD
 {
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_DeviceBuffer->GetVkBuffer(), pOffset);
 }
+

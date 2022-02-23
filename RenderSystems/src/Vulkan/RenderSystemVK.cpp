@@ -10,16 +10,10 @@
 #include "VulkanRenderPass.h"
 #include "VulkanFrameBuffer.h"
 #include "VulkanSemaphore.h"
-#include "VulkanDescriptorPool.h"
-#include "VulkanDescriptorSetLayout.h"
-#include "VulkanDescriptorSet.h"
-#include "VulkanPipeline.h"
+#include "VulkanPipelineCache.h"
 #include "VulkanIndexBuffer.h"
 #include "VulkanVertexBuffer.h"
 #include "RenderSystemVK.h"
-
-#include "Geometry/Vertex.h"
-
 
 USING_NAMESPACE(Spectre)
 
@@ -45,30 +39,23 @@ Spectre::RenderSystemVK::~RenderSystemVK()
 	
 }
 
-void RenderSystemVK::CreateRenderContext(const NativeWindow& wnd)
+void RenderSystemVK::CreateRenderContext(const RenderContextDesc& desc)
 {
-	//创建Surface
-	if (m_ContextPtr->m_VkSurface != VK_NULL_HANDLE)
-	{
-		vkDestroySurfaceKHR(m_Instance->GetVkInstance(), m_ContextPtr->m_VkSurface, NULL);
-		m_ContextPtr->m_VkSurface = VK_NULL_HANDLE;
-	}
+	m_ContextPtr->SetVertexDesc(desc.VertexAttrs);
+	m_ContextPtr->InitCommandPool();
 
+	//创建Surface
+	VkSurfaceKHR surface = VK_NULL_HANDLE;
 	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
 	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
 	surfaceCreateInfo.hinstance = GetModuleHandle(NULL);
-	surfaceCreateInfo.hwnd = (HWND)wnd.hWnd;
-	VkResult err = vkCreateWin32SurfaceKHR(m_Instance->GetVkInstance(), &surfaceCreateInfo, nullptr, &m_ContextPtr->m_VkSurface);
+	surfaceCreateInfo.hwnd = (HWND)desc.Window.hWnd;
+	VK_CHECK(vkCreateWin32SurfaceKHR(m_Instance->GetVkInstance(), &surfaceCreateInfo, nullptr, &surface), "Failed create vkSurface!");
+	m_ContextPtr->CalcSwapchainParamaters(surface);
 
-	VK_CHECK(err, "Failed create surface!");
-
-	m_ContextPtr->Init();
 
 	CreateSemaphores();
 	CreateUniformBuffers();
-	CreateDescriptorPool();
-	CreateDescriptorSetLayout();
-	CreateDescriptorSet();
 }
 
 
@@ -82,6 +69,7 @@ void Spectre::RenderSystemVK::CreateSwapChain(const SwapChainDesc& desc)
 	CreateRenderPass();
 	CreateFrameBuffer();
 	CreatePipelines();
+	m_PipelineCache->CreatePipeline(*m_RenderPass);
 }
 
 void Spectre::RenderSystemVK::Setup()
@@ -133,8 +121,9 @@ void Spectre::RenderSystemVK::Setup()
 			vkCmdBeginRenderPass(cmdBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
 			vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
-			vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetVkPipelineLayout(), 0, 1, &m_DescriptorSet->GetVkDescriptorSet(), 0, nullptr);
-			vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetVkPipeline());
+			m_PipelineCache->BindDescriptorSets(cmdBuffer);
+			m_PipelineCache->BindPipeline(cmdBuffer);
+			vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_PipelineCache->GetVkPipeline());
 			m_VertexBuffer->CmdBind(cmdBuffer, offsets);
 			m_IndicesBuffer->CmdBind(cmdBuffer);
 			vkCmdDrawIndexed(cmdBuffer, m_IndicesBuffer->GetIndexCount(), 1, 0, 0, 0);
@@ -218,8 +207,7 @@ void Spectre::RenderSystemVK::CreateMeshBuffers(std::vector<float>& vertices,std
 
 	m_IndicesBuffer = VulkanIndexBuffer::Create(*m_Device, indices, VK_INDEX_TYPE_UINT32);
 
-	std::vector<VertexAttribute> attributes{ VertexAttribute_Position ,VertexAttribute_Color };
-	m_VertexBuffer = VulkanVertexBuffer::Create(*m_Device, vertices, { VertexAttribute_Position ,VertexAttribute_Color });
+	m_VertexBuffer = VulkanVertexBuffer::Create(*m_Device, vertices);
 
 	auto xferCmdBuffer = VulkanCommand::Create(*m_Device, m_ContextPtr->GetVkGraphicCommandPool(), 1)[0];
 
@@ -247,41 +235,12 @@ void Spectre::RenderSystemVK::CreateUniformBuffers()
 	m_MVPData.projection.Perspective(DegreesToRadians(75.0f), m_Width, m_Height, 0.01f, 3000.0f);
 }
 
-void Spectre::RenderSystemVK::CreateDescriptorPool()
-{
-	m_DescriptorPool = VulkanDescriptorPool::CreateDescriptorPool(*m_Device);
-}
-
-void Spectre::RenderSystemVK::CreateDescriptorSetLayout()
-{
-	m_DescriptorSetLayout = VulkanDescriptorSetLayout::CreateDescriptorSetLayout(*m_Device);
-}
-
-void Spectre::RenderSystemVK::CreateDescriptorSet()
-{
-	VkDevice device = m_Device->GetVkDevice();
-
-	m_DescriptorSet = VulkanDescriptorSet::CreateDescriptorSet(*m_Device, *m_DescriptorPool, *m_DescriptorSetLayout);
-	VkDescriptorBufferInfo MVPDescriptor;
-	MVPDescriptor.buffer = m_MVPBuffer->GetVkBuffer();
-	MVPDescriptor.offset = 0;
-	MVPDescriptor.range = sizeof(UBOData);
-
-	VkWriteDescriptorSet writeDescriptorSet{};
-	writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	writeDescriptorSet.dstSet = m_DescriptorSet->GetVkDescriptorSet();
-	writeDescriptorSet.descriptorCount = 1;
-	writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	writeDescriptorSet.pBufferInfo = &MVPDescriptor;
-	writeDescriptorSet.dstBinding = 0;
-	vkUpdateDescriptorSets(device, 1, &writeDescriptorSet, 0, nullptr);
-}
-
 void Spectre::RenderSystemVK::CreatePipelines()
 {
-	m_Pipeline = VulkanPipeline::CreatePipeline(*m_Device, *m_RenderPass, *m_DescriptorSetLayout);
-}
+	m_PipelineCache = VulkanPipelineCache::Create(m_Device->GetVkDevice());
 
+	m_PipelineCache->SetVertexDescription(m_ContextPtr->GetInputBinding(), m_ContextPtr->GetInputAttributes());
+}
 
 
 
@@ -304,8 +263,8 @@ void Spectre::RenderSystemVK::ReceateSwapchain(const SwapChainDesc& desc)
 	vkDeviceWaitIdle(m_Device->GetVkDevice());
 
 	DestorySwapchain();
-	m_ContextPtr->InitSwapchainParamaters();
-	m_ContextPtr->CalculateSwapChainExtent(_desc.Width, _desc.Height);
+	m_ContextPtr->ReCalcSwapchainParamaters();
+	m_ContextPtr->CalcSwapChainExtent(_desc.Width, _desc.Height);
 	m_Width = _desc.Width;
 	m_Height = _desc.Height;
 

@@ -1,10 +1,9 @@
 #pragma once
 #include <string>
 #include <vector>
-#include "CommonDefinitions.h"
+#include "SpectreDefs.h"
 #include "Noncopyable.h"
 #include "Geometry/Mesh.h"
-#include "Geometry/Vertex.h"
 BEGIN_NAMESPACE_SPECTRE
 
 class Scene;

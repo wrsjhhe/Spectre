@@ -1,6 +1,6 @@
 #pragma once
 #include <map>
-#include "RSDefs.h"
+#include "RenderDefs.h"
 #include "VulkanDevice.h"
 BEGIN_NAMESPACE_SPECTRE
 
@@ -9,18 +9,28 @@ class VulkanContext
 public:
 	VulkanContext(VkInstance instance, VkPhysicalDevice physicalDevice,const VulkanDevice& device);
 	~VulkanContext();
-	void Init();
 
-	void CalculateSwapChainExtent(uint32_t& width, uint32_t& height);
+	void SetVertexDesc(const std::vector<VertexAttribute>& attrs);
 
-	void InitSwapchainParamaters();
+	void CalcSwapChainExtent(uint32_t& width, uint32_t& height);
 
+	void CalcSwapchainParamaters(VkSurfaceKHR surface);
+	void ReCalcSwapchainParamaters();
 	void InitCommandPool();
 
 
 	VkCommandPool GetVkGraphicCommandPool() const;
 	VkCommandPool GetVkComputeCommandPool() const;
 	VkCommandPool GetVkTransferCommandPool() const;
+
+	const std::vector<VkVertexInputAttributeDescription>& GetInputAttributes()
+	{
+		return m_InputAttributeDesc;
+	}
+	const std::vector<VkVertexInputBindingDescription>& GetInputBinding() const
+	{
+		return m_InputBindingDesc;
+	}
 
 public:
 	VkInstance										m_VkInstance;
@@ -32,6 +42,9 @@ public:
 	VkPresentModeKHR								m_VkPresentMode;
 	VkFormat										m_VkSwapChainFormat;
 	std::map<CommandPoolTypes, VkCommandPool>		m_VkCommandPools;
+	std::vector<VkVertexInputBindingDescription>	m_InputBindingDesc;
+	std::vector<VkVertexInputAttributeDescription>  m_InputAttributeDesc;
+	
 };
 
 END_NAMESPACE_SPECTRE

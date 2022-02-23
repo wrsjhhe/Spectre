@@ -1,5 +1,5 @@
 #pragma once
-#include "CommonDefinitions.h"
+#include "SpectreDefs.h"
 #include "Noncopyable.h"
 #include "EngineCreateInfo.h"
 #include "Scene.h"

@@ -13,11 +13,10 @@ include_directories(${SPDLOG_DIR})
 set(DIRECTXMATH_DIR ../ThirdParty/DirectXMath/include)
 include_directories(${DIRECTXMATH_DIR})
 
-set(PUBLIC_HDRS ${INC_DIR}CommonDefinitions.h
+set(PUBLIC_HDRS ${INC_DIR}SpectreDefs.h
 				${INC_DIR}Allocator.h
 				${INC_DIR}Platform.h
 				
-				${INC_DIR}/Geometry/Vertex.h
 				${INC_DIR}/Geometry/Mesh.h
 
 				${INC_DIR}Mutex.h

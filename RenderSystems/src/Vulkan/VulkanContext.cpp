@@ -34,6 +34,143 @@ static VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR
 	return bestMode;
 }
 
+
+static uint32_t VertexAttributeToSize(VertexAttribute attribute)
+{
+    // count * sizeof(float)
+    if (attribute == VertexAttribute::VertexAttribute_Position)
+    {
+        return 3 * sizeof(float);
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_UV0)
+    {
+        return 2 * sizeof(float);
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_UV1)
+    {
+        return 2 * sizeof(float);
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_Normal)
+    {
+        return 3 * sizeof(float);
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_Tangent)
+    {
+        return 4 * sizeof(float);
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_Color)
+    {
+        return 3 * sizeof(float);
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_SkinWeight)
+    {
+        return 4 * sizeof(float);
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_SkinIndex)
+    {
+        return 4 * sizeof(float);
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_SkinPack)
+    {
+        return 3 * sizeof(float);
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_Custom0 ||
+        attribute == VertexAttribute::VertexAttribute_Custom1 ||
+        attribute == VertexAttribute::VertexAttribute_Custom2 ||
+        attribute == VertexAttribute::VertexAttribute_Custom3
+        )
+    {
+        return 4 * sizeof(float);
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_InstanceFloat1)
+    {
+        return 1 * sizeof(float);
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_InstanceFloat2)
+    {
+        return 2 * sizeof(float);
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_InstanceFloat3)
+    {
+        return 3 * sizeof(float);
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_InstanceFloat4)
+    {
+        return 4 * sizeof(float);
+    }
+
+    return 0;
+}
+
+static VkFormat VertexAttributeToVkFormat(VertexAttribute attribute)
+{
+    VkFormat format = VK_FORMAT_R32G32B32_SFLOAT;
+    if (attribute == VertexAttribute::VertexAttribute_Position)
+    {
+        format = VK_FORMAT_R32G32B32_SFLOAT;
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_UV0)
+    {
+        format = VK_FORMAT_R32G32_SFLOAT;
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_UV1)
+    {
+        format = VK_FORMAT_R32G32_SFLOAT;
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_Normal)
+    {
+        format = VK_FORMAT_R32G32B32_SFLOAT;
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_Tangent)
+    {
+        format = VK_FORMAT_R32G32B32A32_SFLOAT;
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_Color)
+    {
+        format = VK_FORMAT_R32G32B32_SFLOAT;
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_SkinPack)
+    {
+        format = VK_FORMAT_R32G32B32_SFLOAT;
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_SkinWeight)
+    {
+        format = VK_FORMAT_R32G32B32A32_SFLOAT;
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_SkinIndex)
+    {
+        format = VK_FORMAT_R32G32B32A32_SFLOAT;
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_Custom0 ||
+        attribute == VertexAttribute::VertexAttribute_Custom1 ||
+        attribute == VertexAttribute::VertexAttribute_Custom2 ||
+        attribute == VertexAttribute::VertexAttribute_Custom3
+        )
+    {
+        format = VK_FORMAT_R32G32B32A32_SFLOAT;
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_InstanceFloat1)
+    {
+        format = VK_FORMAT_R32_SFLOAT;
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_InstanceFloat2)
+    {
+        format = VK_FORMAT_R32G32_SFLOAT;
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_InstanceFloat3)
+    {
+        format = VK_FORMAT_R32G32B32_SFLOAT;
+    }
+    else if (attribute == VertexAttribute::VertexAttribute_InstanceFloat4)
+    {
+        format = VK_FORMAT_R32G32B32A32_SFLOAT;
+    }
+
+    return format;
+}
+
+//*************************************************************************************************************************************//
+
 VulkanContext::VulkanContext(VkInstance instance, VkPhysicalDevice physicalDevice, const VulkanDevice& device):
 	m_VkInstance(instance),
 	m_VkPhysicalDevice(physicalDevice),
@@ -57,13 +194,34 @@ VulkanContext::~VulkanContext()
 	m_VkCommandPools.clear();
 }
 
-void VulkanContext::Init()
+
+void VulkanContext::SetVertexDesc(const std::vector<VertexAttribute>& attrs)
 {
-	InitCommandPool();
-	InitSwapchainParamaters();
+	//create VertexInputBindingDescription
+	uint32_t stride = 0;
+	for (uint32_t i = 0; i < attrs.size(); ++i) {
+		stride += VertexAttributeToSize(attrs[i]);
+	}
+
+	m_InputBindingDesc.resize(1);
+	m_InputBindingDesc[0].binding = 0;
+	m_InputBindingDesc[0].stride = stride;
+	m_InputBindingDesc[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+	//create VertexInputAttributeDescription
+	m_InputAttributeDesc.resize(attrs.size());
+	uint32_t offset = 0;
+	for (uint32_t i = 0; i < attrs.size(); ++i)
+	{
+		m_InputAttributeDesc[i].binding = 0;
+		m_InputAttributeDesc[i].location = i;
+		m_InputAttributeDesc[i].format = VertexAttributeToVkFormat(attrs[i]);
+		m_InputAttributeDesc[i].offset = offset;
+		offset += VertexAttributeToSize(attrs[i]);
+	}
 }
 
-void VulkanContext::CalculateSwapChainExtent(uint32_t& width, uint32_t& height)
+void VulkanContext::CalcSwapChainExtent(uint32_t& width, uint32_t& height)
 {
 	if (m_VkSurfaceCapabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) 
 	{
@@ -81,8 +239,14 @@ void VulkanContext::CalculateSwapChainExtent(uint32_t& width, uint32_t& height)
 	}
 }
 
-void VulkanContext::InitSwapchainParamaters()
+void VulkanContext::CalcSwapchainParamaters(VkSurfaceKHR surface)
 {
+    if (m_VkSurface != VK_NULL_HANDLE)
+    {
+        vkDestroySurfaceKHR(m_VkInstance, m_VkSurface, NULL);
+        m_VkSurface = VK_NULL_HANDLE;
+    }
+    m_VkSurface = surface;
 	//—°‘ÒSurfaceFormat
 	uint32_t formatCount;
 	vkGetPhysicalDeviceSurfaceFormatsKHR(m_VkPhysicalDevice, m_VkSurface, &formatCount, nullptr);
@@ -104,7 +268,10 @@ void VulkanContext::InitSwapchainParamaters()
 
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_VkPhysicalDevice, m_VkSurface, &m_VkSurfaceCapabilities);
 }
-
+void VulkanContext::ReCalcSwapchainParamaters()
+{
+    CalcSwapchainParamaters(m_VkSurface);
+}
 void VulkanContext::InitCommandPool()
 {
 	const VulkanQueue& graphicQueue = m_Device.GetGraphicQueue();

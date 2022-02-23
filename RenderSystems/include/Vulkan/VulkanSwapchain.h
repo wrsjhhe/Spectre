@@ -1,7 +1,7 @@
 #pragma once
 #include "NativeWindow.h"
 #include "VulkanImages.h"
-#include "RSDefs.h"
+#include "RenderDefs.h"
 #include "VulkanContext.h"
 BEGIN_NAMESPACE_SPECTRE
 

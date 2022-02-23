@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "CommonDefinitions.h"
+#include "SpectreDefs.h"
 #include "DirectXMath.h"
 
 USING_NAMESPACE(DirectX)

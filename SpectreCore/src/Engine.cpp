@@ -1,16 +1,17 @@
 #include "Vulkan/RenderSystemVK.h"
-#include "RSDefs.h"
+#include "RenderDefs.h"
 #include "Engine.h"
 
-#include "Geometry/Vertex.h"
-
-
+#include "RenderContextDesc.h"
 USING_NAMESPACE(Spectre)
 
 bool Engine::Init(const EngineCreateInfo& info)
 {
+	RenderContextDesc renderDesc{};
+	renderDesc.Window = info.Wnd;
+	renderDesc.VertexAttrs = { VertexAttribute_Position, 	VertexAttribute_Color};
 	m_pRenderSystem = new RenderSystemVK();
-	m_pRenderSystem->CreateRenderContext(info.Wnd);
+	m_pRenderSystem->CreateRenderContext(renderDesc);
 
 	SwapChainDesc swapChainDesc;
 	swapChainDesc.Width = info.Width;

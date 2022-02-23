@@ -5,8 +5,8 @@
 #include <string>
 #include "MathDef.h"
 #include "NativeWindow.h"
-#include "RSDefs.h"
-
+#include "RenderDefs.h"
+#include "RenderContextDesc.h"
 namespace Spectre
 {
 	class VulkanPhysicalDevice;
@@ -22,10 +22,7 @@ namespace Spectre
 	class VulkanRenderPass;
 	class VulkanFrameBuffer;
 	class VulkanSemaphore;
-	class VulkanDescriptorPool;
-	class VulkanDescriptorSetLayout;
-	class VulkanDescriptorSet;
-	class VulkanPipeline;
+	class VulkanPipelineCache;
 
 	typedef std::shared_ptr<VulkanCommand> VulkanCommandPtr;
 
@@ -42,7 +39,7 @@ namespace Spectre
 	public:
 		RenderSystemVK() noexcept;
 		~RenderSystemVK();
-		void CreateRenderContext(const NativeWindow& wnd);
+		void CreateRenderContext(const RenderContextDesc& desc);
 
 		void CreateSwapChain(const SwapChainDesc& desc);
 
@@ -60,9 +57,6 @@ namespace Spectre
 		void CreateSemaphores();
 
 		void CreateUniformBuffers();
-		void CreateDescriptorPool();
-		void CreateDescriptorSetLayout();
-		void CreateDescriptorSet();
 		void CreatePipelines();
 
 
@@ -95,12 +89,7 @@ namespace Spectre
 
 		std::vector<VulkanCommandPtr>			m_RenderCommandBuffers;
 
-		std::shared_ptr<VulkanDescriptorPool>	m_DescriptorPool;
-
-		std::shared_ptr<VulkanDescriptorSetLayout>	m_DescriptorSetLayout;
-
-		std::shared_ptr<VulkanDescriptorSet>	m_DescriptorSet;
-		std::shared_ptr<VulkanPipeline>         m_Pipeline;
+		std::shared_ptr<VulkanPipelineCache>    m_PipelineCache;
 
 		std::shared_ptr<VulkanSemaphore>		m_PresentComplete;
 

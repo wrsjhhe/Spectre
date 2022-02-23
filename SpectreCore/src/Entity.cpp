@@ -1,3 +1,3 @@
-#include "CommonDefinitions.h"
+#include "SpectreDefs.h"
 #include "Entity.h"
 

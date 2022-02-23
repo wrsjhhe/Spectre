@@ -1,5 +1,5 @@
 #pragma once
-#include "CommonDefinitions.h"
+#include "SpectreDefs.h"
 #include <DirectXMath.h>
 #include <cmath>
 BEGIN_NAMESPACE_SPECTRE
