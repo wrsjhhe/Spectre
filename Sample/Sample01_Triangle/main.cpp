@@ -4,6 +4,9 @@
 #include <glfw3.h>
 #include <glfw3native.h>
 #include <fstream>
+#include <iostream>
+#include <iomanip>
+#include <sstream>
 using namespace Spectre;
 
 static std::string readFile(const std::string& filename)
@@ -28,6 +31,8 @@ static std::string readFile(const std::string& filename)
 
 static void OnButton(GLFWwindow* window, int key, int scancode, int action, int mods);
 static void onWindowResized(GLFWwindow* window, int width, int height);
+
+double filteredFrameTime = 0.0;
 class Sample01_Triangle
 {
 public:
@@ -73,8 +78,16 @@ public:
 		pMesh->SetFaceIndex(indices.data(), indices.size());
 
 		engine.GetScene().GetRootNode()->AddMesh(pMesh);
-		engine.SetEngineLoopCallback([]() {
+
+	
+		engine.SetEngineLoopCallback([](double currTime, double elapsedTime) {
 			glfwPollEvents();
+			double filterScale = 0.2;
+			filteredFrameTime = filteredFrameTime * (1.0 - filterScale) + filterScale * elapsedTime;
+			std::stringstream fpsCounterSS;
+			fpsCounterSS << std::fixed << std::setprecision(1) << filteredFrameTime * 1000;
+			fpsCounterSS << " ms (" << 1.0 / filteredFrameTime << " fps)";
+			std::cout << fpsCounterSS.str() << std::endl;
 			});
 		engine.SetEngineSleepCallback([]() {
 			glfwWaitEvents();

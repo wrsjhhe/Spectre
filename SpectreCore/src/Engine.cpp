@@ -3,7 +3,11 @@
 #include "Engine.h"
 
 #include "RenderContextDesc.h"
+#include "Timer.h"
 USING_NAMESPACE(Spectre)
+
+double g_CurrTime = 0;
+double g_LastTime = 0;
 
 bool Engine::Init(const EngineCreateInfo& info)
 {
@@ -51,16 +55,25 @@ void Engine::Render()
 	m_pRenderSystem->CreateMeshBuffers(vertices, indices);
 
 	m_pRenderSystem->Setup();
+
+	Timer Timer;
+	g_LastTime = Timer.GetElapsedTime();
 	while (!m_Exit)
 	{
+		double currTime = Timer.GetElapsedTime();
+		double elapsedTime = currTime - g_LastTime;
+	
 		if (m_Sleep && m_onSleep!=nullptr)
 		{
 			m_onSleep();
 			continue;
 		}
 		if (m_onLoop != nullptr)
-			m_onLoop();
+			m_onLoop(g_CurrTime, elapsedTime);
 		m_pRenderSystem->Draw();
+
+		g_LastTime = currTime;
+		g_CurrTime = g_CurrTime + elapsedTime;
 	}
 }
 

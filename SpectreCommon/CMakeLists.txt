@@ -25,6 +25,7 @@ set(PUBLIC_HDRS ${INC_DIR}SpectreDefs.h
 				${INC_DIR}MathDef.h
 				${INC_DIR}Noncopyable.h
 				${INC_DIR}NativeWindow.h
+				${INC_DIR}Timer.h
 				)
 #set(PRIVATE_HDRS )
 
@@ -37,7 +38,9 @@ include_directories(${SRC_DIR})
 set(SRCS ${SRC_DIR}Allocator.cpp
 		 ${SRC_DIR}/Geometry/Mesh.cpp
 		 ${SRC_DIR}Mutex.cpp
-		 ${SRC_DIR}LogManager.cpp)
+		 ${SRC_DIR}LogManager.cpp
+		 ${SRC_DIR}Timer.cpp
+)
 
 
 add_library (SpectreCommon STATIC ${PUBLIC_HDRS} ${PRIVATE_HDRS} ${SRCS})

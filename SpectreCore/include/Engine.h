@@ -6,7 +6,7 @@
 
 BEGIN_NAMESPACE_SPECTRE
 
-typedef void (*OnEngineLoopCallback)();
+typedef void (*OnEngineLoopCallback)(double currTime,double elapsedTime);
 
 typedef void (*OnEngineSleepCallback)();
 
