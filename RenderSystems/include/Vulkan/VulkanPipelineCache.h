@@ -17,7 +17,11 @@ public:
 	void SetVertexDescription(const std::vector<VkVertexInputBindingDescription>& bindingDescriptions,
 		const std::vector<VkVertexInputAttributeDescription>& attributeDescriptions);
 
-	void CreatePipeline(const VulkanRenderPass& renderPass);
+	void CreateShaderModules(const std::vector<std::vector<uint32_t>>& vertexShaders, const std::vector<std::vector<uint32_t>>& fragmentShaders);
+
+	void CreateDescriptorSet(VkDescriptorBufferInfo  MVPDescriptor);
+
+	void CreatePipelineInstance(const VulkanRenderPass& renderPass);
 
 	VkPipeline GetVkPipeline() { return m_VkPipeline; }
 	VkPipelineLayout GetVkPipelineLayout() { return m_VkPipelineLayout; }
@@ -29,11 +33,11 @@ public:
 	void Destory();
 private:
 	VulkanPipelineCache(VkDevice device);
-	VkShaderModule LoadSPIPVShader(const std::string& filepath);
+	VkShaderModule LoadSPIPVShader(const std::vector<uint32_t>& shaderCode);
 
 	void CreateDescriptorPool();
 	void CreatePipelineLayout();
-	void CreateDescriptorSet();
+
 
 private:
 	VkDevice							m_VkDevice = VK_NULL_HANDLE;;
@@ -55,6 +59,9 @@ private:
 	VkPipelineViewportStateCreateInfo						m_ViewportState;
 	VkPipelineDepthStencilStateCreateInfo					m_DepthStencilState;
 	std::vector<VkDynamicState>								m_DynamicStateEnables;
+
+	std::vector<std::vector<uint32_t>>						m_VertexShaders;
+	std::vector<std::vector<uint32_t>>						m_FragmentShaders;
 };
 
 END_NAMESPACE_SPECTRE

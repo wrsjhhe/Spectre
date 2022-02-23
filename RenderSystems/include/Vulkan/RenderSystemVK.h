@@ -57,8 +57,6 @@ namespace Spectre
 		void CreateSemaphores();
 
 		void CreateUniformBuffers();
-		void CreatePipelines();
-
 
 		void UpdateUniformBuffers();
 

@@ -1,9 +1,30 @@
 #include "Engine.h"
-
+#include "ShaderTool.h"
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <glfw3.h>
 #include <glfw3native.h>
+#include <fstream>
 using namespace Spectre;
+
+static std::string readFile(const std::string& filename)
+{
+	std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+	if (!file.is_open())
+	{
+		throw std::runtime_error("failed to open file!");
+	}
+	size_t fileSize = (size_t)file.tellg();
+	std::string buffer;
+	buffer.resize(fileSize);
+
+	file.seekg(0);
+	file.read(buffer.data(), fileSize);
+
+	file.close();
+
+	return buffer;
+}
 
 static void OnButton(GLFWwindow* window, int key, int scancode, int action, int mods);
 static void onWindowResized(GLFWwindow* window, int width, int height);
@@ -27,6 +48,12 @@ public:
 		void* hwnd = glfwGetWin32Window(window);
 		info.Wnd = NativeWindow{ hwnd };
 
+		std::string  strVertexShader = readFile("../../../../../../Resources/Shaders/triangle.vert");
+		std::string  strFragmentShader = readFile("../../../../../../Resources/Shaders/triangle.frag");
+		std::vector<uint32_t> vertexSPV = ShaderTool::Compile_glsl(strVertexShader, ShaderType_Vertex);
+		std::vector<uint32_t> fragmentSPV = ShaderTool::Compile_glsl(strFragmentShader, ShaderType_Fragment);
+		info.VertexShaders.emplace_back(std::move(vertexSPV));
+		info.FragmentShaders.emplace_back(std::move(fragmentSPV));
 
 		engine.Init(info);
 

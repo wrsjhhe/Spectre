@@ -47,12 +47,12 @@ typedef enum VertexAttribute
 
 typedef enum ShaderType
 {
-	Vertex = 1,
-	Fragment = 2,
-	Compute = 3,
-	Geometry = 4,
-	Tess_control = 5,
-	Tess_evaluation = 6
+	ShaderType_Vertex = 1,
+	ShaderType_Fragment = 2,
+	ShaderType_Compute = 3,
+	ShaderType_Geometry = 4,
+	ShaderType_Tess_control = 5,
+	ShaderType_Tess_evaluation = 6
 }ShaderType;
 
 END_NAMESPACE_SPECTRE

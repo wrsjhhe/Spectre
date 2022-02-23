@@ -247,7 +247,10 @@ void VulkanContext::CalcSwapchainParamaters(VkSurfaceKHR surface)
         m_VkSurface = VK_NULL_HANDLE;
     }
     m_VkSurface = surface;
-	//—°‘ÒSurfaceFormat
+	ReCalcSwapchainParamaters();
+}
+void VulkanContext::ReCalcSwapchainParamaters()
+{
 	uint32_t formatCount;
 	vkGetPhysicalDeviceSurfaceFormatsKHR(m_VkPhysicalDevice, m_VkSurface, &formatCount, nullptr);
 	std::vector<VkSurfaceFormatKHR> formats(formatCount);
@@ -267,10 +270,6 @@ void VulkanContext::CalcSwapchainParamaters(VkSurfaceKHR surface)
 	m_VkPresentMode = chooseSwapPresentMode(presentModes);
 
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_VkPhysicalDevice, m_VkSurface, &m_VkSurfaceCapabilities);
-}
-void VulkanContext::ReCalcSwapchainParamaters()
-{
-    CalcSwapchainParamaters(m_VkSurface);
 }
 void VulkanContext::InitCommandPool()
 {

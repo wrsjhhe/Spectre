@@ -1,5 +1,5 @@
 #pragma once
-
+#include <stdint.h>
 #define SPECTRE_ENGINE_VERSION 10000
 
 #define BEGIN_NAMESPACE(Name) \

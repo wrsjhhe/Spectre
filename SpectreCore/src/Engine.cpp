@@ -9,7 +9,10 @@ bool Engine::Init(const EngineCreateInfo& info)
 {
 	RenderContextDesc renderDesc{};
 	renderDesc.Window = info.Wnd;
-	renderDesc.VertexAttrs = { VertexAttribute_Position, 	VertexAttribute_Color};
+	renderDesc.VertexAttrs = { VertexAttribute_Position, VertexAttribute_Color};
+	renderDesc.VertexShaders = info.VertexShaders;
+	renderDesc.FragmentShaders = info.FragmentShaders;
+
 	m_pRenderSystem = new RenderSystemVK();
 	m_pRenderSystem->CreateRenderContext(renderDesc);
 

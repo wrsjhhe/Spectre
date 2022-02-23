@@ -22,9 +22,8 @@ static std::vector<char> readFile(const std::string& filename)
 
 	return buffer;
 }
+
 USING_NAMESPACE(Spectre)
-
-
 
 std::shared_ptr<VulkanPipelineCache> VulkanPipelineCache::Create(VkDevice device)
 {
@@ -51,7 +50,33 @@ void VulkanPipelineCache::SetVertexDescription(const std::vector<VkVertexInputBi
 	m_VertexInputState.pVertexAttributeDescriptions = m_AttributeDescriptions.data();
 }
 
-void VulkanPipelineCache::CreatePipeline(const VulkanRenderPass& renderPass)
+void VulkanPipelineCache::CreateShaderModules(const std::vector<std::vector<uint32_t>>& vertexShaders,
+	const std::vector<std::vector<uint32_t>>& fragmentShaders)
+{
+	uint32_t offset = 0;
+	m_ShaderStages.resize(vertexShaders.size() + fragmentShaders.size());
+	for (uint32_t i = offset; i < vertexShaders.size(); ++i)
+	{
+		m_ShaderStages[i] = {};
+		m_ShaderStages[i].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		m_ShaderStages[i].stage = VK_SHADER_STAGE_VERTEX_BIT;
+		m_ShaderStages[i].module = LoadSPIPVShader(vertexShaders[i]);
+		m_ShaderStages[i].pName = "main";
+		++offset;
+	}
+	
+	for (uint32_t i = 0; i < fragmentShaders.size(); ++i)
+	{
+		m_ShaderStages[offset] = {};
+		m_ShaderStages[offset].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		m_ShaderStages[offset].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+		m_ShaderStages[offset].module = LoadSPIPVShader(fragmentShaders[i]);
+		m_ShaderStages[offset].pName = "main";
+		++offset;
+	}
+}
+
+void VulkanPipelineCache::CreatePipelineInstance(const VulkanRenderPass& renderPass)
 {
 	if (m_VkPipeline != VK_NULL_HANDLE)
 	{
@@ -107,7 +132,6 @@ void VulkanPipelineCache::Destory()
 	vkDestroyPipeline(device, m_VkPipeline, nullptr);
 	vkDestroyPipelineCache(device, m_VkPipelineCache, nullptr);
 
-	vkFreeDescriptorSets(device, m_VkDescriptorPool, 1, &m_VkDescriptorSet);
 	vkDestroyDescriptorSetLayout(device, m_VkDescriptorSetLayout, nullptr);
 	vkDestroyDescriptorPool(device, m_VkDescriptorPool, nullptr);
 }
@@ -117,7 +141,7 @@ VulkanPipelineCache::VulkanPipelineCache(VkDevice device):
 {
 	CreateDescriptorPool();
 	CreatePipelineLayout();
-	CreateDescriptorSet();
+
 
 	VkPipelineLayoutCreateInfo pipeLayoutInfo{};
 	pipeLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -177,34 +201,17 @@ VulkanPipelineCache::VulkanPipelineCache(VkDevice device):
 	m_MultisampleState.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 	m_MultisampleState.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT; //todo
 	m_MultisampleState.pSampleMask = nullptr;
-
-	m_ShaderStages.resize(2);
-	m_ShaderStages[0] = {};
-	m_ShaderStages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	m_ShaderStages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-	m_ShaderStages[0].module = LoadSPIPVShader("../../../../../../Resources/Shaders/triangle.vert.spv");
-	m_ShaderStages[0].pName = "main";
-
-	m_ShaderStages[1] = {};
-	m_ShaderStages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	m_ShaderStages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-	m_ShaderStages[1].module = LoadSPIPVShader("../../../../../../Resources/Shaders/triangle.frag.spv");
-	m_ShaderStages[1].pName = "main";
 }
 
-VkShaderModule VulkanPipelineCache::LoadSPIPVShader(const std::string& filepath)
+VkShaderModule VulkanPipelineCache::LoadSPIPVShader(const std::vector<uint32_t>& shaderCode)
 {
-	VkDevice device = m_VkDevice;
-
-	std::vector<char> shaderCode = readFile(filepath);
-
 	VkShaderModuleCreateInfo moduleCreateInfo{};
 	moduleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	moduleCreateInfo.codeSize = shaderCode.size();
-	moduleCreateInfo.pCode = reinterpret_cast<const uint32_t*>(shaderCode.data());
+	moduleCreateInfo.codeSize = shaderCode.size()*sizeof(uint32_t);
+	moduleCreateInfo.pCode = shaderCode.data();
 
 	VkShaderModule shaderModule;
-	vkCreateShaderModule(device, &moduleCreateInfo, nullptr, &shaderModule);
+	vkCreateShaderModule(m_VkDevice, &moduleCreateInfo, nullptr, &shaderModule);
 
 	return shaderModule;
 }
@@ -239,7 +246,7 @@ void VulkanPipelineCache::CreatePipelineLayout()
 	vkCreateDescriptorSetLayout(m_VkDevice, &descSetLayoutInfo, nullptr, &m_VkDescriptorSetLayout);
 }
 
-void VulkanPipelineCache::CreateDescriptorSet()
+void VulkanPipelineCache::CreateDescriptorSet(VkDescriptorBufferInfo  MVPDescriptor)
 {
 	VkDescriptorSetAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -247,4 +254,13 @@ void VulkanPipelineCache::CreateDescriptorSet()
 	allocInfo.descriptorSetCount = 1;
 	allocInfo.pSetLayouts = &m_VkDescriptorSetLayout;
 	vkAllocateDescriptorSets(m_VkDevice, &allocInfo, &m_VkDescriptorSet);
+
+	VkWriteDescriptorSet writeDescriptorSet{};
+	writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	writeDescriptorSet.dstSet = m_VkDescriptorSet;
+	writeDescriptorSet.descriptorCount = 1;
+	writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	writeDescriptorSet.pBufferInfo = &MVPDescriptor;
+	writeDescriptorSet.dstBinding = 0;
+	vkUpdateDescriptorSets(m_VkDevice, 1, &writeDescriptorSet, 0, nullptr);
 }

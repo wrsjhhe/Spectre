@@ -52,8 +52,8 @@ void RenderSystemVK::CreateRenderContext(const RenderContextDesc& desc)
 	surfaceCreateInfo.hwnd = (HWND)desc.Window.hWnd;
 	VK_CHECK(vkCreateWin32SurfaceKHR(m_Instance->GetVkInstance(), &surfaceCreateInfo, nullptr, &surface), "Failed create vkSurface!");
 	m_ContextPtr->CalcSwapchainParamaters(surface);
-
-
+	m_PipelineCache = VulkanPipelineCache::Create(m_Device->GetVkDevice());
+	m_PipelineCache->CreateShaderModules(desc.VertexShaders, desc.FragmentShaders);
 	CreateSemaphores();
 	CreateUniformBuffers();
 }
@@ -68,8 +68,14 @@ void Spectre::RenderSystemVK::CreateSwapChain(const SwapChainDesc& desc)
 	CreateDepthStencil();
 	CreateRenderPass();
 	CreateFrameBuffer();
-	CreatePipelines();
-	m_PipelineCache->CreatePipeline(*m_RenderPass);
+
+	m_PipelineCache->SetVertexDescription(m_ContextPtr->GetInputBinding(), m_ContextPtr->GetInputAttributes());
+	VkDescriptorBufferInfo MVPDescriptor;
+	MVPDescriptor.buffer = m_MVPBuffer->GetVkBuffer();
+	MVPDescriptor.offset = 0;
+	MVPDescriptor.range = sizeof(UBOData);
+	m_PipelineCache->CreateDescriptorSet(MVPDescriptor);
+	m_PipelineCache->CreatePipelineInstance(*m_RenderPass);
 }
 
 void Spectre::RenderSystemVK::Setup()
@@ -123,7 +129,6 @@ void Spectre::RenderSystemVK::Setup()
 			vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
 			m_PipelineCache->BindDescriptorSets(cmdBuffer);
 			m_PipelineCache->BindPipeline(cmdBuffer);
-			vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_PipelineCache->GetVkPipeline());
 			m_VertexBuffer->CmdBind(cmdBuffer, offsets);
 			m_IndicesBuffer->CmdBind(cmdBuffer);
 			vkCmdDrawIndexed(cmdBuffer, m_IndicesBuffer->GetIndexCount(), 1, 0, 0, 0);
@@ -234,14 +239,6 @@ void Spectre::RenderSystemVK::CreateUniformBuffers()
 	m_MVPData.projection.SetIdentity();
 	m_MVPData.projection.Perspective(DegreesToRadians(75.0f), m_Width, m_Height, 0.01f, 3000.0f);
 }
-
-void Spectre::RenderSystemVK::CreatePipelines()
-{
-	m_PipelineCache = VulkanPipelineCache::Create(m_Device->GetVkDevice());
-
-	m_PipelineCache->SetVertexDescription(m_ContextPtr->GetInputBinding(), m_ContextPtr->GetInputAttributes());
-}
-
 
 
 void Spectre::RenderSystemVK::UpdateUniformBuffers()
