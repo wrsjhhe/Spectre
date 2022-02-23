@@ -3,12 +3,16 @@
 #include "Noncopyable.h"
 #include "EngineCreateInfo.h"
 #include "Scene.h"
+#include <functional>
 
 BEGIN_NAMESPACE_SPECTRE
 
-typedef void (*OnEngineLoopCallback)(double currTime,double elapsedTime);
+typedef std::function<void(double,double)> OnEngineLoopCallback;
+typedef std::function<void()> OnEngineSleepCallback;
 
-typedef void (*OnEngineSleepCallback)();
+//typedef void (*OnEngineLoopCallback)(double currTime,double elapsedTime);
+//
+//typedef void (*OnEngineSleepCallback)();
 
 class RenderSystemVK;
 class Engine : public Noncopyable

@@ -32,7 +32,7 @@ static std::string readFile(const std::string& filename)
 static void OnButton(GLFWwindow* window, int key, int scancode, int action, int mods);
 static void onWindowResized(GLFWwindow* window, int width, int height);
 
-double filteredFrameTime = 0.0;
+
 class Sample01_Triangle
 {
 public:
@@ -79,8 +79,8 @@ public:
 
 		engine.GetScene().GetRootNode()->AddMesh(pMesh);
 
-	
-		engine.SetEngineLoopCallback([](double currTime, double elapsedTime) {
+		double filteredFrameTime = 0.0;
+		engine.SetEngineLoopCallback([&](double currTime, double elapsedTime) {
 			glfwPollEvents();
 			double filterScale = 0.2;
 			filteredFrameTime = filteredFrameTime * (1.0 - filterScale) + filterScale * elapsedTime;
@@ -97,29 +97,8 @@ public:
 		glfwDestroyWindow(window);
 		glfwTerminate();
 	}
-
-	void Resize(uint32_t width, uint32_t height)
-	{
-		engine.Resize(width, height);
-	}
-
-	void Sleep()
-	{
-		engine.Sleep();
-	}
-
-	void Awake()
-	{
-		engine.Awake();
-	}
-
-	void Exit()
-	{
-		engine.Exit();
-	}
-private:
-
-
+	
+	Engine& GetEngine() { return engine; }
 private:
 	Engine engine;
 };
@@ -130,7 +109,7 @@ static void OnButton(GLFWwindow* window, int key, int scancode, int action, int 
 	Sample01_Triangle* app = reinterpret_cast<Sample01_Triangle*>(glfwGetWindowUserPointer(window));
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 	{
-		app->Exit();
+		app->GetEngine().Exit();
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 	}
 }
@@ -141,12 +120,12 @@ static void onWindowResized(GLFWwindow* window, int width, int height) {
 
 	if (width == 0 || height == 0)
 	{
-		app->Sleep();
+		app->GetEngine().Sleep();
 	}
 	else
 	{
-		app->Awake();
-		app->Resize(width, height);
+		app->GetEngine().Awake();
+		app->GetEngine().Resize(width, height);
 	}
 }
 
