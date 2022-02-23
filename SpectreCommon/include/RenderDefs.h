@@ -15,14 +15,14 @@ typedef enum CommandPoolTypes
 	CommandPool_Type_Transfer = 3,
 }CommandPoolTypes;
 
-enum BufferType
+typedef enum BufferType
 {
 	Buffer_Type_Undefined = -1,
 	Buffer_Type_Host = 1,
 	Buffer_Type_Device = 2
-};
+}BufferType;
 
-enum VertexAttribute
+typedef enum VertexAttribute
 {
 	VertexAttribute_None = 0,
 	VertexAttribute_Position,
@@ -43,6 +43,16 @@ enum VertexAttribute
 	VertexAttribute_Custom2,
 	VertexAttribute_Custom3,
 	VertexAttribute_Count,
-};
+}VertexAttribute;
+
+typedef enum ShaderType
+{
+	Vertex = 1,
+	Fragment = 2,
+	Compute = 3,
+	Geometry = 4,
+	Tess_control = 5,
+	Tess_evaluation = 6
+}ShaderType;
 
 END_NAMESPACE_SPECTRE

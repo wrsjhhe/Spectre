@@ -44,6 +44,8 @@ public:
 	std::map<CommandPoolTypes, VkCommandPool>		m_VkCommandPools;
 	std::vector<VkVertexInputBindingDescription>	m_InputBindingDesc;
 	std::vector<VkVertexInputAttributeDescription>  m_InputAttributeDesc;
+	std::vector<std::vector<uint32_t>>				m_VertexShaders;
+	std::vector<std::vector<uint32_t>>				m_FragmentShaders;
 	
 };
 
