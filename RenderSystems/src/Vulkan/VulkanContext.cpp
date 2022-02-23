@@ -60,7 +60,7 @@ static uint32_t VertexAttributeToSize(VertexAttribute attribute)
     }
     else if (attribute == VertexAttribute::VertexAttribute_Color)
     {
-        return 3 * sizeof(float);
+        return 4 * sizeof(float);
     }
     else if (attribute == VertexAttribute::VertexAttribute_SkinWeight)
     {
