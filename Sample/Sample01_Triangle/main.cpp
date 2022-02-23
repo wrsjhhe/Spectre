@@ -45,7 +45,7 @@ public:
 
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-		auto window = glfwCreateWindow(info.Width, info.Height, "Vulkan", nullptr, nullptr);
+		auto window = glfwCreateWindow(info.Width, info.Height, "Sample01_Triangle", nullptr, nullptr);
 		glfwSetKeyCallback(window, OnButton);
 
 		glfwSetWindowSizeCallback(window, onWindowResized);
