@@ -1,5 +1,8 @@
-#include "Engine.h"
-#include "ShaderTool.h"
+#include "Objects/Scene.h"
+#include "Materials/Material.h"
+#include "Geometries/BufferGeometry.h"
+#include "Renderers/Renderer.h"
+#include "Timer.h"
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <glfw3.h>
 #include <glfw3native.h>
@@ -32,36 +35,39 @@ static std::string readFile(const std::string& filename)
 static void OnButton(GLFWwindow* window, int key, int scancode, int action, int mods);
 static void onWindowResized(GLFWwindow* window, int width, int height);
 
+int g_Width = 1400;
+int g_Height = 900;
+double g_CurrTime = 0;
+double g_LastTime = 0;
 
 class Sample01_Triangle
 {
 public:
-	void Run()
+	NativeWindow CreateWnd(int width,int height)
 	{
-		EngineCreateInfo info;
-		info.Width = 1400;
-		info.Height = 900;
 		glfwInit();
 
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-		auto window = glfwCreateWindow(info.Width, info.Height, "Sample01_Triangle", nullptr, nullptr);
-		glfwSetKeyCallback(window, OnButton);
+		pWindow = glfwCreateWindow(width, height, "Sample01_Triangle", nullptr, nullptr);
+		glfwSetKeyCallback(pWindow, OnButton);
 
-		glfwSetWindowSizeCallback(window, onWindowResized);
-		glfwSetWindowUserPointer(window, this);
-		void* hwnd = glfwGetWin32Window(window);
-		info.Wnd = NativeWindow{ hwnd };
+		glfwSetWindowSizeCallback(pWindow, onWindowResized);
+		glfwSetWindowUserPointer(pWindow, this);
+		void* hwnd = glfwGetWin32Window(pWindow);
+		return NativeWindow{ hwnd };
+	}
 
-		std::string  strVertexShader = readFile("../../../../../../Resources/Shaders/triangle.vert");
-		std::string  strFragmentShader = readFile("../../../../../../Resources/Shaders/triangle.frag");
-		std::vector<uint32_t> vertexSPV = ShaderTool::Compile_glsl(strVertexShader, ShaderType_Vertex);
-		std::vector<uint32_t> fragmentSPV = ShaderTool::Compile_glsl(strFragmentShader, ShaderType_Fragment);
-		info.VertexShaders.emplace_back(std::move(vertexSPV));
-		info.FragmentShaders.emplace_back(std::move(fragmentSPV));
+	void Run()
+	{
 
-		engine.Init(info);
+		ObjectDesc* pObjectDesc = renderer.CreateObjectDesc();
+		pObjectDesc->VertexAttrs = { VertexAttribute_Position, VertexAttribute_Color };
 
+		pObjectDesc->MateralPtr->VertexShader = readFile("../../../../../../Resources/Shaders/triangle.vert");
+		pObjectDesc->MateralPtr->FragmentShader = readFile("../../../../../../Resources/Shaders/triangle.frag");
+
+		BufferGeometry* geometry = BufferGeometry::Create(pObjectDesc->VertexAttrs);
 		// 顶点数据
 		std::vector<float> vertices = {
 				1.0f, 1.0f, 0.0f ,1.0f, 0.0f, 0.0f ,1.0f,
@@ -71,36 +77,77 @@ public:
 
 		// 索引数据
 		std::vector<uint32_t> indices = { 0, 1, 2 };
+		geometry->SetVertices(vertices.data(), vertices.size());
+		geometry->SetFaceIndex(indices.data(), indices.size());
 
-		Mesh* pMesh = new Mesh();
+		Mesh* pMesh = Mesh::Create(geometry, pObjectDesc->MateralPtr);
 
-		pMesh->SetVertices(vertices.data(), vertices.size());
-		pMesh->SetFaceIndex(indices.data(), indices.size());
+		Scene scene;
+		scene.Add(pMesh);
 
-		engine.GetScene().GetRootNode()->AddMesh(pMesh);
+		auto wnd = CreateWnd(g_Width, g_Height);
+
+		renderer.Attach(wnd);
+		renderer.BindScene(&scene);
+		renderer.Resize(g_Width, g_Height);
+		renderer.Setup();
 
 		double filteredFrameTime = 0.0;
-		engine.SetEngineLoopCallback([&](double currTime, double elapsedTime) {
-			glfwPollEvents();
-			double filterScale = 0.2;
+		double filterScale = 0.2;
+		Timer timer;
+		g_LastTime = timer.GetElapsedTime();
+		while (!exit)
+		{
+			if (sleep)
+			{
+				glfwWaitEvents();
+				continue;		
+			}
+			double currTime = timer.GetElapsedTime();
+			double elapsedTime = currTime - g_LastTime;
+
 			filteredFrameTime = filteredFrameTime * (1.0 - filterScale) + filterScale * elapsedTime;
 			std::stringstream fpsCounterSS;
 			fpsCounterSS << std::fixed << std::setprecision(1) << filteredFrameTime * 1000;
 			fpsCounterSS << " ms (" << 1.0 / filteredFrameTime << " fps)";
 			std::cout << fpsCounterSS.str() << std::endl;
-			});
-		engine.SetEngineSleepCallback([]() {
-			glfwWaitEvents();
-			});
-		engine.Render();
 
-		glfwDestroyWindow(window);
+			Present();
+			glfwPollEvents();
+
+			g_LastTime = currTime;
+			g_CurrTime = g_CurrTime + elapsedTime;
+		}
+		glfwDestroyWindow(pWindow);
 		glfwTerminate();
 	}
+
+	void Exit()
+	{
+		exit = true;
+	}
+
+	void Present()
+	{
+		renderer.Render();
+	}
+
+	void Sleep()
+	{
+		sleep = true;
+	}
+
+	void Awake()
+	{
+		sleep = false;
+	}
 	
-	Engine& GetEngine() { return engine; }
+	Renderer& GetRnderer() { return renderer; }
 private:
-	Engine engine;
+	GLFWwindow* pWindow;
+	Renderer renderer;
+	bool exit = false;
+	bool sleep = false;
 };
 
 
@@ -109,7 +156,7 @@ static void OnButton(GLFWwindow* window, int key, int scancode, int action, int 
 	Sample01_Triangle* app = reinterpret_cast<Sample01_Triangle*>(glfwGetWindowUserPointer(window));
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 	{
-		app->GetEngine().Exit();
+		app->Exit();
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 	}
 }
@@ -120,12 +167,12 @@ static void onWindowResized(GLFWwindow* window, int width, int height) {
 
 	if (width == 0 || height == 0)
 	{
-		app->GetEngine().Sleep();
+		app->Sleep();
 	}
 	else
 	{
-		app->GetEngine().Awake();
-		app->GetEngine().Resize(width, height);
+		app->Awake();
+		app->GetRnderer().Resize(width, height);
 	}
 }
 

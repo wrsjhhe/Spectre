@@ -51,7 +51,9 @@ void RenderSystemVK::CreateRenderContext(const RenderContextDesc& desc)
 	surfaceCreateInfo.hinstance = GetModuleHandle(NULL);
 	surfaceCreateInfo.hwnd = (HWND)desc.Window.hWnd;
 	VK_CHECK(vkCreateWin32SurfaceKHR(m_Instance->GetVkInstance(), &surfaceCreateInfo, nullptr, &surface), "Failed create vkSurface!");
+	
 	m_ContextPtr->CalcSwapchainParamaters(surface);
+	
 	m_PipelineCache = VulkanPipelineCache::Create(m_Device->GetVkDevice());
 	m_PipelineCache->CreateShaderModules(desc.VertexShaders, desc.FragmentShaders);
 	CreateSemaphores();

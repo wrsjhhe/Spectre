@@ -1,10 +1,16 @@
 #pragma once
+#include <vector>
+#include <RenderDefs.h>
 
 BEGIN_NAMESPACE_SPECTRE
 
 class BufferGeometry
 {
 public:
+	static BufferGeometry* Create(const std::vector<VertexAttribute>& vertexAttrs);
+public:
+	void SetVertexAttributes();
+
 	void SetVertices(const float* vertices, uint32_t count);
 	void SetFaceIndex(const uint32_t* faces, uint32_t count);
 
@@ -16,8 +22,12 @@ public:
 
 
 	~BufferGeometry();
+private:
+	BufferGeometry();
 
 private:
+	std::vector<VertexAttribute> m_VertexAttrs;
+
 	uint32_t			m_VerticesCount;
 	float* m_Vertices = nullptr;
 

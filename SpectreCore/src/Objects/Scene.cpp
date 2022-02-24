@@ -1,24 +1,26 @@
-#include "Scene.h"
+#include "Objects/Scene.h"
 
 USING_NAMESPACE(Spectre)
 
 Scene::Scene()
 {
-	m_RootNode = new SceneNode();
+
 }
 
 Scene::~Scene()
 {
-	delete m_RootNode;
+
 }
 
-void Scene::AddNode(SceneNode* pNode)
+void Scene::Add(Object3D* pObj)
 {
-	pNode->m_Parent = this->m_RootNode;
+	AddMesh(static_cast<Mesh*>(pObj));
 }
 
-SceneNode* Scene::GetRootNode()
+void Scene::AddMesh(Mesh* pMesh)
 {
-	return m_RootNode;
+	m_Meshes.emplace_back(pMesh);
 }
+
+
 
