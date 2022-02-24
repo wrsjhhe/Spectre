@@ -14,7 +14,11 @@ Scene::~Scene()
 
 void Scene::Add(Object3D* pObj)
 {
-	AddMesh(static_cast<Mesh*>(pObj));
+	if (Mesh::Desc(pObj))
+	{
+		AddMesh(static_cast<Mesh*>(pObj));
+	}
+	
 }
 
 void Scene::AddMesh(Mesh* pMesh)

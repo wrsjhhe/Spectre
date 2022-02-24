@@ -14,7 +14,9 @@ include_directories(../SpectreCommon/include/)
 set(INC_DIR ./include/)
 include_directories(${INC_DIR})
 
-set(PUBLIC_HDRS ${INC_DIR}ShaderTool.h
+set(PUBLIC_HDRS 
+				${INC_DIR}Object.h
+				${INC_DIR}ShaderTool.h
 				${INC_DIR}Geometries/BufferGeometry.h
 				${INC_DIR}Materials/Material.h				
 				${INC_DIR}Objects/Object3D.h
@@ -33,7 +35,9 @@ set(PRIVATE_HDRS )
 # ==================================================================================================
 set(SRC_DIR ./src/)
 
-set(SRCS ${SRC_DIR}ShaderTool.cpp		 
+set(SRCS 
+		 ${SRC_DIR}Object.cpp
+		 ${SRC_DIR}ShaderTool.cpp		 
 		 ${SRC_DIR}Geometries/BufferGeometry.cpp
 		 ${SRC_DIR}Materials/Material.cpp		 
 		 ${SRC_DIR}Objects/Object3D.cpp

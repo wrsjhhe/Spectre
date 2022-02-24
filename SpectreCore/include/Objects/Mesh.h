@@ -8,10 +8,11 @@ BEGIN_NAMESPACE_SPECTRE
 class Mesh : public Object3D
 {
 public:
+	SpectreObject(Mesh)
 	static Mesh* Create(BufferGeometry* pGeometry, Material* pMaterial);
 public:
 
-	~Mesh();
+	virtual ~Mesh();
 
 	BufferGeometry* GetBufferGeometry() const { return m_GeometryPtr; }
 	Material* GetMaterial() const { return m_MaterialPtr; }

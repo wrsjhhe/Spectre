@@ -1,5 +1,5 @@
 #pragma once
-#include "SpectreDefs.h"
+#include "Object.h"
 #include "Objects/Scene.h"
 #include "Cameras/Camera.h"
 #include "Materials/Material.h"
@@ -14,12 +14,11 @@ struct ObjectDesc
 };
 
 class RenderSystemVK;
-class Renderer
+class Renderer :public Object
 {
 public:
+	SpectreObject(Renderer);
 	Renderer();
-
-	std::string Id() { return "1"; }
 
 	void Attach(const NativeWindow& wnd);
 
