@@ -17,10 +17,23 @@ include_directories(${INC_DIR})
 
 set(PUBLIC_HDRS ${INC_DIR}Engine.h
 				${INC_DIR}SceneNode.h
-				${INC_DIR}Scene.h
+	
 				${INC_DIR}Material.h
 				${INC_DIR}ShaderTool.h
-				${INC_DIR}Entity.h
+				
+				${INC_DIR}Geometries/BufferGeometry.h
+
+				${INC_DIR}Materials/Material.h
+				
+				${INC_DIR}Objects/Object3D.h
+				${INC_DIR}Objects/Scene.h
+				${INC_DIR}Objects/Mesh.h				
+				
+				${INC_DIR}Renderers/Renderer.h
+
+				${INC_DIR}Cameras/Camera.h
+				${INC_DIR}Cameras/PerspectiveCamera.h
+
 )
 
 set(PRIVATE_HDRS )
@@ -29,14 +42,24 @@ set(PRIVATE_HDRS )
 # 项目源文件设置
 # ==================================================================================================
 set(SRC_DIR ./src/)
-include_directories(${SRC_DIR})
 
 set(SRCS ${SRC_DIR}Engine.cpp
 		 ${SRC_DIR}SceneNode.cpp
-		 ${SRC_DIR}Scene.cpp
 		 ${SRC_DIR}Material.cpp
 		 ${SRC_DIR}ShaderTool.cpp
-		 ${SRC_DIR}Entity.cpp
+		 
+		 ${SRC_DIR}Geometries/BufferGeometry.cpp
+
+		 ${SRC_DIR}Materials/Material.cpp
+		 
+		 ${SRC_DIR}Objects/Object3D.cpp
+		 ${SRC_DIR}Objects/Scene.cpp
+		 ${SRC_DIR}Objects/Mesh.cpp
+
+		 ${SRC_DIR}Renderers/Renderer.cpp
+
+		 ${SRC_DIR}Cameras/Camera.cpp
+		 ${SRC_DIR}Cameras/PerspectiveCamera.cpp
 )
 
 

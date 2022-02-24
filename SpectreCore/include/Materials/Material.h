@@ -2,10 +2,10 @@
 
 BEGIN_NAMESPACE_SPECTRE
 
-class Entity
+class Material
 {
-public:
-
+private:
+	
 };
 
 END_NAMESPACE_SPECTRE
