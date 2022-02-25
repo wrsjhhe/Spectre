@@ -8,8 +8,15 @@ PerspectiveCamera::PerspectiveCamera(float fov, float aspect, float near, float 
 	m_Near(near),
 	m_Far(far)
 {
-	//m_Projection.Perspective(m_Fov, aspect, m_Near, m_Far);
+	m_Projection = Matrix::CreatePerspectiveFieldOfView(m_Fov, aspect, m_Near, m_Far);
+}
 
-	//Matrix4x4 view = m_World
-	//m_ViewProjection = 
+void PerspectiveCamera::SetPosition(const Vector3& pos)
+{
+	m_Position = pos;
+}
+
+void PerspectiveCamera::LookAt(const Vector3& target, const Vector3& up)
+{
+	Matrix::CreateLookAt(m_Position, target, up);
 }

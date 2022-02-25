@@ -234,11 +234,9 @@ void Spectre::RenderSystemVK::CreateMeshBuffers(std::vector<float>& vertices,std
 
 void Spectre::RenderSystemVK::CreateUniformBuffers()
 {
-	m_MVPData.model = Matrix::Identity;
 	m_MVPData.model.Translation({ 0.f,0.f,0.f });
 
-	m_MVPData.view = Matrix::Identity;
-	m_MVPData.view.Translation({ 0, 0, -2.5f });
+	m_MVPData.view.Translation({ 0, 0, -12.5f });
 
 	m_MVPData.projection = Matrix::CreatePerspectiveFieldOfView(DegreesToRadians(75.0f), (float)m_Width / (float)m_Height, 0.01f, 3000.0f);
 	m_MVPBuffer = VulkanBuffer::Create(*m_Device, sizeof(UBOData), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
@@ -255,7 +253,7 @@ void Spectre::RenderSystemVK::UpdateUniformBuffers()
 	m_MVPData.projection = Matrix::CreatePerspectiveFieldOfView(DegreesToRadians(75.0f), (float)m_Width / (float)m_Height, 0.01f, 3000.0f);
 	VkDevice device = m_Device->GetVkDevice();
 	Matrix rMat = Matrix::CreateRotationZ(DegreesToRadians(90.0f) * delta);
-	m_MVPData.model = m_MVPData.model * rMat;
+	//m_MVPData.model = m_MVPData.model * rMat;
 	m_MVPBuffer->UpdateHostBuffer(&m_MVPData);
 }
 
