@@ -1,5 +1,5 @@
 #pragma once
-#include "SpectreDefs.h"
+#include "SpectreDef.h"
 BEGIN_NAMESPACE_SPECTRE
 
 

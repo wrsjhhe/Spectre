@@ -3,7 +3,6 @@
 #include "VulkanDevice.h"
 #include "VulkanSemaphore.h"
 #include "VulkanSwapchain.h"
-#include "MathDef.h"
 USING_NAMESPACE(Spectre)
 
 VulkanSwapChain::VulkanSwapChain(const VulkanDevice& device, const VulkanContext& context, const SwapChainDesc& desc):
@@ -66,7 +65,7 @@ uint32_t VulkanSwapChain::AcquireImageIndex(std::shared_ptr<VulkanSemaphore>& ou
 	const uint32_t prev = m_SemaphoreIndex;
 
 	m_SemaphoreIndex = (m_SemaphoreIndex + 1) % m_ImageAcquiredSemaphore.size();
-	VkResult result = vkAcquireNextImageKHR(device, m_VkSwapChain, MAX_uint64, m_ImageAcquiredSemaphore[m_SemaphoreIndex]->GetVkSemaphore(), VK_NULL_HANDLE, &imageIndex);
+	VkResult result = vkAcquireNextImageKHR(device, m_VkSwapChain, 0xffffffff, m_ImageAcquiredSemaphore[m_SemaphoreIndex]->GetVkSemaphore(), VK_NULL_HANDLE, &imageIndex);
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
 		m_SemaphoreIndex = prev;

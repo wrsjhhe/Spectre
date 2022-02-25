@@ -1,6 +1,6 @@
 #pragma once
-#include "SpectreDefs.h"
-#include "RenderDefs.h"
+#include "SpectreDef.h"
+#include "RenderDef.h"
 #include <string>
 #include <vector>
 BEGIN_NAMESPACE_SPECTRE

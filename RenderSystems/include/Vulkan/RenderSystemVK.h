@@ -3,9 +3,9 @@
 #include <memory>
 #include <vector>
 #include <string>
-#include "MathDef.h"
+#include "Math/MathDef.h"
 #include "NativeWindow.h"
-#include "RenderDefs.h"
+#include "RenderDef.h"
 #include "RenderContextDesc.h"
 namespace Spectre
 {
@@ -31,9 +31,9 @@ namespace Spectre
 	private:
 		struct UBOData
 		{
-			Matrix4x4 model;
-			Matrix4x4 view;
-			Matrix4x4 projection;
+			Matrix model;
+			Matrix view;
+			Matrix projection;
 		};
 
 	public:

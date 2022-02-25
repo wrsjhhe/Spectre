@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
-#include "SpectreDefs.h"
-#include "RenderDefs.h"
+#include "SpectreDef.h"
+#include "RenderDef.h"
 #include "NativeWindow.h"
 
 BEGIN_NAMESPACE_SPECTRE

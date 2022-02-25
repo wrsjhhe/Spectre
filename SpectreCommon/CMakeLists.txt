@@ -13,16 +13,18 @@ include_directories(${SPDLOG_DIR})
 set(DIRECTXMATH_DIR ../ThirdParty/DirectXMath/include)
 include_directories(${DIRECTXMATH_DIR})
 
-set(PUBLIC_HDRS ${INC_DIR}SpectreDefs.h
+set(PUBLIC_HDRS ${INC_DIR}SpectreDef.h
 				${INC_DIR}Allocator.h
 				${INC_DIR}Platform.h
 				${INC_DIR}Mutex.h
 				${INC_DIR}FormotString.h
 				${INC_DIR}LogManager.h
-				${INC_DIR}MathDef.h
 				${INC_DIR}Noncopyable.h
 				${INC_DIR}NativeWindow.h
 				${INC_DIR}Timer.h
+				${INC_DIR}Math/MathDef.h
+				${INC_DIR}Math/SimpleMath.h
+				${INC_DIR}Math/SimpleMath.inl
 				)
 #set(PRIVATE_HDRS )
 
@@ -36,6 +38,7 @@ set(SRCS ${SRC_DIR}Allocator.cpp
 		 ${SRC_DIR}Mutex.cpp
 		 ${SRC_DIR}LogManager.cpp
 		 ${SRC_DIR}Timer.cpp
+		 ${SRC_DIR}Math/SimpleMath.cpp
 )
 
 

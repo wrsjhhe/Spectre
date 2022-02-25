@@ -1,4 +1,4 @@
-#include "SpectreDefs.h"
+#include "SpectreDef.h"
 #include "Materials/Material.h"
 #include "ShaderTool.h"
 USING_NAMESPACE(Spectre)

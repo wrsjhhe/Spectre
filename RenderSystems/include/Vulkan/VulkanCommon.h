@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdexcept>
 #include < stdlib.h >
-#include "SpectreDefs.h"
+#include "SpectreDef.h"
 #include "Platform.h"
 #include "LogManager.h"
 #include "Noncopyable.h"

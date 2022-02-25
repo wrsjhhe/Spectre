@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <cstddef>
 #include <assert.h>
-#include "SpectreDefs.h"
+#include "SpectreDef.h"
 
 #if defined(WIN32)
 #include <malloc.h>

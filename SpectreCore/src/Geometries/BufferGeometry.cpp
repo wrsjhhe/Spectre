@@ -1,4 +1,4 @@
-#include "SpectreDefs.h"
+#include "SpectreDef.h"
 #include "Geometries/BufferGeometry.h"
 #include "Allocator.h"
 #include <memory>

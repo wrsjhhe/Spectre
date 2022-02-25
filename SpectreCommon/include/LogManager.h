@@ -1,5 +1,5 @@
 #pragma once
-#include "SpectreDefs.h"
+#include "SpectreDef.h"
 #include <string>
 #include <memory>
 #include <exception>

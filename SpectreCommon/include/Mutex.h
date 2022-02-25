@@ -1,6 +1,6 @@
 #pragma once
 #include <atomic>
-#include "SpectreDefs.h"
+#include "SpectreDef.h"
 #include "Platform.h"
 
 
