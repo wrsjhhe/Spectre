@@ -15,8 +15,7 @@ set(Base_Src
 
 )
 
-#add_subdirectory ("Sample01_Triangle")
 
-add_executable (Sample01_Triangle ${Base_Src} "./Sample01_Triangle/main.cpp")
-target_link_libraries(Sample01_Triangle PRIVATE SpectreCore)
-target_link_libraries(Sample01_Triangle PRIVATE glfw3.lib)
+add_executable (Example01_Triangle ${Base_Src} "./Example01_Triangle/main.cpp")
+target_link_libraries(Example01_Triangle PRIVATE SpectreCore)
+target_link_libraries(Example01_Triangle PRIVATE glfw3.lib)
