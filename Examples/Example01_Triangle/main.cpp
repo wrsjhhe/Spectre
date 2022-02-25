@@ -30,8 +30,6 @@ static std::string readFile(const std::string& filename)
 	return buffer;
 }
 
-static void OnButton(GLFWwindow* window, int key, int scancode, int action, int mods);
-static void onWindowResized(GLFWwindow* window, int width, int height);
 
 int g_Width = 1400;
 int g_Height = 900;
@@ -120,35 +118,8 @@ private:
 	GLFWContext context;
 	GLFWwindow* pWindow;
 	Renderer renderer;
-	bool exit = false;
-	bool sleep = false;
 };
 
-//
-//static void OnButton(GLFWwindow* window, int key, int scancode, int action, int mods)
-//{
-//	Sample01_Triangle* app = reinterpret_cast<Sample01_Triangle*>(glfwGetWindowUserPointer(window));
-//	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-//	{
-//		app->Exit();
-//		glfwSetWindowShouldClose(window, GLFW_TRUE);
-//	}
-//}
-//
-//static void onWindowResized(GLFWwindow* window, int width, int height) {
-//
-//	Sample01_Triangle* app = reinterpret_cast<Sample01_Triangle*>(glfwGetWindowUserPointer(window));
-//
-//	if (width == 0 || height == 0)
-//	{
-//		app->Sleep();
-//	}
-//	else
-//	{
-//		app->Awake();
-//		app->GetRnderer().Resize(width, height);
-//	}
-//}
 
 int main()
 {
