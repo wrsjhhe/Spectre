@@ -19,6 +19,9 @@ VulkanSwapChain::VulkanSwapChain(const VulkanDevice& device, const VulkanContext
 	{
 		m_ImageCount = m_Context.m_VkSurfaceCapabilities.maxImageCount;
 	}
+	uint32_t support = false;
+
+	vkGetPhysicalDeviceSurfaceSupportKHR(m_Context.m_VkPhysicalDevice,m_Device.GetGraphicQueue().m_QueueFamilyIndex,m_Context.m_VkSurface,&support);
 
 	VkSwapchainCreateInfoKHR createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;

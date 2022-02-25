@@ -12,3 +12,7 @@
 
 #define BEGIN_NAMESPACE_SPECTRE BEGIN_NAMESPACE(Spectre)
 #define END_NAMESPACE_SPECTRE END_NAMESPACE(Spectre)
+
+#if !defined(NDEBUG) || defined(DEBUG) || defined(_DEBUG)
+#	define SPE_DEBUG
+#endif

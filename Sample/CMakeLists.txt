@@ -1,16 +1,22 @@
 project ("Sample")
 
-set(DIRECTXMATH_DIR ../ThirdParty/DirectXMath/include)
-include_directories(${DIRECTXMATH_DIR})
-
-set(GLFW_DIR ../ThirdParty/GLFW/include/)
-include_directories(${GLFW_DIR})
-
-set(SPECTRE_COMMON_DIR ../SpectreCommon/include/)
-include_directories(${SPECTRE_COMMON_DIR})
-
-set(SPECTRE_CORE_DIR ../SpectreCore/include/)
-include_directories (${SPECTRE_CORE_DIR})
+include_directories(../ThirdParty/DirectXMath/include)
+include_directories(../ThirdParty/GLFW/include/)
+include_directories(../SpectreCommon/include/)
+include_directories (../SpectreCore/include/)
 
 
-add_subdirectory ("Sample01_Triangle")
+include_directories(./Base/)
+
+set(Base_Src 
+			 ./Base/InputType.h
+			 ./Base/GLFWContext.h
+			 ./Base/GLFWContext.cpp
+
+)
+
+#add_subdirectory ("Sample01_Triangle")
+
+add_executable (Sample01_Triangle ${Base_Src} "./Sample01_Triangle/main.cpp")
+target_link_libraries(Sample01_Triangle PRIVATE SpectreCore)
+target_link_libraries(Sample01_Triangle PRIVATE glfw3.lib)

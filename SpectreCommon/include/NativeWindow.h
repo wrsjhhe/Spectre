@@ -12,7 +12,7 @@ struct Win32Window
 	Win32Window() noexcept
 	{}
 
-	explicit Win32Window(void* _hWnd) noexcept :
+	Win32Window(void* _hWnd) noexcept :
 		hWnd{ _hWnd }
 	{}
 };

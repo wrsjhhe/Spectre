@@ -3,9 +3,7 @@
 #include "Geometries/BufferGeometry.h"
 #include "Renderers/Renderer.h"
 #include "Timer.h"
-#define GLFW_EXPOSE_NATIVE_WIN32
-#include <glfw3.h>
-#include <glfw3native.h>
+#include "GLFWContext.h"
 #include <fstream>
 #include <iostream>
 #include <iomanip>
@@ -43,29 +41,27 @@ double g_LastTime = 0;
 class Sample01_Triangle
 {
 public:
-	NativeWindow CreateWnd(int width,int height)
+	void CreateContext(int width, int height)
 	{
-		glfwInit();
-
-		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-		pWindow = glfwCreateWindow(width, height, "Sample01_Triangle", nullptr, nullptr);
-		glfwSetKeyCallback(pWindow, OnButton);
-
-		glfwSetWindowSizeCallback(pWindow, onWindowResized);
-		glfwSetWindowUserPointer(pWindow, this);
-		void* hwnd = glfwGetWin32Window(pWindow);
-		return NativeWindow{ hwnd };
+		context.Create("Sample01_Triangle", width, height);
+		context.OnResized = [this](int _width, int _height) {
+			if (_width == 0 || _height == 0)
+			{
+				return;
+			}
+			renderer.Resize(_width, _height);
+		};
 	}
 
 	void Run()
 	{
+		CreateContext(g_Width, g_Height);
 
 		ObjectDesc* pObjectDesc = renderer.CreateObjectDesc();
 		pObjectDesc->VertexAttrs = { VertexAttribute_Position, VertexAttribute_Color };
 
-		pObjectDesc->MateralPtr->VertexShader = readFile("../../../../../../Resources/Shaders/triangle.vert");
-		pObjectDesc->MateralPtr->FragmentShader = readFile("../../../../../../Resources/Shaders/triangle.frag");
+		pObjectDesc->MateralPtr->VertexShader = readFile("../../../../../Resources/Shaders/triangle.vert");
+		pObjectDesc->MateralPtr->FragmentShader = readFile("../../../../../Resources/Shaders/triangle.frag");
 
 		BufferGeometry* geometry = BufferGeometry::Create(pObjectDesc->VertexAttrs);
 		// ¶¥µãÊý¾Ý
@@ -85,9 +81,8 @@ public:
 		Scene scene;
 		scene.Add(pMesh);
 
-		auto wnd = CreateWnd(g_Width, g_Height);
 
-		renderer.Attach(wnd);
+		renderer.Attach({ context.GetWindowHandle() });
 		renderer.BindScene(&scene);
 		renderer.Resize(g_Width, g_Height);
 		renderer.Setup();
@@ -96,13 +91,14 @@ public:
 		double filterScale = 0.2;
 		Timer timer;
 		g_LastTime = timer.GetElapsedTime();
-		while (!exit)
+		while (!context.Closed())
 		{
-			if (sleep)
+			if (!context.Paused())
 			{
-				glfwWaitEvents();
+				context.WaitEvent();
 				continue;		
 			}
+			context.PollEvent();
 			double currTime = timer.GetElapsedTime();
 			double elapsedTime = currTime - g_LastTime;
 
@@ -112,69 +108,47 @@ public:
 			fpsCounterSS << " ms (" << 1.0 / filteredFrameTime << " fps)";
 			std::cout << fpsCounterSS.str() << std::endl;
 
-			Present();
-			glfwPollEvents();
+			renderer.Render();
+	
 
 			g_LastTime = currTime;
 			g_CurrTime = g_CurrTime + elapsedTime;
 		}
-		glfwDestroyWindow(pWindow);
-		glfwTerminate();
-	}
-
-	void Exit()
-	{
-		exit = true;
-	}
-
-	void Present()
-	{
-		renderer.Render();
-	}
-
-	void Sleep()
-	{
-		sleep = true;
-	}
-
-	void Awake()
-	{
-		sleep = false;
 	}
 	
-	Renderer& GetRnderer() { return renderer; }
 private:
+	GLFWContext context;
 	GLFWwindow* pWindow;
 	Renderer renderer;
 	bool exit = false;
 	bool sleep = false;
 };
 
-
-static void OnButton(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-	Sample01_Triangle* app = reinterpret_cast<Sample01_Triangle*>(glfwGetWindowUserPointer(window));
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-	{
-		app->Exit();
-		glfwSetWindowShouldClose(window, GLFW_TRUE);
-	}
-}
-
-static void onWindowResized(GLFWwindow* window, int width, int height) {
-
-	Sample01_Triangle* app = reinterpret_cast<Sample01_Triangle*>(glfwGetWindowUserPointer(window));
-
-	if (width == 0 || height == 0)
-	{
-		app->Sleep();
-	}
-	else
-	{
-		app->Awake();
-		app->GetRnderer().Resize(width, height);
-	}
-}
+//
+//static void OnButton(GLFWwindow* window, int key, int scancode, int action, int mods)
+//{
+//	Sample01_Triangle* app = reinterpret_cast<Sample01_Triangle*>(glfwGetWindowUserPointer(window));
+//	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+//	{
+//		app->Exit();
+//		glfwSetWindowShouldClose(window, GLFW_TRUE);
+//	}
+//}
+//
+//static void onWindowResized(GLFWwindow* window, int width, int height) {
+//
+//	Sample01_Triangle* app = reinterpret_cast<Sample01_Triangle*>(glfwGetWindowUserPointer(window));
+//
+//	if (width == 0 || height == 0)
+//	{
+//		app->Sleep();
+//	}
+//	else
+//	{
+//		app->Awake();
+//		app->GetRnderer().Resize(width, height);
+//	}
+//}
 
 int main()
 {

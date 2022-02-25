@@ -52,6 +52,11 @@ void RenderSystemVK::CreateRenderContext(const RenderContextDesc& desc)
 	surfaceCreateInfo.hwnd = (HWND)desc.Window.hWnd;
 	VK_CHECK(vkCreateWin32SurfaceKHR(m_Instance->GetVkInstance(), &surfaceCreateInfo, nullptr, &surface), "Failed create vkSurface!");
 	
+	uint32_t surafceSupport = 0;
+	vkGetPhysicalDeviceSurfaceSupportKHR(m_PhysicalDevice->GetVkPhysicalDevice(), m_Device->GetGraphicQueue().m_QueueFamilyIndex, surface, &surafceSupport);
+	EXP_CHECK(surafceSupport, "Surface not support");
+
+
 	m_ContextPtr->CalcSwapchainParamaters(surface);
 	
 	m_PipelineCache = VulkanPipelineCache::Create(m_Device->GetVkDevice());

@@ -6,7 +6,7 @@
 #include "Platform.h"
 #include "LogManager.h"
 #include "Noncopyable.h"
-#if !defined(NDEBUG) || defined(DEBUG) || defined(_DEBUG)
+#if defined(SPE_DEBUG)
 #	define VKB_DEBUG
 #endif
 
