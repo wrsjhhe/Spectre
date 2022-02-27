@@ -4,6 +4,7 @@
 #include "Renderers/Renderer.h"
 #include "Timer.h"
 #include "GLFWContext.h"
+#include "Cameras/PerspectiveCamera.h"
 #include <fstream>
 #include <iostream>
 #include <iomanip>
@@ -64,9 +65,9 @@ public:
 		BufferGeometry* geometry = BufferGeometry::Create(pObjectDesc->VertexAttrs);
 		// 顶点数据
 		std::vector<float> vertices = {
-				1.0f, 1.0f, 0.0f ,1.0f, 0.0f, 0.0f ,1.0f,
-				-1.0f,1.0f, 0.0f , 0.0f, 1.0f, 0.0f,1.0f,
-				 0.0f, -1.0f, 0.0f , 0.0f, 0.0f, 1.0f,1.0f,
+				1.0f, 1.0f, 0.0f ,     1.0f, 0.0f, 0.0f ,1.0f,
+				-1.0f,1.0f, 0.0f ,     0.0f, 1.0f, 0.0f,1.0f,
+				 0.0f, -1.0f, 0.0f ,   0.0f, 0.0f, 1.0f,1.0f,
 		};
 
 		// 索引数据
@@ -79,10 +80,15 @@ public:
 		Scene scene;
 		scene.Add(pMesh);
 
-
 		renderer.Attach({ context.GetWindowHandle() });
 		renderer.BindScene(&scene);
 		renderer.Resize(g_Width, g_Height);
+
+		
+		PerspectiveCamera camera(DegreesToRadians(75.f), (float)g_Width/ (float)g_Height, 0.1, 3000.0f);
+		camera.LookAt({ 0.f,0.f, 2.5f }, { 0.f,0.f, 0.f }, { 0.f,1.f, 0.f });
+		renderer.BindCamera(&camera);
+
 		renderer.Setup();
 
 		double filteredFrameTime = 0.0;
@@ -107,13 +113,17 @@ public:
 			std::cout << fpsCounterSS.str() << std::endl;
 
 			renderer.Render();
-	
 
 			g_LastTime = currTime;
 			g_CurrTime = g_CurrTime + elapsedTime;
+
+			Matrix rMat = Matrix::CreateRotationZ(DegreesToRadians(90.0f) * elapsedTime);
+			pMesh->Transform(rMat);
 		}
 	}
 	
+
+
 private:
 	GLFWContext context;
 	GLFWwindow* pWindow;

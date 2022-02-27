@@ -28,9 +28,9 @@ void Renderer::BindScene(Scene* pScene)
 	m_ScenePtr = pScene;
 }
 
-void Renderer::BindCamera(Camera* pCamera)
+void Renderer::BindCamera(PerspectiveCamera* pCamera)
 {
-	m_CameraPtr = pCamera;
+	m_PerspectiveCameraPtr = pCamera;
 }
 
 void Renderer::Resize(uint32_t width, uint32_t height)
@@ -91,6 +91,8 @@ void Renderer::Setup()
 	}
 	m_pRenderSystem->CreateMeshBuffers(vertices, indices);
 
+	m_MVPData = m_PerspectiveCameraPtr->GetViewProjection();
+
 	m_pRenderSystem->Setup();
 
 	m_Prepared = true;
@@ -99,6 +101,13 @@ void Renderer::Setup()
 
 void Renderer::Render()
 {
+	m_MVPData = m_PerspectiveCameraPtr->GetViewProjection();
+	for (auto* pMesh : m_ScenePtr->GetMeshes())
+	{
+		m_MVPData = pMesh->GetTransformMatrix() * m_MVPData;
+	}
+
+	m_pRenderSystem->UpdateUniformBuffers(m_MVPData);
 	m_pRenderSystem->Draw();
 }
 

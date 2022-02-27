@@ -1,7 +1,7 @@
 #pragma once
 #include "Object.h"
 #include "Objects/Scene.h"
-#include "Cameras/Camera.h"
+#include "Cameras/PerspectiveCamera.h"
 #include "Materials/Material.h"
 #include "NativeWindow.h"
 
@@ -26,7 +26,7 @@ public:
 
 	void BindScene(Scene* pScene);
 
-	void BindCamera(Camera* pCamera);
+	void BindCamera(PerspectiveCamera* pCamera);
 
 	void Resize(uint32_t width, uint32_t height);
 
@@ -45,8 +45,9 @@ private:
 	bool                              m_Prepared = false;
 	NativeWindow					  m_Window;
 	Scene*							  m_ScenePtr = nullptr;
-	Camera*							  m_CameraPtr = nullptr;
+	PerspectiveCamera*				  m_PerspectiveCameraPtr = nullptr;
 	std::vector<ObjectDesc*>		  m_ObjectDecs;
+	Matrix                            m_MVPData;
 };
 
 END_NAMESPACE_SPECTRE

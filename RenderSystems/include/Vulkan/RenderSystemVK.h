@@ -31,9 +31,7 @@ namespace Spectre
 	private:
 		struct UBOData
 		{
-			Matrix model;
-			Matrix view;
-			Matrix projection;
+			Matrix MVPMatrix;
 		};
 
 	public:
@@ -45,6 +43,8 @@ namespace Spectre
 
 		void CreateMeshBuffers(std::vector<float>& vertices,std::vector<uint32_t>& indices);
 
+		void CreateUniformBuffers();
+		void UpdateUniformBuffers(const Matrix& mat);
 		void Setup();
 
 		void Draw();
@@ -55,10 +55,6 @@ namespace Spectre
 		void CreateRenderPass();
 		void CreateFrameBuffer();
 		void CreateSemaphores();
-
-		void CreateUniformBuffers();
-
-		void UpdateUniformBuffers();
 
 		void DestorySwapchain();
 	private:
@@ -83,7 +79,6 @@ namespace Spectre
 		std::shared_ptr<VulkanIndexBuffer>		m_IndicesBuffer;
 
 		std::shared_ptr<VulkanBuffer>			m_MVPBuffer;
-		UBOData									m_MVPData;
 
 		std::vector<VulkanCommandPtr>			m_RenderCommandBuffers;
 

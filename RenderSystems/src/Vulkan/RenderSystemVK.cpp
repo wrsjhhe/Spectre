@@ -148,7 +148,7 @@ void Spectre::RenderSystemVK::Setup()
 
 void Spectre::RenderSystemVK::Draw()
 {
-	UpdateUniformBuffers();
+	//UpdateUniformBuffers();
 
 	VkDevice device = m_Device->GetVkDevice();
 	VulkanQueue queue = m_Device->GetGraphicQueue();
@@ -234,28 +234,15 @@ void Spectre::RenderSystemVK::CreateMeshBuffers(std::vector<float>& vertices,std
 
 void Spectre::RenderSystemVK::CreateUniformBuffers()
 {
-	m_MVPData.model.Translation({ 0.f,0.f,0.f });
-
-	m_MVPData.view.Translation({ 0, 0, -12.5f });
-
-	m_MVPData.projection = Matrix::CreatePerspectiveFieldOfView(DegreesToRadians(75.0f), (float)m_Width / (float)m_Height, 0.01f, 3000.0f);
 	m_MVPBuffer = VulkanBuffer::Create(*m_Device, sizeof(UBOData), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &m_MVPData);
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, nullptr);
 }
 
-
-void Spectre::RenderSystemVK::UpdateUniformBuffers()
+void Spectre::RenderSystemVK::UpdateUniformBuffers(const Matrix& mat)
 {
-	static float  delta = 0;
-	delta += 0.00001;
-	if (delta > 6.28)
-		delta = 0;
-	m_MVPData.projection = Matrix::CreatePerspectiveFieldOfView(DegreesToRadians(75.0f), (float)m_Width / (float)m_Height, 0.01f, 3000.0f);
-	VkDevice device = m_Device->GetVkDevice();
-	Matrix rMat = Matrix::CreateRotationZ(DegreesToRadians(90.0f) * delta);
-	//m_MVPData.model = m_MVPData.model * rMat;
-	m_MVPBuffer->UpdateHostBuffer(&m_MVPData);
+	m_MVPBuffer->UpdateHostBuffer(&mat);
 }
+
 
 void Spectre::RenderSystemVK::ReceateSwapchain(const SwapChainDesc& desc)
 {

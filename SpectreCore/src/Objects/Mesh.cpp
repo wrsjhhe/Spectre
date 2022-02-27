@@ -1,3 +1,4 @@
+
 #include "Objects/Mesh.h"
 USING_NAMESPACE(Spectre)
 
@@ -14,12 +15,15 @@ Mesh::Mesh(BufferGeometry* pGeometry, Material* pMaterial):
 
 }
 
-
-
 Mesh::~Mesh()
 {
 	delete m_GeometryPtr;
 	m_GeometryPtr = nullptr;
 	delete m_MaterialPtr;
 	m_MaterialPtr = nullptr;
+}
+
+void Mesh::Transform(const Matrix& mat)
+{
+	m_Transform *= mat;
 }
