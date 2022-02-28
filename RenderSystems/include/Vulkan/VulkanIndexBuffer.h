@@ -9,14 +9,14 @@ class VulkanIndexBuffer
 {
 public:
 	template<typename T>
-	static std::shared_ptr<VulkanIndexBuffer> Create(const VulkanDevice& vulkanDevice, std::vector<T> indices, VkIndexType indexType)
+	static std::shared_ptr<VulkanIndexBuffer> Create(std::vector<T> indices, VkIndexType indexType)
 	{	
-		auto* pIndexBuffer = new VulkanIndexBuffer(vulkanDevice,std::forward<std::vector<T>>(indices),indexType);
+		auto* pIndexBuffer = new VulkanIndexBuffer(std::forward<std::vector<T>>(indices),indexType);
 		return std::shared_ptr<VulkanIndexBuffer>{pIndexBuffer};
 	}
 private:
-	VulkanIndexBuffer(const VulkanDevice& vulkanDevice, std::vector<uint32_t> indices, VkIndexType indexType);
-	VulkanIndexBuffer(const VulkanDevice& vulkanDevice, std::vector<uint16_t> indices, VkIndexType indexType);
+	VulkanIndexBuffer(std::vector<uint32_t> indices, VkIndexType indexType);
+	VulkanIndexBuffer(std::vector<uint16_t> indices, VkIndexType indexType);
 
 public:
 	void Synchronize(const VkCommandBuffer& commandBuffer);

@@ -34,10 +34,7 @@ ${INC_VULKAN_DIR}RenderSystemVK.h
 set(SRC_VULKAN_DIR ./src/Vulkan/)
 set(VULKAN_SRCS 
 ${SRC_VULKAN_DIR}VulkanCommon.cpp
-${SRC_VULKAN_DIR}VulkanInstance.cpp
-${SRC_VULKAN_DIR}VulkanPhysicalDevice.cpp
-${SRC_VULKAN_DIR}VulkanDevice.cpp
-${SRC_VULKAN_DIR}VulkanQueue.cpp
+${SRC_VULKAN_DIR}VulkanEngine.cpp
 ${SRC_VULKAN_DIR}VulkanSwapchain.cpp
 ${SRC_VULKAN_DIR}VulkanBuffer.cpp
 ${SRC_VULKAN_DIR}VulkanCommand.cpp
@@ -54,11 +51,8 @@ ${SRC_VULKAN_DIR}RenderSystemVK.cpp
 
 set(VULKAN_PRIVATE_HDRS
 ${INC_VULKAN_DIR}VulkanCommon.h
-${INC_VULKAN_DIR}VulkanInstance.h
-${INC_VULKAN_DIR}VulkanPhysicalDevice.h
+${INC_VULKAN_DIR}VulkanEngine.h
 ${INC_VULKAN_DIR}VulkanSwapchain.h
-${INC_VULKAN_DIR}VulkanDevice.h
-${INC_VULKAN_DIR}VulkanQueue.h
 ${INC_VULKAN_DIR}VulkanBuffer.h
 ${INC_VULKAN_DIR}VulkanCommand.h
 ${INC_VULKAN_DIR}VulkanImages.h

@@ -1,5 +1,5 @@
 #include "VulkanCommon.h"
-#include "VulkanDevice.h"
+#include "VulkanEngine.h"
 #include "VulkanSwapchain.h"
 #include "VulkanImages.h"
 
@@ -8,10 +8,11 @@ USING_NAMESPACE(Spectre)
 
 
 
-std::shared_ptr<VulkanImages> VulkanImages::CreateSwapChainImage(const VulkanDevice& vulkanDevice, const VulkanSwapChain& swapChain)
+std::shared_ptr<VulkanImages> VulkanImages::CreateSwapChainImage(const VulkanSwapChain& swapChain)
 {
+	auto* pEngine = VulkanEngine::GetInstance();
 	uint32_t imageCount = swapChain.GetImageCount();
-	auto* pImage = new VulkanImages(vulkanDevice);
+	auto* pImage = new VulkanImages();
 
 	pImage->m_ImageInfo.Count = imageCount;
 	pImage->m_ImageInfo.ImageAutoDestory = true;
@@ -21,16 +22,16 @@ std::shared_ptr<VulkanImages> VulkanImages::CreateSwapChainImage(const VulkanDev
 	pImage->m_ImageInfo.AspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 
 	pImage->m_VkImages.resize(imageCount);
-	vkGetSwapchainImagesKHR(vulkanDevice.GetVkDevice(), swapChain.GetVkSwapChain(), &imageCount, pImage->m_VkImages.data());
+	vkGetSwapchainImagesKHR(pEngine->GetVkDevice(), swapChain.GetVkSwapChain(), &imageCount, pImage->m_VkImages.data());
 
 	pImage->CreateImageViews();
 
 	return std::shared_ptr<VulkanImages>(pImage);
 }
 
-std::shared_ptr<VulkanImages> VulkanImages::CreateDepthStencilImage(const VulkanDevice& vulkanDevice,uint32_t width,uint32_t height)
+std::shared_ptr<VulkanImages> VulkanImages::CreateDepthStencilImage(uint32_t width,uint32_t height)
 {
-	auto* pImage = new VulkanImages(vulkanDevice);
+	auto* pImage = new VulkanImages();
 	
 	pImage->m_ImageInfo.Count = 1;
 	pImage->m_ImageInfo.Width = width;
@@ -52,7 +53,8 @@ VulkanImages::~VulkanImages()
 }
 void VulkanImages::Destroy()
 {
-	VkDevice device = m_Device.GetVkDevice();
+	auto* pEngine = VulkanEngine::GetInstance();
+	VkDevice device = pEngine->GetVkDevice();
 
 	for (uint32_t i = 0; i < m_ImageInfo.Count; ++i)
 	{
@@ -74,15 +76,15 @@ void VulkanImages::Destroy()
 	m_ImageInfo.Count = 0;
 }
 
-VulkanImages::VulkanImages(const VulkanDevice& vulkanDevice):
-	m_Device(vulkanDevice)
+VulkanImages::VulkanImages()
 {
 
 }
 
 void VulkanImages::CreateImages()
 {
-	VkDevice device = m_Device.GetVkDevice();
+	auto* pEngine = VulkanEngine::GetInstance();
+	VkDevice device = pEngine->GetVkDevice();
 
 	VkImageCreateInfo imageCreateInfo = {};
 	imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -104,7 +106,7 @@ void VulkanImages::CreateImages()
 
 		VkMemoryRequirements memRequire;
 		vkGetImageMemoryRequirements(device, m_VkImages[i], &memRequire);
-		uint32_t memoryTypeIndex = m_Device.GetPhysicalDevice().GetMemoryTypeIndex(memRequire.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+		uint32_t memoryTypeIndex = pEngine->GetMemoryTypeIndex(memRequire.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
 		VkMemoryAllocateInfo memAllocateInfo = {};
 		memAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -118,7 +120,8 @@ void VulkanImages::CreateImages()
 
 void VulkanImages::CreateImageViews()
 {
-	VkDevice device = m_Device.GetVkDevice();
+	auto* pEngine = VulkanEngine::GetInstance();
+	VkDevice device = pEngine->GetVkDevice();
 
 	VkImageViewCreateInfo imageViewCreateInfo = {};
 	imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;

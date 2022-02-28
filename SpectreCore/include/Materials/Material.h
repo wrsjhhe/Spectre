@@ -1,12 +1,16 @@
 #pragma once
 #include <string>
 #include <vector>
+#include "Object.h"
 BEGIN_NAMESPACE_SPECTRE
 
-class Material
+class Material:public Object
 {
-	friend class Renderer;
 public:
+	SpectreObject(Material)
+
+	friend class Renderer;
+
 	std::string VertexShader;
 	std::string FragmentShader;
 public:

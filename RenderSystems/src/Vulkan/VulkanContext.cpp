@@ -171,23 +171,21 @@ static VkFormat VertexAttributeToVkFormat(VertexAttribute attribute)
 
 //*************************************************************************************************************************************//
 
-VulkanContext::VulkanContext(VkInstance instance, VkPhysicalDevice physicalDevice, const VulkanDevice& device):
-	m_VkInstance(instance),
-	m_VkPhysicalDevice(physicalDevice),
-	m_Device(device)
+VulkanContext::VulkanContext(VulkanEngine* pEngine):
+    m_VulkanEnginePtr(pEngine)
 {
 
 }
 
 VulkanContext::~VulkanContext()
 {
-	vkDestroySurfaceKHR(m_VkInstance, m_VkSurface, nullptr);
+	vkDestroySurfaceKHR(m_VulkanEnginePtr->GetVkInstance(), m_VkSurface, nullptr);
 
 	for (auto& kv : m_VkCommandPools)
 	{
 		if (kv.second != VK_NULL_HANDLE)
 		{
-			vkDestroyCommandPool(m_Device.GetVkDevice(), kv.second, nullptr);
+			vkDestroyCommandPool(m_VulkanEnginePtr->GetVkDevice(), kv.second, nullptr);
 			kv.second = VK_NULL_HANDLE;
 		}
 	}
@@ -232,7 +230,7 @@ void VulkanContext::CalcSwapChainExtent(uint32_t& width, uint32_t& height)
 	else 
 	{
 		VkSurfaceCapabilitiesKHR surfProperties;
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_VkPhysicalDevice, m_VkSurface, &surfProperties);
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_VulkanEnginePtr->GetVkPhysicalDevice(), m_VkSurface, &surfProperties);
 
 		width = std::max(m_VkSurfaceCapabilities.minImageExtent.width, std::min(m_VkSurfaceCapabilities.maxImageExtent.width, width));
 		height = std::max(m_VkSurfaceCapabilities.minImageExtent.height, std::min(m_VkSurfaceCapabilities.maxImageExtent.height, height));
@@ -243,7 +241,7 @@ void VulkanContext::CalcSwapchainParamaters(VkSurfaceKHR surface)
 {
     if (m_VkSurface != VK_NULL_HANDLE)
     {
-        vkDestroySurfaceKHR(m_VkInstance, m_VkSurface, NULL);
+        vkDestroySurfaceKHR(m_VulkanEnginePtr->GetVkInstance(), m_VkSurface, NULL);
         m_VkSurface = VK_NULL_HANDLE;
     }
     m_VkSurface = surface;
@@ -251,55 +249,57 @@ void VulkanContext::CalcSwapchainParamaters(VkSurfaceKHR surface)
 }
 void VulkanContext::ReCalcSwapchainParamaters()
 {
+    auto vkPhysicalDevice = m_VulkanEnginePtr->GetVkPhysicalDevice();
 	uint32_t formatCount;
-	vkGetPhysicalDeviceSurfaceFormatsKHR(m_VkPhysicalDevice, m_VkSurface, &formatCount, nullptr);
+	vkGetPhysicalDeviceSurfaceFormatsKHR(vkPhysicalDevice, m_VkSurface, &formatCount, nullptr);
 	std::vector<VkSurfaceFormatKHR> formats(formatCount);
 	if (formatCount != 0) {
-		vkGetPhysicalDeviceSurfaceFormatsKHR(m_VkPhysicalDevice, m_VkSurface, &formatCount, formats.data());
+		vkGetPhysicalDeviceSurfaceFormatsKHR(vkPhysicalDevice, m_VkSurface, &formatCount, formats.data());
 	}
 	m_VkSurfaceFormat = chooseSwapSurfaceFormat(formats);
 	m_VkSwapChainFormat = m_VkSurfaceFormat.format;
 	//—°‘ÒPresentMode
 	uint32_t presentModeCount;
-	vkGetPhysicalDeviceSurfacePresentModesKHR(m_VkPhysicalDevice, m_VkSurface, &presentModeCount, nullptr);
+	vkGetPhysicalDeviceSurfacePresentModesKHR(vkPhysicalDevice, m_VkSurface, &presentModeCount, nullptr);
 	std::vector<VkPresentModeKHR> presentModes(presentModeCount);
 	if (presentModeCount != 0) {
-		vkGetPhysicalDeviceSurfacePresentModesKHR(m_VkPhysicalDevice, m_VkSurface, &presentModeCount, presentModes.data());
+		vkGetPhysicalDeviceSurfacePresentModesKHR(vkPhysicalDevice, m_VkSurface, &presentModeCount, presentModes.data());
 	}
 
 	m_VkPresentMode = chooseSwapPresentMode(presentModes);
 
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_VkPhysicalDevice, m_VkSurface, &m_VkSurfaceCapabilities);
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vkPhysicalDevice, m_VkSurface, &m_VkSurfaceCapabilities);
 }
 void VulkanContext::InitCommandPool()
 {
-	const VulkanQueue& graphicQueue = m_Device.GetGraphicQueue();
-	const VulkanQueue& computeQueue = m_Device.GetComputeQueue();
-	const VulkanQueue& transferQueue = m_Device.GetTransferQueue();
+    auto vkDevice = m_VulkanEnginePtr->GetVkDevice();
+	const auto& graphicQueue = m_VulkanEnginePtr->GetGraphicQueue();
+	const auto& computeQueue = m_VulkanEnginePtr->GetComputeQueue();
+	const auto& transferQueue = m_VulkanEnginePtr->GetTransferQueue();
 
 	VkCommandPool vkCommandPool;
 	VkCommandPoolCreateInfo cmdPoolInfo{};
 	cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	cmdPoolInfo.queueFamilyIndex = graphicQueue.m_QueueFamilyIndex;
+	cmdPoolInfo.queueFamilyIndex = graphicQueue.QueueFamilyIndex;
 	cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	VK_CHECK(vkCreateCommandPool(m_Device.GetVkDevice(), &cmdPoolInfo, nullptr, &vkCommandPool), "Failed created VkCommandPool!");
+	VK_CHECK(vkCreateCommandPool(vkDevice, &cmdPoolInfo, nullptr, &vkCommandPool), "Failed created VkCommandPool!");
 
 	m_VkCommandPools[CommandPool_Type_Graphics] = vkCommandPool;
 
-	if (graphicQueue.m_QueueFamilyIndex != computeQueue.m_QueueFamilyIndex)
+	if (graphicQueue.QueueFamilyIndex != computeQueue.QueueFamilyIndex)
 	{
 		vkCommandPool = VK_NULL_HANDLE;
-		cmdPoolInfo.queueFamilyIndex = computeQueue.m_QueueFamilyIndex;
-		VK_CHECK(vkCreateCommandPool(m_Device.GetVkDevice(), &cmdPoolInfo, nullptr, &vkCommandPool), "Failed created VkCommandPool!");
+		cmdPoolInfo.queueFamilyIndex = computeQueue.QueueFamilyIndex;
+		VK_CHECK(vkCreateCommandPool(vkDevice, &cmdPoolInfo, nullptr, &vkCommandPool), "Failed created VkCommandPool!");
 		m_VkCommandPools[CommandPool_Type_Compute] = vkCommandPool;
 	}
 
 
-	if (graphicQueue.m_QueueFamilyIndex != transferQueue.m_QueueFamilyIndex)
+	if (graphicQueue.QueueFamilyIndex != transferQueue.QueueFamilyIndex)
 	{
 		vkCommandPool = VK_NULL_HANDLE;
-		cmdPoolInfo.queueFamilyIndex = transferQueue.m_QueueFamilyIndex;
-		VK_CHECK(vkCreateCommandPool(m_Device.GetVkDevice(), &cmdPoolInfo, nullptr, &vkCommandPool), "Failed created VkCommandPool!");
+		cmdPoolInfo.queueFamilyIndex = transferQueue.QueueFamilyIndex;
+		VK_CHECK(vkCreateCommandPool(vkDevice, &cmdPoolInfo, nullptr, &vkCommandPool), "Failed created VkCommandPool!");
 		m_VkCommandPools[CommandPool_Type_Transfer] = vkCommandPool;
 	}
 

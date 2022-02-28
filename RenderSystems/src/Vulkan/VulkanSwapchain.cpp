@@ -1,17 +1,16 @@
 #include "VulkanCommon.h"
-#include "VulkanInstance.h"
-#include "VulkanDevice.h"
+#include "VulkanEngine.h"
 #include "VulkanSemaphore.h"
 #include "VulkanSwapchain.h"
 USING_NAMESPACE(Spectre)
 
-VulkanSwapChain::VulkanSwapChain(const VulkanDevice& device, const VulkanContext& context, const SwapChainDesc& desc):
-	m_Device(device),
+VulkanSwapChain::VulkanSwapChain(const VulkanContext& context, const SwapChainDesc& desc):
 	m_Context(context),
 	m_Width(desc.Width),
 	m_Height(desc.Height)
 {
-	VkPhysicalDevice physicalDevice = m_Device.GetPhysicalDevice().GetVkPhysicalDevice();
+	auto* pEngine = VulkanEngine::GetInstance();
+	VkPhysicalDevice physicalDevice = pEngine->GetVkPhysicalDevice();
 
 	m_ImageCount = m_Context.m_VkSurfaceCapabilities.minImageCount + 1;
 	if (m_Context.m_VkSurfaceCapabilities.maxImageCount > 0 && m_ImageCount > m_Context.m_VkSurfaceCapabilities.maxImageCount)
@@ -20,7 +19,7 @@ VulkanSwapChain::VulkanSwapChain(const VulkanDevice& device, const VulkanContext
 	}
 	uint32_t support = false;
 
-	vkGetPhysicalDeviceSurfaceSupportKHR(m_Context.m_VkPhysicalDevice,m_Device.GetGraphicQueue().m_QueueFamilyIndex,m_Context.m_VkSurface,&support);
+	vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, pEngine->GetGraphicQueue().QueueFamilyIndex,m_Context.m_VkSurface,&support);
 
 	VkSwapchainCreateInfoKHR createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -40,20 +39,20 @@ VulkanSwapChain::VulkanSwapChain(const VulkanDevice& device, const VulkanContext
 	createInfo.presentMode = m_Context.m_VkPresentMode;
 	createInfo.clipped = VK_TRUE;
 
-	VK_CHECK(vkCreateSwapchainKHR(m_Device.GetVkDevice(), &createInfo, nullptr, &m_VkSwapChain), "Failed to create swap chain!");
+	VK_CHECK(vkCreateSwapchainKHR(pEngine->GetVkDevice(), &createInfo, nullptr, &m_VkSwapChain), "Failed to create swap chain!");
 
-	m_Images = VulkanImages::CreateSwapChainImage(m_Device, *this);
+	m_Images = VulkanImages::CreateSwapChainImage(*this);
 	m_ImageAcquiredSemaphore.resize(m_ImageCount);
 	for (uint32_t i = 0;i < m_ImageCount;++i)
 	{
-		m_ImageAcquiredSemaphore[i] = VulkanSemaphore::CreateSemaphore(m_Device);
+		m_ImageAcquiredSemaphore[i] = VulkanSemaphore::CreateSemaphore();
 	}
 }
 
 VulkanSwapChain::~VulkanSwapChain()
 {
 	m_Images = nullptr;
-	VkDevice device = m_Device.GetVkDevice();
+	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
 
 	vkDestroySwapchainKHR(device, m_VkSwapChain, nullptr);
 }
@@ -61,7 +60,7 @@ VulkanSwapChain::~VulkanSwapChain()
 uint32_t VulkanSwapChain::AcquireImageIndex(std::shared_ptr<VulkanSemaphore>& outSemaphore)
 {
 	uint32_t imageIndex = 0;
-	VkDevice device = m_Device.GetVkDevice();
+	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
 	const uint32_t prev = m_SemaphoreIndex;
 
 	m_SemaphoreIndex = (m_SemaphoreIndex + 1) % m_ImageAcquiredSemaphore.size();

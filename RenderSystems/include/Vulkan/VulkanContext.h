@@ -1,13 +1,13 @@
 #pragma once
 #include <map>
 #include "RenderDef.h"
-#include "VulkanDevice.h"
+#include "VulkanEngine.h"
 BEGIN_NAMESPACE_SPECTRE
 
 class VulkanContext
 {
 public:
-	VulkanContext(VkInstance instance, VkPhysicalDevice physicalDevice,const VulkanDevice& device);
+	VulkanContext(VulkanEngine* pEngine);
 	~VulkanContext();
 
 	void SetVertexDesc(const std::vector<VertexAttribute>& attrs);
@@ -33,9 +33,7 @@ public:
 	}
 
 public:
-	VkInstance										m_VkInstance;
-	VkPhysicalDevice								m_VkPhysicalDevice;
-	const VulkanDevice&								m_Device;
+	VulkanEngine*									m_VulkanEnginePtr;
 	VkSurfaceKHR									m_VkSurface = VK_NULL_HANDLE;
 	VkSurfaceCapabilitiesKHR						m_VkSurfaceCapabilities;
 	VkSurfaceFormatKHR								m_VkSurfaceFormat;
