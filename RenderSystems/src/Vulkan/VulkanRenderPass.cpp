@@ -1,10 +1,10 @@
 #include "VulkanCommon.h"
-#include "VulkanDevice.h"
+#include "VulkanEngine.h"
 #include "VulkanRenderPass.h"
 
 USING_NAMESPACE(Spectre)
 
-std::shared_ptr<VulkanRenderPass> VulkanRenderPass::CreateCommonRenderPass(const VulkanDevice& vulkanDevice, VkFormat colorAttachmentFormat)
+std::shared_ptr<VulkanRenderPass> VulkanRenderPass::CreateCommonRenderPass(VkFormat colorAttachmentFormat)
 {
 	std::vector<VkAttachmentDescription> attachments(2);
 	// color attachment
@@ -62,7 +62,7 @@ std::shared_ptr<VulkanRenderPass> VulkanRenderPass::CreateCommonRenderPass(const
 	dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
 	dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-	auto* pPass = new VulkanRenderPass(vulkanDevice);
+	auto* pPass = new VulkanRenderPass();
 	pPass->CreateRenderPass(attachments, subpassDescription, dependencies);
 	return std::shared_ptr<VulkanRenderPass>(pPass);
 
@@ -76,12 +76,11 @@ VulkanRenderPass::~VulkanRenderPass()
 
 void VulkanRenderPass::Destroy()
 {
-	vkDestroyRenderPass(m_Device.GetVkDevice(), m_VkRenderPass, nullptr);
+	vkDestroyRenderPass(VulkanEngine::GetInstance()->GetVkDevice(), m_VkRenderPass, nullptr);
 	m_VkRenderPass = VK_NULL_HANDLE;
 }
 
-VulkanRenderPass::VulkanRenderPass(const VulkanDevice& vulkanDevice):
-	m_Device(vulkanDevice)
+VulkanRenderPass::VulkanRenderPass()
 {
 
 }
@@ -96,6 +95,6 @@ void VulkanRenderPass::CreateRenderPass(const std::vector<VkAttachmentDescriptio
 	renderPassInfo.pSubpasses = &subpassDescription;
 	renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
 	renderPassInfo.pDependencies = dependencies.data();
-	vkCreateRenderPass(m_Device.GetVkDevice(), &renderPassInfo, nullptr, &m_VkRenderPass);
+	vkCreateRenderPass(VulkanEngine::GetInstance()->GetVkDevice(), &renderPassInfo, nullptr, &m_VkRenderPass);
 }
 

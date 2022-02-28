@@ -5,7 +5,7 @@ BEGIN_NAMESPACE_SPECTRE
 class VulkanSemaphore : public Noncopyable
 {
 public:
-	static std::shared_ptr<VulkanSemaphore> CreateSemaphore(const VulkanDevice& vulkanDevice);
+	static std::shared_ptr<VulkanSemaphore> CreateSemaphore();
 public:
 	~VulkanSemaphore();
 
@@ -13,9 +13,8 @@ public:
 
 	void Destory();
 private:
-	VulkanSemaphore(const VulkanDevice& vulkanDevice);
+	VulkanSemaphore();
 private:
-	const VulkanDevice&					m_Device;
 	VkSemaphore							m_VkSemaphore = VK_NULL_HANDLE;
 };
 

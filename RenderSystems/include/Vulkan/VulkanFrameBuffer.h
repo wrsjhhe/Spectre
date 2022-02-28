@@ -6,7 +6,7 @@ BEGIN_NAMESPACE_SPECTRE
 class VulkanFrameBuffer : public Noncopyable
 {
 public:
-	static std::shared_ptr<VulkanFrameBuffer> CreateFrameBuffer(const VulkanDevice& vulkanDevice,const VulkanRenderPass& renderPass,
+	static std::shared_ptr<VulkanFrameBuffer> CreateFrameBuffer(const VulkanRenderPass& renderPass,
 		const std::vector<VkImageView>& attachments,uint32_t width,uint32_t height);
 public:
 	~VulkanFrameBuffer();
@@ -14,11 +14,10 @@ public:
 	void Destroy();
 
 private:
-	VulkanFrameBuffer(const VulkanDevice& vulkanDevice, const VulkanRenderPass& renderPass,
+	VulkanFrameBuffer(const VulkanRenderPass& renderPass,
 		const std::vector<VkImageView>& attachments, uint32_t width, uint32_t height);
 
 private:
-	const VulkanDevice&					m_Device;   
 	VkFramebuffer						m_FrameBuffers;
 };
 

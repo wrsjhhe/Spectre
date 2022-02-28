@@ -1,8 +1,6 @@
 #include "VulkanCommon.h"
+#include "VulkanEngine.h"
 #include "VulkanContext.h"
-#include "VulkanInstance.h"
-#include "VulkanPhysicalDevice.h"
-#include "VulkanDevice.h"
 #include "VulkanSwapchain.h"
 #include "VulkanCommand.h"
 #include "VulkanBuffer.h"
@@ -19,19 +17,27 @@ USING_NAMESPACE(Spectre)
 
 Spectre::RenderSystemVK::RenderSystemVK() noexcept
 {
-	VulkanInstance::CreateInfo instanceCI;
+
+	VulkanEngine::VulkanEngineCreateInfo engineCI;
 #ifdef VKB_DEBUG
-	instanceCI.EnableValidation = true;
+	engineCI.EnableValidation = true;
 #endif
+	m_VulkanEnginePtr = VulkanEngine::Create(engineCI);
 
-	m_Instance = VulkanInstance::Create(instanceCI);
-	VkPhysicalDevice vkPhysicalDevice = m_Instance->GetVkPhysicalDevices().at(0);
+//
+//	VulkanInstance::CreateInfo instanceCI;
+//#ifdef VKB_DEBUG
+//	instanceCI.EnableValidation = true;
+//#endif
 
-	m_PhysicalDevice = VulkanPhysicalDevice::Create(vkPhysicalDevice, *m_Instance->GetSharedPtr());
+	//m_Instance = VulkanInstance::Create(instanceCI);
+	//VkPhysicalDevice vkPhysicalDevice = m_Instance->GetVkPhysicalDevices().at(0);
 
-	m_Device = VulkanDevice::Create(m_PhysicalDevice);
+	//m_PhysicalDevice = VulkanPhysicalDevice::Create(vkPhysicalDevice, *m_Instance->GetSharedPtr());
 
-	m_ContextPtr = std::make_shared<VulkanContext>(m_Instance->GetVkInstance(), m_PhysicalDevice->GetVkPhysicalDevice(), *m_Device);
+	//m_Device = VulkanDevice::Create(m_PhysicalDevice);
+
+	m_ContextPtr = std::make_shared<VulkanContext>(m_VulkanEnginePtr);
 }
 
 Spectre::RenderSystemVK::~RenderSystemVK()
@@ -50,16 +56,16 @@ void RenderSystemVK::CreateRenderContext(const RenderContextDesc& desc)
 	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
 	surfaceCreateInfo.hinstance = GetModuleHandle(NULL);
 	surfaceCreateInfo.hwnd = (HWND)desc.Window.hWnd;
-	VK_CHECK(vkCreateWin32SurfaceKHR(m_Instance->GetVkInstance(), &surfaceCreateInfo, nullptr, &surface), "Failed create vkSurface!");
+	VK_CHECK(vkCreateWin32SurfaceKHR(m_VulkanEnginePtr->GetVkInstance(), &surfaceCreateInfo, nullptr, &surface), "Failed create vkSurface!");
 	
 	uint32_t surafceSupport = 0;
-	vkGetPhysicalDeviceSurfaceSupportKHR(m_PhysicalDevice->GetVkPhysicalDevice(), m_Device->GetGraphicQueue().m_QueueFamilyIndex, surface, &surafceSupport);
+	vkGetPhysicalDeviceSurfaceSupportKHR(m_VulkanEnginePtr->GetVkPhysicalDevice(), m_VulkanEnginePtr->GetGraphicQueue().QueueFamilyIndex, surface, &surafceSupport);
 	EXP_CHECK(surafceSupport, "Surface not support");
 
 
 	m_ContextPtr->CalcSwapchainParamaters(surface);
 	
-	m_PipelineCache = VulkanPipelineCache::Create(m_Device->GetVkDevice());
+	m_PipelineCache = VulkanPipelineCache::Create(m_VulkanEnginePtr->GetVkDevice());
 	m_PipelineCache->CreateShaderModules(desc.VertexShaders, desc.FragmentShaders);
 	CreateSemaphores();
 	CreateUniformBuffers();
@@ -70,7 +76,7 @@ void Spectre::RenderSystemVK::CreateSwapChain(const SwapChainDesc& desc)
 {
 	m_Width = desc.Width;
 	m_Height = desc.Height;
-	m_SwapChain = std::make_shared<VulkanSwapChain>(*m_Device,*m_ContextPtr, desc);
+	m_SwapChain = std::make_shared<VulkanSwapChain>(*m_ContextPtr, desc);
 
 	CreateDepthStencil();
 	CreateRenderPass();
@@ -109,7 +115,7 @@ void Spectre::RenderSystemVK::Setup()
 	renderPassBeginInfo.renderArea.extent.width = fwidth;
 	renderPassBeginInfo.renderArea.extent.height = fheight;
 
-	m_RenderCommandBuffers = VulkanCommand::Create(*m_Device, m_ContextPtr->GetVkGraphicCommandPool(), m_SwapChain->GetImageCount());
+	m_RenderCommandBuffers = VulkanCommand::Create(m_ContextPtr->GetVkGraphicCommandPool(), m_SwapChain->GetImageCount());
 	for (uint32_t i = 0; i < m_RenderCommandBuffers.size(); ++i)
 	{
 		renderPassBeginInfo.framebuffer = m_FrameBuffers[i]->GetVkFrameBuffer();
@@ -143,13 +149,13 @@ void Spectre::RenderSystemVK::Setup()
 		});
 
 	}
-	vkDeviceWaitIdle(m_Device->GetVkDevice());
+	vkDeviceWaitIdle(m_VulkanEnginePtr->GetVkDevice());
 }
 
 void Spectre::RenderSystemVK::Draw()
 {
-	VkDevice device = m_Device->GetVkDevice();
-	VulkanQueue queue = m_Device->GetGraphicQueue();
+	VkDevice device = m_VulkanEnginePtr->GetVkDevice();
+	VulkanQueue queue = m_VulkanEnginePtr->GetGraphicQueue();
 	int32_t backBufferIndex = m_SwapChain->AcquireImageIndex(m_PresentComplete);
 	if (backBufferIndex < 0)
 	{
@@ -168,26 +174,26 @@ void Spectre::RenderSystemVK::Draw()
 
 	// present
 	m_SwapChain->Present(
-		queue.GetVkQueue(),
+		queue.VkQueue,
 		&m_RenderComplete->GetVkSemaphore()
 	);
 }
 
 void Spectre::RenderSystemVK::CreateDepthStencil()
 {
-	m_DepthStencilImage = VulkanImages::CreateDepthStencilImage(*m_Device, m_Width, m_Height);
+	m_DepthStencilImage = VulkanImages::CreateDepthStencilImage(m_Width, m_Height);
 }
 
 void Spectre::RenderSystemVK::CreateRenderPass()
 {
-	m_RenderPass = VulkanRenderPass::CreateCommonRenderPass(*m_Device, m_ContextPtr->m_VkSwapChainFormat);
+	m_RenderPass = VulkanRenderPass::CreateCommonRenderPass(m_ContextPtr->m_VkSwapChainFormat);
 }
 
 void Spectre::RenderSystemVK::CreateFrameBuffer()
 {
 	uint32_t fwidth = m_SwapChain->GetWidth();
 	uint32_t fheight = m_SwapChain->GetHeight();
-	VkDevice device = m_Device->GetVkDevice();
+	VkDevice device = m_VulkanEnginePtr->GetVkDevice();
 
 	std::vector<VkImageView> attachments;
 	attachments.resize(2);
@@ -199,27 +205,27 @@ void Spectre::RenderSystemVK::CreateFrameBuffer()
 	for (uint32_t i = 0; i < m_FrameBuffers.size(); ++i)
 	{
 		attachments[0] = backbufferViews[i];
-		m_FrameBuffers[i] = VulkanFrameBuffer::CreateFrameBuffer(*m_Device, *m_RenderPass, attachments, m_Width, m_Height);
+		m_FrameBuffers[i] = VulkanFrameBuffer::CreateFrameBuffer(*m_RenderPass, attachments, m_Width, m_Height);
 	}
 }
 
 void Spectre::RenderSystemVK::CreateSemaphores()
 {
-	m_RenderComplete = VulkanSemaphore::CreateSemaphore(*m_Device);
+	m_RenderComplete = VulkanSemaphore::CreateSemaphore();
 }
 
 
 
 void Spectre::RenderSystemVK::CreateMeshBuffers(std::vector<float>& vertices,std::vector<uint32_t>& indices)
 {
-	VkDevice device = m_Device->GetVkDevice();
-	VulkanQueue queue = m_Device->GetGraphicQueue();
+	VkDevice device = m_VulkanEnginePtr->GetVkDevice();
+	VulkanQueue queue = m_VulkanEnginePtr->GetGraphicQueue();
 
-	m_IndicesBuffer = VulkanIndexBuffer::Create(*m_Device, indices, VK_INDEX_TYPE_UINT32);
+	m_IndicesBuffer = VulkanIndexBuffer::Create(indices, VK_INDEX_TYPE_UINT32);
 
-	m_VertexBuffer = VulkanVertexBuffer::Create(*m_Device, vertices);
+	m_VertexBuffer = VulkanVertexBuffer::Create( vertices);
 
-	auto xferCmdBuffer = VulkanCommand::Create(*m_Device, m_ContextPtr->GetVkGraphicCommandPool(), 1)[0];
+	auto xferCmdBuffer = VulkanCommand::Create(m_ContextPtr->GetVkGraphicCommandPool(), 1)[0];
 
 	xferCmdBuffer->RecordCommond([&](VkCommandBuffer cmdBuffer) {
 		m_VertexBuffer->Synchronize(cmdBuffer);
@@ -232,7 +238,7 @@ void Spectre::RenderSystemVK::CreateMeshBuffers(std::vector<float>& vertices,std
 
 void Spectre::RenderSystemVK::CreateUniformBuffers()
 {
-	m_MVPBuffer = VulkanBuffer::Create(*m_Device, sizeof(UBOData), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+	m_MVPBuffer = VulkanBuffer::Create(sizeof(UBOData), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, nullptr);
 }
 
@@ -245,7 +251,7 @@ void Spectre::RenderSystemVK::UpdateUniformBuffers(const Matrix& mat)
 void Spectre::RenderSystemVK::ReceateSwapchain(const SwapChainDesc& desc)
 {
 	SwapChainDesc _desc = desc;
-	vkDeviceWaitIdle(m_Device->GetVkDevice());
+	vkDeviceWaitIdle(m_VulkanEnginePtr->GetVkDevice());
 
 	DestorySwapchain();
 	m_ContextPtr->ReCalcSwapchainParamaters();
@@ -253,7 +259,7 @@ void Spectre::RenderSystemVK::ReceateSwapchain(const SwapChainDesc& desc)
 	m_Width = _desc.Width;
 	m_Height = _desc.Height;
 
-	m_SwapChain = std::make_shared<VulkanSwapChain>(*m_Device,*m_ContextPtr, _desc);
+	m_SwapChain = std::make_shared<VulkanSwapChain>(*m_ContextPtr, _desc);
 	CreateDepthStencil();
 	CreateSemaphores();
 	CreateRenderPass();

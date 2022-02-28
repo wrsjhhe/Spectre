@@ -9,11 +9,9 @@
 #include "RenderContextDesc.h"
 namespace Spectre
 {
-	class VulkanPhysicalDevice;
+	class VulkanEngine;
 	class VulkanContext;
 	class VulkanSwapChain;
-	class VulkanInstance;
-	class VulkanDevice;
 	class VulkanBuffer;
 	class VulkanIndexBuffer;
 	class VulkanVertexBuffer;
@@ -35,7 +33,7 @@ namespace Spectre
 		};
 
 	public:
-		RenderSystemVK() noexcept;
+		explicit RenderSystemVK() noexcept;
 		~RenderSystemVK();
 		void CreateRenderContext(const RenderContextDesc& desc);
 
@@ -60,9 +58,7 @@ namespace Spectre
 	private:
 		uint32_t                                m_Width = 1400;
 		uint32_t                                m_Height = 900;
-		std::shared_ptr<VulkanInstance>			m_Instance;
-		std::shared_ptr<VulkanPhysicalDevice>	m_PhysicalDevice;
-		std::shared_ptr<VulkanDevice>			m_Device;
+		VulkanEngine*							m_VulkanEnginePtr;
 		std::shared_ptr<VulkanContext>			m_ContextPtr;
 		std::shared_ptr<VulkanSwapChain>		m_SwapChain;
 

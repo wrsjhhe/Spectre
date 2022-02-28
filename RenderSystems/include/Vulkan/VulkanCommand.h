@@ -1,5 +1,4 @@
 #pragma once
-
 #include <memory>
 #include <vector>
 #include <functional>
@@ -11,7 +10,7 @@ class VulkanCommandPool;
 class VulkanCommand : public Noncopyable
 {
 public:
-	static std::vector<std::shared_ptr<VulkanCommand>> Create(const VulkanDevice& vulkanDevice,
+	static std::vector<std::shared_ptr<VulkanCommand>> Create(
 		const VkCommandPool& commandPool, uint32_t size);
 
 public:
@@ -24,13 +23,12 @@ public:
 
 	void Free();
 private:
-	VulkanCommand(const VulkanDevice& vulkanDevice, const VkCommandPool& commandPool, VkCommandBuffer buffer);
+	VulkanCommand(const VkCommandPool& commandPool, VkCommandBuffer buffer);
 public:
 	std::vector<VkSemaphore> SignalSemaphore;
 	std::vector < VkPipelineStageFlags> WaitStageMask;
 	std::vector<VkSemaphore> WaitSemaphore;
 private:
-	const VulkanDevice&							 m_Device;
 	VkCommandPool								 m_CommandPool;
 	VkCommandBuffer								 m_VkCommandBuffer;
 	VkFence										 m_VkFence = VK_NULL_HANDLE;

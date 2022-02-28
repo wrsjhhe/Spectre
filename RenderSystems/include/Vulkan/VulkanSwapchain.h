@@ -18,7 +18,7 @@ public:
 		SurfaceLost = -2,
 	};
 public:
-	VulkanSwapChain(const VulkanDevice& device, const VulkanContext& context,const SwapChainDesc& desc);
+	VulkanSwapChain(const VulkanContext& context,const SwapChainDesc& desc);
 	~VulkanSwapChain();
 
 	VkSwapchainKHR GetVkSwapChain() const { return m_VkSwapChain; }
@@ -36,7 +36,6 @@ public:
 
 	SwapStatus Present(VkQueue presentQueue, VkSemaphore* doneSemaphore);
 private:
-	const VulkanDevice&								m_Device;
 	const VulkanContext&							m_Context;
 	VkSwapchainKHR									m_VkSwapChain;
 	uint32_t										m_ImageCount;

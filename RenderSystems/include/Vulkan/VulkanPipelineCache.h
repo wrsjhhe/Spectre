@@ -36,7 +36,7 @@ private:
 	VkShaderModule LoadSPIPVShader(const std::vector<uint32_t>& shaderCode);
 
 	void CreateDescriptorPool();
-	void CreatePipelineLayout();
+	void CreateDescriptorSetLayout();
 
 
 private:

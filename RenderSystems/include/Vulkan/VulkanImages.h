@@ -21,11 +21,9 @@ class VulkanSwapChain;
 class VulkanImages : public Noncopyable
 {
 public:
-	static std::shared_ptr<VulkanImages> CreateSwapChainImage(const VulkanDevice& vulkanDevice,
-		const VulkanSwapChain& swapChain);
+	static std::shared_ptr<VulkanImages> CreateSwapChainImage(const VulkanSwapChain& swapChain);
 
-	static std::shared_ptr<VulkanImages> CreateDepthStencilImage(const VulkanDevice& vulkanDevice,
-		 uint32_t width, uint32_t height);
+	static std::shared_ptr<VulkanImages> CreateDepthStencilImage(uint32_t width, uint32_t height);
 public:
 	~VulkanImages();
 
@@ -33,17 +31,14 @@ public:
 
 	const std::vector <VkImageView>& GetVkImageViews() const { return m_VkImageViews; }
 
-	inline void GetVkMemoryRequirements(VkMemoryRequirements& memRequire);
-
 	void Destroy();
 private:
-	VulkanImages(const VulkanDevice& vulkanDevice);
+	VulkanImages();
 
 	void CreateImages();
 
 	void CreateImageViews();
 private:
-	const VulkanDevice&							 m_Device;
 	std::vector<VkImage>						 m_VkImages;
 	std::vector <VkImageView>					 m_VkImageViews;
 	std::vector <VkDeviceMemory>                 m_VkDeviceMemory;

@@ -11,7 +11,7 @@ class VulkanBuffer
 public:
 
 public:
-	static std::shared_ptr<VulkanBuffer> Create(const VulkanDevice& vulkanDevice, uint32_t size, 
+	static std::shared_ptr<VulkanBuffer> Create(uint32_t size, 
 		VkBufferUsageFlagBits usage, VkMemoryPropertyFlags memoryFlags,const void* data = nullptr);
 
 public:
@@ -40,11 +40,10 @@ public:
 	void Destroy();
 
 private:
-	explicit VulkanBuffer(const VulkanDevice& vulkanDevice);
+	explicit VulkanBuffer();
 	void CreateBuffer(const void* ptr, uint32_t size, VkBufferUsageFlagBits usage, VkMemoryPropertyFlags memoryFlags);
 
 private:
-	const VulkanDevice&							 m_Device;
 	uint32_t                                     m_Size = 0;
 	VkDeviceMemory				                 m_VkMemory = VK_NULL_HANDLE;
 	VkBuffer					                 m_VkbBuffer = VK_NULL_HANDLE;

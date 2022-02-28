@@ -140,7 +140,7 @@ VulkanPipelineCache::VulkanPipelineCache(VkDevice device):
 	m_VkDevice(device)
 {
 	CreateDescriptorPool();
-	CreatePipelineLayout();
+	CreateDescriptorSetLayout();
 
 
 	VkPipelineLayoutCreateInfo pipeLayoutInfo{};
@@ -230,7 +230,7 @@ void VulkanPipelineCache::CreateDescriptorPool()
 	vkCreateDescriptorPool(m_VkDevice, &descriptorPoolInfo, nullptr, &m_VkDescriptorPool);
 }
 
-void VulkanPipelineCache::CreatePipelineLayout()
+void VulkanPipelineCache::CreateDescriptorSetLayout()
 {
 	VkDescriptorSetLayoutBinding layoutBinding;
 	layoutBinding.binding = 0;

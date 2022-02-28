@@ -6,7 +6,7 @@ BEGIN_NAMESPACE_SPECTRE
 class VulkanRenderPass : public Noncopyable
 {
 public:
-	static std::shared_ptr<VulkanRenderPass> CreateCommonRenderPass(const VulkanDevice& vulkanDevice, VkFormat colorAttachmentFormat);
+	static std::shared_ptr<VulkanRenderPass> CreateCommonRenderPass(VkFormat colorAttachmentFormat);
 
 public:
 	~VulkanRenderPass();
@@ -14,12 +14,11 @@ public:
 
 	void Destroy();
 private:
-	VulkanRenderPass(const VulkanDevice& vulkanDevice);
+	VulkanRenderPass();
 
 	void CreateRenderPass(const std::vector<VkAttachmentDescription>& attachments, const VkSubpassDescription& subpassDescription,
 		const std::vector<VkSubpassDependency>& dependencies);
 private:
-	const VulkanDevice&							 m_Device;
 	VkRenderPass								 m_VkRenderPass;
 };
 
