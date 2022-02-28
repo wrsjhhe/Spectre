@@ -148,8 +148,6 @@ void Spectre::RenderSystemVK::Setup()
 
 void Spectre::RenderSystemVK::Draw()
 {
-	//UpdateUniformBuffers();
-
 	VkDevice device = m_Device->GetVkDevice();
 	VulkanQueue queue = m_Device->GetGraphicQueue();
 	int32_t backBufferIndex = m_SwapChain->AcquireImageIndex(m_PresentComplete);
