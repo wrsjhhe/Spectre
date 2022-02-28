@@ -10,6 +10,11 @@ Renderer::Renderer()
 
 }
 
+Renderer::~Renderer()
+{
+	delete m_pRenderSystem;
+}
+
 void Renderer::Attach(const NativeWindow& wnd)
 {
 	m_Window = wnd;

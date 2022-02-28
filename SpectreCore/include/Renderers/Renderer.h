@@ -19,7 +19,7 @@ class Renderer :public Object
 public:
 	SpectreObject(Renderer);
 	Renderer();
-
+	~Renderer();
 	void Attach(const NativeWindow& wnd);
 
 	ObjectDesc* CreateObjectDesc();

@@ -1,5 +1,4 @@
 #include "VulkanCommon.h"
-#include "VulkanDevice.h"
 #include "VulkanBuffer.h"
 #include "VulkanVertexBuffer.h"
 

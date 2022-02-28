@@ -61,13 +61,32 @@ VulkanEngine* VulkanEngine::Create(const VulkanEngineCreateInfo& ci)
 
 void VulkanEngine::Destory()
 {
-
+    if (m_EngineInstance!=nullptr)
+    {	
+        delete m_EngineInstance;
+        m_EngineInstance = nullptr;
+    }
 }
 
 VulkanEngine::VulkanEngine(const VulkanEngineCreateInfo& ci):
     m_CI(ci)
 {
     CreateVkInstance();
+    CreateVkPhysicalDevice();
+    CreateVkDevice();
+}
+
+VulkanEngine::~VulkanEngine()
+{
+	if (debug_utils_messenger != VK_NULL_HANDLE)
+	{
+		PFN_vkDestroyDebugUtilsMessengerEXT destroyMsgCallback =
+			(PFN_vkDestroyDebugUtilsMessengerEXT)(void*)vkGetInstanceProcAddr(m_VkInstance,
+				"vkDestroyDebugUtilsMessengerEXT");
+		destroyMsgCallback(m_VkInstance, debug_utils_messenger, nullptr);
+	}
+    vkDestroyDevice(m_VkDevice, nullptr);
+	vkDestroyInstance(m_VkInstance, nullptr);
 }
 
 void VulkanEngine::CreateVkInstance()

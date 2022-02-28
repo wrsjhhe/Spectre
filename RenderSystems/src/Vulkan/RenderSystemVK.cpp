@@ -24,19 +24,6 @@ Spectre::RenderSystemVK::RenderSystemVK() noexcept
 #endif
 	m_VulkanEnginePtr = VulkanEngine::Create(engineCI);
 
-//
-//	VulkanInstance::CreateInfo instanceCI;
-//#ifdef VKB_DEBUG
-//	instanceCI.EnableValidation = true;
-//#endif
-
-	//m_Instance = VulkanInstance::Create(instanceCI);
-	//VkPhysicalDevice vkPhysicalDevice = m_Instance->GetVkPhysicalDevices().at(0);
-
-	//m_PhysicalDevice = VulkanPhysicalDevice::Create(vkPhysicalDevice, *m_Instance->GetSharedPtr());
-
-	//m_Device = VulkanDevice::Create(m_PhysicalDevice);
-
 	m_ContextPtr = std::make_shared<VulkanContext>(m_VulkanEnginePtr);
 }
 

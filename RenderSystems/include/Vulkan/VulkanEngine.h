@@ -40,7 +40,7 @@ public:
 		VkMemoryPropertyFlags requiredProperties) const;
 private:
 	VulkanEngine(const VulkanEngineCreateInfo& CI);
-
+	~VulkanEngine();
 
 	void CreateVkInstance();
 	void CreateVkPhysicalDevice();

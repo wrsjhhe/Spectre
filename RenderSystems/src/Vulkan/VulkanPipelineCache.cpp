@@ -1,5 +1,4 @@
 #include "VulkanCommon.h"
-#include "VulkanDevice.h"
 #include "VulkanRenderPass.h"
 #include "VulkanPipelineCache.h"
 
