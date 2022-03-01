@@ -32,7 +32,8 @@ include_directories(./ThirdParty/spdlog/include)
 
 # 包含子项目。
 add_subdirectory ("SpectreCommon")
-add_subdirectory ("RenderSystems")
+add_subdirectory ("Backends")
 add_subdirectory ("SpectreCore")
+add_subdirectory ("SpectreComponents")
 add_subdirectory ("Examples")
 #add_subdirectory ("tests")

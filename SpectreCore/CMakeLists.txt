@@ -3,7 +3,7 @@ project ("SpectreCore")
 
 include_directories(../ThirdParty/shaderc/include/)
 
-include_directories (../RenderSystems/include/)
+include_directories (../Backends/include/)
 include_directories(../SpectreCommon/include/)
 
 
@@ -50,7 +50,7 @@ set(SRCS
 
 
 add_library (SpectreCore STATIC ${PUBLIC_HDRS} ${PRIVATE_HDRS} ${SRCS} )
-target_link_libraries(SpectreCore PUBLIC RenderSystems)
+target_link_libraries(SpectreCore PUBLIC Backends)
 IF (${CMAKE_CONFIGURATION_TYPES} MATCHES "Release")
 	target_link_libraries(SpectreCore PUBLIC shaderc.lib
 											 shaderc_util.lib
