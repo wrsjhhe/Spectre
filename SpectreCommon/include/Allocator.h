@@ -26,7 +26,7 @@ inline void* aligned_alloc(size_t size, size_t align) noexcept
         align <<= 1u;
     }
 
-#if defined(WIN32)
+#if defined(_WIN32)
     p = ::_aligned_malloc(size, align);
 #else
     ::posix_memalign(&p, align, size);

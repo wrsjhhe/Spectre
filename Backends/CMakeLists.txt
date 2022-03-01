@@ -1,11 +1,26 @@
-project ("RenderSystems")
+project ("Backends")
 
 # ==================================================================================================
 # 外部引用头文件目录设置
 # ==================================================================================================
 
-include_directories(../ThirdParty/VulkanSDK/include/)
-include_directories(../)
+set(IMGUI_SRC_DIR ../ThirdParty/imgui/)
+
+set(IMGUI_SRC 
+			    ${IMGUI_SRC_DIR}imconfig.h
+				${IMGUI_SRC_DIR}imgui.h
+				${IMGUI_SRC_DIR}imgui_internal.h
+				${IMGUI_SRC_DIR}imstb_rectpack.h
+				${IMGUI_SRC_DIR}imstb_textedit.h
+				${IMGUI_SRC_DIR}imstb_truetype.h
+				${IMGUI_SRC_DIR}imgui.cpp
+				${IMGUI_SRC_DIR}imgui_draw.cpp
+				${IMGUI_SRC_DIR}imgui_widgets.cpp
+				${IMGUI_SRC_DIR}imgui_tables.cpp
+				${IMGUI_SRC_DIR}imgui_impl_vulkan.cpp
+				${IMGUI_SRC_DIR}imgui_impl_vulkan.cpp
+)
+
 include_directories(../SpectreCommon/include/)
 
 # ==================================================================================================
@@ -14,7 +29,6 @@ include_directories(../SpectreCommon/include/)
 set(INC_DIR ./include/)
 include_directories(${INC_DIR})
 set(PUBLIC_HDRS 
-${INC_DIR}RenderContextDesc.h
 )
 
 set(INTERFACEE_DIR ./interface/)
@@ -45,6 +59,7 @@ ${SRC_VULKAN_DIR}VulkanPipelineCache.cpp
 ${SRC_VULKAN_DIR}VulkanContext.cpp
 ${SRC_VULKAN_DIR}VulkanIndexBuffer.cpp
 ${SRC_VULKAN_DIR}VulkanVertexBuffer.cpp
+${SRC_VULKAN_DIR}VulkanGui.cpp
 ${SRC_VULKAN_DIR}RenderSystemVK.cpp
 )
 
@@ -62,10 +77,11 @@ ${INC_VULKAN_DIR}VulkanPipelineCache.h
 ${INC_VULKAN_DIR}VulkanContext.h
 ${INC_VULKAN_DIR}VulkanIndexBuffer.h
 ${INC_VULKAN_DIR}VulkanVertexBuffer.h
+${INC_VULKAN_DIR}VulkanGui.h
 ${INC_VULKAN_DIR}RenderSystemVK.h
 )
 
 
-add_library (RenderSystems STATIC ${PUBLIC_HDRS} ${VULKAN_PUBLIC_HDRS} ${VULKAN_PRIVATE_HDRS} ${VULKAN_SRCS})
-target_link_libraries(RenderSystems PRIVATE SpectreCommon)
-target_link_libraries(RenderSystems PRIVATE vulkan-1)
+add_library (Backends STATIC ${PUBLIC_HDRS} ${VULKAN_PUBLIC_HDRS} ${VULKAN_PRIVATE_HDRS} ${VULKAN_SRCS} ${IMGUI_SRC})
+target_link_libraries(Backends PUBLIC SpectreCommon)
+target_link_libraries(Backends PUBLIC vulkan-1)

@@ -1,5 +1,4 @@
 #include "Vulkan/RenderSystemVK.h"
-#include "RenderContextDesc.h"
 #include "Renderers/Renderer.h"
 
 USING_NAMESPACE(Spectre)

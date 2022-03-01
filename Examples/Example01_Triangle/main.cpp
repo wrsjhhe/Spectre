@@ -5,31 +5,11 @@
 #include "Timer.h"
 #include "GLFWContext.h"
 #include "Cameras/PerspectiveCamera.h"
-#include <fstream>
+#include "FileUtils.h"
 #include <iostream>
 #include <iomanip>
 #include <sstream>
 using namespace Spectre;
-
-static std::string readFile(const std::string& filename)
-{
-	std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
-	if (!file.is_open())
-	{
-		throw std::runtime_error("failed to open file!");
-	}
-	size_t fileSize = (size_t)file.tellg();
-	std::string buffer;
-	buffer.resize(fileSize);
-
-	file.seekg(0);
-	file.read(buffer.data(), fileSize);
-
-	file.close();
-
-	return buffer;
-}
 
 
 int g_Width = 1400;
@@ -59,8 +39,8 @@ public:
 		ObjectDesc* pObjectDesc = renderer.CreateObjectDesc();
 		pObjectDesc->VertexAttrs = { VertexAttribute_Position, VertexAttribute_Color };
 
-		pObjectDesc->MateralPtr->VertexShader = readFile("../../../../../Resources/Shaders/triangle.vert");
-		pObjectDesc->MateralPtr->FragmentShader = readFile("../../../../../Resources/Shaders/triangle.frag");
+		pObjectDesc->MateralPtr->VertexShader = FileUtils::ReadFile("../../../../../Resources/Shaders/triangle.vert");
+		pObjectDesc->MateralPtr->FragmentShader = FileUtils::ReadFile("../../../../../Resources/Shaders/triangle.frag");
 
 		BufferGeometry* geometry = BufferGeometry::Create(pObjectDesc->VertexAttrs);
 		// ¶¥µãÊý¾Ý
@@ -107,10 +87,11 @@ public:
 			double elapsedTime = currTime - g_LastTime;
 
 			filteredFrameTime = filteredFrameTime * (1.0 - filterScale) + filterScale * elapsedTime;
-			std::stringstream fpsCounterSS;
+			std::stringstream fpsCounterSS; 
+			fpsCounterSS << "Sample01_Triangle -----";
 			fpsCounterSS << std::fixed << std::setprecision(1) << filteredFrameTime * 1000;
 			fpsCounterSS << " ms (" << 1.0 / filteredFrameTime << " fps)";
-			std::cout << fpsCounterSS.str() << std::endl;
+			context.SetTitle(fpsCounterSS.str());
 
 			renderer.Render();
 

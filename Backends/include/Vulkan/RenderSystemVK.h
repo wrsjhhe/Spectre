@@ -6,9 +6,16 @@
 #include "Math/MathDef.h"
 #include "NativeWindow.h"
 #include "RenderDef.h"
-#include "RenderContextDesc.h"
 namespace Spectre
 {
+	struct RenderContextDesc
+	{
+		bool Headless = false;
+		NativeWindow Window;
+		std::vector<VertexAttribute> VertexAttrs;
+		std::vector<std::vector<uint32_t>> VertexShaders;
+		std::vector<std::vector<uint32_t>> FragmentShaders;
+	};
 	class VulkanEngine;
 	class VulkanContext;
 	class VulkanSwapChain;
@@ -21,7 +28,7 @@ namespace Spectre
 	class VulkanFrameBuffer;
 	class VulkanSemaphore;
 	class VulkanPipelineCache;
-
+	class VulkanGui;
 	typedef std::shared_ptr<VulkanCommand> VulkanCommandPtr;
 
 	class RenderSystemVK
@@ -55,6 +62,8 @@ namespace Spectre
 		void CreateSemaphores();
 
 		void DestorySwapchain();
+
+		bool UpdateUI();
 	private:
 		uint32_t                                m_Width = 1400;
 		uint32_t                                m_Height = 900;
@@ -82,6 +91,7 @@ namespace Spectre
 
 		std::shared_ptr<VulkanSemaphore>		m_PresentComplete;
 
+		std::shared_ptr<VulkanGui>              m_GuiPtr;
 	};
 
 }

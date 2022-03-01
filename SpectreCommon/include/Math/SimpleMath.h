@@ -10,7 +10,7 @@
 
 #pragma once
 
-#if (defined(WIN32) || defined(WINAPI_FAMILY)) && !(defined(_XBOX_ONE) && defined(_TITLE)) && !defined(_GAMING_XBOX)
+#if (defined(WIN32) || defined(WINAPI_FAMILY) || defined(_WIN32)) && !(defined(_XBOX_ONE) && defined(_TITLE)) && !defined(_GAMING_XBOX)
 #include <dxgi1_2.h>
 #endif
 

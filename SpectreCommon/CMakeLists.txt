@@ -21,6 +21,7 @@ set(PUBLIC_HDRS ${INC_DIR}SpectreDef.h
 				${INC_DIR}Noncopyable.h
 				${INC_DIR}NativeWindow.h
 				${INC_DIR}Timer.h
+				${INC_DIR}FileUtils.h
 				${INC_DIR}Math/MathDef.h
 				${INC_DIR}Math/SimpleMath.h
 				${INC_DIR}Math/SimpleMath.inl
@@ -37,6 +38,7 @@ set(SRCS ${SRC_DIR}Allocator.cpp
 		 ${SRC_DIR}Mutex.cpp
 		 ${SRC_DIR}LogManager.cpp
 		 ${SRC_DIR}Timer.cpp
+		 ${SRC_DIR}FileUtils.cpp
 		 ${SRC_DIR}Math/SimpleMath.cpp
 )
 

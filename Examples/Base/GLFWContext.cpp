@@ -71,6 +71,11 @@ void GLFWContext::Create(const char* name, int width, int height)
 	});
 }
 
+void GLFWContext::SetTitle(const std::string& title)
+{
+	glfwSetWindowTitle(m_Window,title.c_str());
+}
+
 void GLFWContext::GetWindowSize(int* width, int* height)
 {
 	glfwGetWindowSize(m_Window, width, height);

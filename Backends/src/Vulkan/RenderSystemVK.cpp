@@ -11,6 +11,8 @@
 #include "VulkanPipelineCache.h"
 #include "VulkanIndexBuffer.h"
 #include "VulkanVertexBuffer.h"
+#include "VulkanGui.h"
+#include "imgui.h"
 #include "RenderSystemVK.h"
 
 USING_NAMESPACE(Spectre)
@@ -29,7 +31,7 @@ Spectre::RenderSystemVK::RenderSystemVK() noexcept
 
 Spectre::RenderSystemVK::~RenderSystemVK()
 {
-	
+	m_GuiPtr->Destroy();
 }
 
 void RenderSystemVK::CreateRenderContext(const RenderContextDesc& desc)
@@ -63,6 +65,10 @@ void Spectre::RenderSystemVK::CreateSwapChain(const SwapChainDesc& desc)
 {
 	m_Width = desc.Width;
 	m_Height = desc.Height;
+
+	m_GuiPtr = std::make_shared<VulkanGui>(m_VulkanEnginePtr);
+	m_GuiPtr->Init("../../../../../Resources/Fonts/Ubuntu-Regular.ttf", m_Width,m_Height);
+
 	m_SwapChain = std::make_shared<VulkanSwapChain>(*m_ContextPtr, desc);
 
 	CreateDepthStencil();
@@ -132,6 +138,7 @@ void Spectre::RenderSystemVK::Setup()
 			m_VertexBuffer->CmdBind(cmdBuffer, offsets);
 			m_IndicesBuffer->CmdBind(cmdBuffer);
 			vkCmdDrawIndexed(cmdBuffer, m_IndicesBuffer->GetIndexCount(), 1, 0, 0, 0);
+			m_GuiPtr->BindDrawCmd(cmdBuffer, m_RenderPass->GetVkRenderPass());
 			vkCmdEndRenderPass(cmdBuffer);		
 		});
 
@@ -141,6 +148,21 @@ void Spectre::RenderSystemVK::Setup()
 
 void Spectre::RenderSystemVK::Draw()
 {
+	m_GuiPtr->StartFrame();
+
+	ImGui::Begin("ImGUI!", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+
+	ImGui::Text("This is some useful text.");
+	ImGui::SameLine();
+
+	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+	ImGui::End();
+
+	m_GuiPtr->EndFrame();
+	if (m_GuiPtr->Update())
+	{
+		Setup();
+	}
 	VkDevice device = m_VulkanEnginePtr->GetVkDevice();
 	VulkanQueue queue = m_VulkanEnginePtr->GetGraphicQueue();
 	int32_t backBufferIndex = m_SwapChain->AcquireImageIndex(m_PresentComplete);
@@ -158,7 +180,7 @@ void Spectre::RenderSystemVK::Draw()
 	m_RenderCommandBuffers[backBufferIndex]->WaitStageMask = { waitStageMask };
 
 	m_RenderCommandBuffers[backBufferIndex]->Submit(queue);
-
+	
 	// present
 	m_SwapChain->Present(
 		queue.VkQueue,
@@ -200,8 +222,6 @@ void Spectre::RenderSystemVK::CreateSemaphores()
 {
 	m_RenderComplete = VulkanSemaphore::CreateSemaphore();
 }
-
-
 
 void Spectre::RenderSystemVK::CreateMeshBuffers(std::vector<float>& vertices,std::vector<uint32_t>& indices)
 {
@@ -267,4 +287,48 @@ void Spectre::RenderSystemVK::DestorySwapchain()
 	m_PresentComplete = nullptr;
 
 	m_SwapChain = nullptr;
+}
+
+bool Spectre::RenderSystemVK::UpdateUI()
+{
+	m_GuiPtr->StartFrame();
+
+	bool yes = true;
+	{
+		static float f = 0.0f;
+		static Vector3 color(0, 0, 0);
+		static int counter = 0;
+		ImGuiIO& io = ImGui::GetIO();
+		//ImGui::SetNextWindowPos(ImVec2(0, 0));
+		//ImGui::SetNextWindowSize(ImVec2(0, 0), ImVec2(io.DisplaySize.x, io.DisplaySize.y));
+		ImGui::Begin("ImGUI!", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+
+		ImGui::Text("This is some useful text.");
+		ImGui::Checkbox("Demo Window", &yes);
+		ImGui::Checkbox("Another Window", &yes);
+
+		ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
+		ImGui::ColorEdit3("clear color", (float*)&color);
+
+		if (ImGui::Button("Button"))
+		{
+			counter++;
+		}
+
+		ImGui::SameLine();
+		ImGui::Text("counter = %d", counter);
+
+		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		ImGui::End();
+	}
+
+	bool hovered = ImGui::IsItemHovered() || ImGui::IsAnyItemHovered();
+
+	m_GuiPtr->EndFrame();
+
+	//if (m_GuiPtr->Update())
+	//{
+	//	Setup();
+	//}
+	return hovered;
 }

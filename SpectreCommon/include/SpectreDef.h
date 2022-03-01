@@ -16,3 +16,5 @@
 #if !defined(NDEBUG) || defined(DEBUG) || defined(_DEBUG)
 #	define SPE_DEBUG
 #endif
+
+#define _HAS_CXX17 1

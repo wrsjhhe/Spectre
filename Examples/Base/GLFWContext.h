@@ -19,6 +19,8 @@ public:
 
 	void Create(const char* name, int width, int height);
 
+	void SetTitle(const std::string& title);
+
 	void GetWindowSize(int* width,int* height);
 
 	void* GetWindowHandle();

@@ -5,16 +5,11 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("Spectre")
 
-if (WIN32)
+if (MSVC)
     set(CXX_STANDARD "/std:c++17")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_STANDARD} /W0 /Zc:__cplusplus  /EHsc ")
 else()
     set(CXX_STANDARD "-std=c++17")
-endif()
-
-if (MSVC)
-    set(CXX_STANDARD "/std:c++latest")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_STANDARD} /W0 /Zc:__cplusplus")
-else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_STANDARD} -fstrict-aliasing -Wno-unknown-pragmas -Wno-unused-function")
 endif()
 
@@ -29,11 +24,11 @@ ENDIF()
 link_directories(./ThirdParty/VulkanSDK/lib)
 link_directories(./ThirdParty/GLFW/lib)
 include_directories(./ThirdParty/spdlog/include)
-
+include_directories(./ThirdParty/VulkanSDK/include/)
+include_directories(./ThirdParty/imgui/)
 # 包含子项目。
 add_subdirectory ("SpectreCommon")
 add_subdirectory ("Backends")
 add_subdirectory ("SpectreCore")
-add_subdirectory ("SpectreComponents")
 add_subdirectory ("Examples")
 #add_subdirectory ("tests")
