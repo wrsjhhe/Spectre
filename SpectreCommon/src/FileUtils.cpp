@@ -2,9 +2,14 @@
 #include <fstream>
 USING_NAMESPACE(Spectre)
 
-std::string FileUtils::ReadFile(const std::string& filename)
+const std::string g_resourecsDir = RESOURCES_DIR;
+
+std::string FileUtils::ReadFile(const std::string& filename, bool isRes)
 {
-	std::ifstream file(filename, std::ios::ate | std::ios::binary);
+	std::string fullPath = filename;
+	if (isRes)
+		fullPath = g_resourecsDir + filename;
+	std::ifstream file(fullPath, std::ios::ate | std::ios::binary);
 
 	if (!file.is_open())
 	{

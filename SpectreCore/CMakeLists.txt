@@ -50,15 +50,6 @@ set(SRCS
 		 ${SRC_DIR}Cameras/PerspectiveCamera.cpp
 )
 
-
-# ==================================================================================================
-# 资源文件设置
-# ==================================================================================================
-SET(RESOURCES_DIR ../Resources/Shaders/)
-configure_file(${RESOURCES_DIR}/triangle.vert
-configure_file(${RESOURCES_DIR}/triangle.frag
-    ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
-
 add_library (SpectreCore STATIC ${PUBLIC_HDRS} ${PRIVATE_HDRS} ${SRCS} )
 target_link_libraries(SpectreCore PUBLIC Backends)
 IF (${CMAKE_CONFIGURATION_TYPES} MATCHES "Release")
