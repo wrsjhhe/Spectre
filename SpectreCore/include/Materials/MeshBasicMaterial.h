@@ -1,20 +1,22 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <memory>
 #include "Object.h"
 BEGIN_NAMESPACE_SPECTRE
 
-class Material:public Object
+class MeshBasicMaterial :public Object
 {
 public:
-	SpectreObject(Material)
-
-	friend class Renderer;
+	SpectreObject(MeshBasicMaterial)
 
 	std::string VertexShader;
 	std::string FragmentShader;
+
+	static std::shared_ptr<MeshBasicMaterial> Create();
 public:
-	~Material();
+	
+	~MeshBasicMaterial();
 
 	const std::vector<uint32_t>& GetVertexSPV() const;
 
@@ -23,7 +25,7 @@ public:
 	void CompileSpv();
 
 private:
-	Material();
+	MeshBasicMaterial();
 
 private:
 	std::vector<uint32_t> m_VertSpvCache;

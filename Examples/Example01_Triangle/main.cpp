@@ -1,5 +1,5 @@
 #include "Objects/Scene.h"
-#include "Materials/Material.h"
+#include "Materials/Materials.h"
 #include "Geometries/BufferGeometry.h"
 #include "Renderers/Renderer.h"
 #include "Timer.h"
@@ -36,13 +36,13 @@ public:
 	{
 		CreateContext(g_Width, g_Height);
 
-		ObjectDesc* pObjectDesc = renderer.CreateObjectDesc();
-		pObjectDesc->VertexAttrs = { VertexAttribute_Position, VertexAttribute_Color };
+		std::vector<VertexAttribute> VertexAttrs = { VertexAttribute_Position, VertexAttribute_Color };
 
-		pObjectDesc->MateralPtr->VertexShader = FileUtils::ReadFile("../../../../../Resources/Shaders/triangle.vert");
-		pObjectDesc->MateralPtr->FragmentShader = FileUtils::ReadFile("../../../../../Resources/Shaders/triangle.frag");
+		MeshBasicMaterialPtr pMat = MeshBasicMaterial::Create();
+		pMat->VertexShader = FileUtils::ReadFile("triangle.vert");
+		pMat->FragmentShader = FileUtils::ReadFile("triangle.frag");
 
-		BufferGeometry* geometry = BufferGeometry::Create(pObjectDesc->VertexAttrs);
+		BufferGeometry* geometry = BufferGeometry::Create(VertexAttrs);
 		// ¶¥µãÊý¾Ý
 		std::vector<float> vertices = {
 				1.0f, 1.0f, 0.0f ,     1.0f, 0.0f, 0.0f ,1.0f,
@@ -55,7 +55,7 @@ public:
 		geometry->SetVertices(vertices.data(), vertices.size());
 		geometry->SetFaceIndex(indices.data(), indices.size());
 
-		Mesh* pMesh = Mesh::Create(geometry, pObjectDesc->MateralPtr);
+		Mesh* pMesh = Mesh::Create(geometry, pMat);
 
 		Scene scene;
 		scene.Add(pMesh);

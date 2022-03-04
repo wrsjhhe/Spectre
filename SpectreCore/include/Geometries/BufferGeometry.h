@@ -10,6 +10,7 @@ public:
 	static BufferGeometry* Create(const std::vector<VertexAttribute>& vertexAttrs);
 public:
 	void SetVertexAttributes();
+	const std::vector<VertexAttribute>& VertexAttributes() const { return m_VertexAttrs; }
 
 	void SetVertices(const float* vertices, uint32_t count);
 	void SetFaceIndex(const uint32_t* faces, uint32_t count);

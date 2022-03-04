@@ -18,7 +18,8 @@ set(PUBLIC_HDRS
 				${INC_DIR}Object.h
 				${INC_DIR}ShaderTool.h
 				${INC_DIR}Geometries/BufferGeometry.h
-				${INC_DIR}Materials/Material.h				
+				${INC_DIR}Materials/MeshBasicMaterial.h				
+				${INC_DIR}Materials/Materials.h				
 				${INC_DIR}Objects/Object3D.h
 				${INC_DIR}Objects/Scene.h
 				${INC_DIR}Objects/Mesh.h								
@@ -39,7 +40,8 @@ set(SRCS
 		 ${SRC_DIR}Object.cpp
 		 ${SRC_DIR}ShaderTool.cpp		 
 		 ${SRC_DIR}Geometries/BufferGeometry.cpp
-		 ${SRC_DIR}Materials/Material.cpp		 
+		 ${SRC_DIR}Materials/MeshBasicMaterial.cpp		 
+		 ${SRC_DIR}Materials/Materials.cpp		 
 		 ${SRC_DIR}Objects/Object3D.cpp
 		 ${SRC_DIR}Objects/Scene.cpp
 		 ${SRC_DIR}Objects/Mesh.cpp
@@ -48,6 +50,14 @@ set(SRCS
 		 ${SRC_DIR}Cameras/PerspectiveCamera.cpp
 )
 
+
+# ==================================================================================================
+# 资源文件设置
+# ==================================================================================================
+SET(RESOURCES_DIR ../Resources/Shaders/)
+configure_file(${RESOURCES_DIR}/triangle.vert
+configure_file(${RESOURCES_DIR}/triangle.frag
+    ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 
 add_library (SpectreCore STATIC ${PUBLIC_HDRS} ${PRIVATE_HDRS} ${SRCS} )
 target_link_libraries(SpectreCore PUBLIC Backends)

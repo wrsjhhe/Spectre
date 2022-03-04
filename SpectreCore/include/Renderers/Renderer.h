@@ -2,16 +2,11 @@
 #include "Object.h"
 #include "Objects/Scene.h"
 #include "Cameras/PerspectiveCamera.h"
-#include "Materials/Material.h"
+#include "Materials/Materials.h"
 #include "NativeWindow.h"
 
 BEGIN_NAMESPACE_SPECTRE
 
-struct ObjectDesc
-{
-	Material* MateralPtr;
-	std::vector<VertexAttribute> VertexAttrs;
-};
 
 class RenderSystemVK;
 class Renderer :public Object
@@ -21,8 +16,6 @@ public:
 	Renderer();
 	~Renderer();
 	void Attach(const NativeWindow& wnd);
-
-	ObjectDesc* CreateObjectDesc();
 
 	void BindScene(Scene* pScene);
 
@@ -45,8 +38,8 @@ private:
 	bool                              m_Prepared = false;
 	NativeWindow					  m_Window;
 	Scene*							  m_ScenePtr = nullptr;
+	MeshBasicMaterialPtr              m_MaterialPtr = nullptr;
 	PerspectiveCamera*				  m_PerspectiveCameraPtr = nullptr;
-	std::vector<ObjectDesc*>		  m_ObjectDecs;
 	Matrix                            m_MVPData;
 };
 

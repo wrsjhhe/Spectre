@@ -19,13 +19,6 @@ void Renderer::Attach(const NativeWindow& wnd)
 	m_Window = wnd;
 }
 
-ObjectDesc* Renderer::CreateObjectDesc()
-{
-	ObjectDesc* pDesc = new ObjectDesc;
-	pDesc->MateralPtr = new Material;
-	m_ObjectDecs.emplace_back(pDesc);
-	return pDesc;
-}
 
 void Renderer::BindScene(Scene* pScene)
 {
@@ -55,10 +48,11 @@ void Renderer::Setup()
 {
 	RenderContextDesc renderDesc{};
 	renderDesc.Window = m_Window;
-	renderDesc.VertexAttrs = m_ObjectDecs[0]->VertexAttrs;
-	m_ObjectDecs[0]->MateralPtr->CompileSpv();
-	renderDesc.VertexShaders = { m_ObjectDecs[0]->MateralPtr->GetVertexSPV() };
-	renderDesc.FragmentShaders = { m_ObjectDecs[0]->MateralPtr->GetFragmentSPV() };
+	renderDesc.VertexAttrs = m_ScenePtr->GetMeshes()[0]->GetBufferGeometry()->VertexAttributes();
+	MeshBasicMaterialPtr pMaterial = m_ScenePtr->GetMeshes()[0]->GetMaterial();
+	pMaterial->CompileSpv();
+	renderDesc.VertexShaders = { pMaterial->GetVertexSPV() };
+	renderDesc.FragmentShaders = { pMaterial->GetFragmentSPV() };
 
 	m_pRenderSystem = new RenderSystemVK();
 	m_pRenderSystem->CreateRenderContext(renderDesc);
