@@ -13,11 +13,12 @@
 #include "VulkanVertexBuffer.h"
 #include "VulkanGui.h"
 #include "imgui.h"
+#include "VulkanPipelineCache.h"
 #include "RenderSystemVK.h"
 
 USING_NAMESPACE(Spectre)
 
-Spectre::RenderSystemVK::RenderSystemVK() noexcept
+RenderSystemVK::RenderSystemVK() noexcept
 {
 
 	VulkanEngine::VulkanEngineCreateInfo engineCI;
@@ -29,14 +30,14 @@ Spectre::RenderSystemVK::RenderSystemVK() noexcept
 	m_ContextPtr = std::make_shared<VulkanContext>(m_VulkanEnginePtr);
 }
 
-Spectre::RenderSystemVK::~RenderSystemVK()
+RenderSystemVK::~RenderSystemVK()
 {
 	m_GuiPtr->Destroy();
 }
 
 void RenderSystemVK::CreateRenderContext(const RenderContextDesc& desc)
 {
-	m_ContextPtr->SetVertexDesc(desc.VertexAttrs);
+	//m_ContextPtr->SetVertexDesc(desc.VertexAttrs);
 	m_ContextPtr->InitCommandPool();
 
 	//´´½¨Surface
@@ -54,20 +55,20 @@ void RenderSystemVK::CreateRenderContext(const RenderContextDesc& desc)
 
 	m_ContextPtr->CalcSwapchainParamaters(surface);
 	
-	m_PipelineCache = VulkanPipelineCache::Create(m_VulkanEnginePtr->GetVkDevice());
-	m_PipelineCache->CreateShaderModules(desc.VertexShaders, desc.FragmentShaders);
+	//m_PipelineCache = VulkanPipelineCache::Create(m_VulkanEnginePtr->GetVkDevice());
+	//m_PipelineCache->CreateShaderModules(desc.VertexShaders, desc.FragmentShaders);
 	CreateSemaphores();
-	CreateUniformBuffers();
+	//CreateUniformBuffers();
 }
 
 
-void Spectre::RenderSystemVK::CreateSwapChain(const SwapChainDesc& desc)
+void RenderSystemVK::CreateSwapChain(const SwapChainDesc& desc)
 {
 	m_Width = desc.Width;
 	m_Height = desc.Height;
 
 	m_GuiPtr = std::make_shared<VulkanGui>(m_VulkanEnginePtr);
-	m_GuiPtr->Init("../../../../../Resources/Fonts/Ubuntu-Regular.ttf", m_Width,m_Height);
+	m_GuiPtr->Init("Fonts/Ubuntu-Regular.ttf", m_Width,m_Height);
 
 	m_SwapChain = std::make_shared<VulkanSwapChain>(*m_ContextPtr, desc);
 
@@ -75,28 +76,25 @@ void Spectre::RenderSystemVK::CreateSwapChain(const SwapChainDesc& desc)
 	CreateRenderPass();
 	CreateFrameBuffer();
 
-	m_PipelineCache->SetVertexDescription(m_ContextPtr->GetInputBinding(), m_ContextPtr->GetInputAttributes());
-	VkDescriptorBufferInfo MVPDescriptor;
-	MVPDescriptor.buffer = m_MVPBuffer->GetVkBuffer();
-	MVPDescriptor.offset = 0;
-	MVPDescriptor.range = sizeof(UBOData);
-	m_PipelineCache->CreateDescriptorSet(MVPDescriptor);
-	m_PipelineCache->CreatePipelineInstance(*m_RenderPass);
+	//m_PipelineCache->SetVertexDescription(m_ContextPtr->GetInputBinding(), m_ContextPtr->GetInputAttributes());
+	//VkDescriptorBufferInfo MVPDescriptor;
+	//MVPDescriptor.buffer = m_MVPBuffer->GetVkBuffer();
+	//MVPDescriptor.offset = 0;
+	//MVPDescriptor.range = sizeof(UBOData);
+	//m_PipelineCache->CreateDescriptorSet(MVPDescriptor);
+	//m_PipelineCache->CreatePipelineInstance(*m_RenderPass);
 }
-
-void Spectre::RenderSystemVK::Setup()
+void RenderSystemVK::CompileResources()
 {
-	VkCommandBufferBeginInfo cmdBeginInfo{};
-	cmdBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
+	m_PipelineCaches[0]->CreatePipelineInstance(*m_RenderPass);
+}
+void RenderSystemVK::Setup()
+{
 	VkClearValue clearValues[2];
 	clearValues[0].color = {
 		{0.350f, 0.350f, 0.350f, 1.0f}
 	};
 	clearValues[1].depthStencil = { 1.0f, 0 };
-
-	uint32_t fwidth = m_SwapChain->GetWidth();
-	uint32_t fheight = m_SwapChain->GetHeight();
 
 	VkRenderPassBeginInfo renderPassBeginInfo{};
 	renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -105,9 +103,8 @@ void Spectre::RenderSystemVK::Setup()
 	renderPassBeginInfo.pClearValues = clearValues;
 	renderPassBeginInfo.renderArea.offset.x = 0;
 	renderPassBeginInfo.renderArea.offset.y = 0;
-	renderPassBeginInfo.renderArea.extent.width = fwidth;
-	renderPassBeginInfo.renderArea.extent.height = fheight;
-
+	renderPassBeginInfo.renderArea.extent.width = m_SwapChain->GetWidth();
+	renderPassBeginInfo.renderArea.extent.height = m_SwapChain->GetHeight();
 	m_RenderCommandBuffers = VulkanCommand::Create(m_ContextPtr->GetVkGraphicCommandPool(), m_SwapChain->GetImageCount());
 	for (uint32_t i = 0; i < m_RenderCommandBuffers.size(); ++i)
 	{
@@ -115,15 +112,15 @@ void Spectre::RenderSystemVK::Setup()
 
 		VkViewport viewport = {};
 		viewport.x = 0;
-		viewport.y = (float)fheight;
-		viewport.width = (float)fwidth;
-		viewport.height = -(float)fheight;    // flip y axis
+		viewport.y = (float)m_SwapChain->GetHeight();
+		viewport.width = (float)m_SwapChain->GetWidth();
+		viewport.height = -(float)m_SwapChain->GetHeight();    // flip y axis
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 
 		VkRect2D scissor = {};
-		scissor.extent.width = fwidth;
-		scissor.extent.height = fheight;
+		scissor.extent.width = m_SwapChain->GetWidth();
+		scissor.extent.height = m_SwapChain->GetHeight();
 		scissor.offset.x = 0;
 		scissor.offset.y = 0;
 
@@ -133,8 +130,10 @@ void Spectre::RenderSystemVK::Setup()
 			vkCmdBeginRenderPass(cmdBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
 			vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
-			m_PipelineCache->BindDescriptorSets(cmdBuffer);
-			m_PipelineCache->BindPipeline(cmdBuffer);
+			m_PipelineCaches[0]->BindDescriptorSets(cmdBuffer);
+			m_PipelineCaches[0]->BindPipeline(cmdBuffer);
+		/*	m_PipelineCache->BindDescriptorSets(cmdBuffer);
+			m_PipelineCache->BindPipeline(cmdBuffer);*/
 			m_VertexBuffer->CmdBind(cmdBuffer, offsets);
 			m_IndicesBuffer->CmdBind(cmdBuffer);
 			vkCmdDrawIndexed(cmdBuffer, m_IndicesBuffer->GetIndexCount(), 1, 0, 0, 0);
@@ -146,7 +145,7 @@ void Spectre::RenderSystemVK::Setup()
 	vkDeviceWaitIdle(m_VulkanEnginePtr->GetVkDevice());
 }
 
-void Spectre::RenderSystemVK::Draw()
+void RenderSystemVK::Draw()
 {
 	m_GuiPtr->StartFrame();
 
@@ -188,17 +187,17 @@ void Spectre::RenderSystemVK::Draw()
 	);
 }
 
-void Spectre::RenderSystemVK::CreateDepthStencil()
+void RenderSystemVK::CreateDepthStencil()
 {
 	m_DepthStencilImage = VulkanImages::CreateDepthStencilImage(m_Width, m_Height);
 }
 
-void Spectre::RenderSystemVK::CreateRenderPass()
+void RenderSystemVK::CreateRenderPass()
 {
 	m_RenderPass = VulkanRenderPass::CreateCommonRenderPass(m_ContextPtr->m_VkSwapChainFormat);
 }
 
-void Spectre::RenderSystemVK::CreateFrameBuffer()
+void RenderSystemVK::CreateFrameBuffer()
 {
 	uint32_t fwidth = m_SwapChain->GetWidth();
 	uint32_t fheight = m_SwapChain->GetHeight();
@@ -218,12 +217,12 @@ void Spectre::RenderSystemVK::CreateFrameBuffer()
 	}
 }
 
-void Spectre::RenderSystemVK::CreateSemaphores()
+void RenderSystemVK::CreateSemaphores()
 {
 	m_RenderComplete = VulkanSemaphore::CreateSemaphore();
 }
 
-void Spectre::RenderSystemVK::CreateMeshBuffers(std::vector<float>& vertices,std::vector<uint32_t>& indices)
+void RenderSystemVK::CreateMeshBuffers(std::vector<float>& vertices,std::vector<uint32_t>& indices)
 {
 	VkDevice device = m_VulkanEnginePtr->GetVkDevice();
 	VulkanQueue queue = m_VulkanEnginePtr->GetGraphicQueue();
@@ -241,21 +240,30 @@ void Spectre::RenderSystemVK::CreateMeshBuffers(std::vector<float>& vertices,std
 
 	xferCmdBuffer->Submit(queue);
 }
-
-
-void Spectre::RenderSystemVK::CreateUniformBuffers()
+void RenderSystemVK::CreatePipeline(const PipelineDesc& pipelineDesc)
 {
-	m_MVPBuffer = VulkanBuffer::Create(sizeof(UBOData), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, nullptr);
+	auto pipeline = VulkanPipelineCache::Create(m_VulkanEnginePtr->GetVkDevice());
+	pipeline->CreateShaderModules(pipelineDesc.VertexShaders, pipelineDesc.FragmentShaders);
+	pipeline->SetVertexDescription(pipelineDesc.VertexAttributes);
+	pipeline->CreateUniformBuffer(pipelineDesc.UniformBufferSizes);
+
+	m_PipelineCaches.emplace_back(pipeline);
 }
 
-void Spectre::RenderSystemVK::UpdateUniformBuffers(const Matrix& mat)
+//VulkanBufferPtr RenderSystemVK::CreateUniformBuffers()
+//{
+//	m_MVPBuffer = VulkanBuffer::Create(sizeof(UBOData), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+//		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, nullptr);
+//	return m_MVPBuffer;
+//}
+
+void RenderSystemVK::UpdateUniformBuffers(const Matrix& mat)
 {
-	m_MVPBuffer->UpdateHostBuffer(&mat);
+	m_PipelineCaches[0]->GetUniformBuffer()->UpdateHostBuffer(&mat);
 }
 
 
-void Spectre::RenderSystemVK::ReceateSwapchain(const SwapChainDesc& desc)
+void RenderSystemVK::ReceateSwapchain(const SwapChainDesc& desc)
 {
 	SwapChainDesc _desc = desc;
 	vkDeviceWaitIdle(m_VulkanEnginePtr->GetVkDevice());
@@ -274,7 +282,7 @@ void Spectre::RenderSystemVK::ReceateSwapchain(const SwapChainDesc& desc)
 	Setup();
 }
 
-void Spectre::RenderSystemVK::DestorySwapchain()
+void RenderSystemVK::DestorySwapchain()
 {
 	m_FrameBuffers.clear();
 
@@ -289,7 +297,7 @@ void Spectre::RenderSystemVK::DestorySwapchain()
 	m_SwapChain = nullptr;
 }
 
-bool Spectre::RenderSystemVK::UpdateUI()
+bool RenderSystemVK::UpdateUI()
 {
 	m_GuiPtr->StartFrame();
 

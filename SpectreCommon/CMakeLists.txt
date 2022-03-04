@@ -3,14 +3,13 @@ project ("SpectreCommon")
 # ==================================================================================================
 # 项目头文件设置
 # ==================================================================================================
+include_directories(../ThirdParty/spdlog/include/)
+include_directories(../ThirdParty/DirectXMath/include/)
+include_directories(../ThirdParty/shaderc/include/)
+
 set(INC_DIR ./include/)
 include_directories(${INC_DIR})
 
-set(SPDLOG_DIR ../ThirdParty/spdlog/include)
-include_directories(${SPDLOG_DIR})
-
-set(DIRECTXMATH_DIR ../ThirdParty/DirectXMath/include)
-include_directories(${DIRECTXMATH_DIR})
 
 set(PUBLIC_HDRS ${INC_DIR}SpectreDef.h
 				${INC_DIR}Allocator.h
@@ -22,6 +21,7 @@ set(PUBLIC_HDRS ${INC_DIR}SpectreDef.h
 				${INC_DIR}NativeWindow.h
 				${INC_DIR}Timer.h
 				${INC_DIR}FileUtils.h
+				${INC_DIR}ShaderTool.h
 				${INC_DIR}Math/MathDef.h
 				${INC_DIR}Math/SimpleMath.h
 				${INC_DIR}Math/SimpleMath.inl
@@ -39,6 +39,7 @@ set(SRCS ${SRC_DIR}Allocator.cpp
 		 ${SRC_DIR}LogManager.cpp
 		 ${SRC_DIR}Timer.cpp
 		 ${SRC_DIR}FileUtils.cpp
+		 ${SRC_DIR}ShaderTool.cpp
 		 ${SRC_DIR}Math/SimpleMath.cpp
 )
 

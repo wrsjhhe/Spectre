@@ -1,8 +1,6 @@
 ﻿cmake_minimum_required (VERSION 3.8)
 project ("SpectreCore")
 
-include_directories(../ThirdParty/shaderc/include/)
-
 include_directories (../Backends/include/)
 include_directories(../SpectreCommon/include/)
 
@@ -16,7 +14,6 @@ include_directories(${INC_DIR})
 
 set(PUBLIC_HDRS 
 				${INC_DIR}Object.h
-				${INC_DIR}ShaderTool.h
 				${INC_DIR}Geometries/BufferGeometry.h
 				${INC_DIR}Materials/MeshBasicMaterial.h				
 				${INC_DIR}Materials/Materials.h				
@@ -38,7 +35,6 @@ set(SRC_DIR ./src/)
 
 set(SRCS 
 		 ${SRC_DIR}Object.cpp
-		 ${SRC_DIR}ShaderTool.cpp		 
 		 ${SRC_DIR}Geometries/BufferGeometry.cpp
 		 ${SRC_DIR}Materials/MeshBasicMaterial.cpp		 
 		 ${SRC_DIR}Materials/Materials.cpp		 

@@ -1,45 +1,185 @@
 #include "VulkanCommon.h"
 #include "VulkanRenderPass.h"
+#include "VulkanBuffer.h"
 #include "VulkanPipelineCache.h"
 
 #include <fstream>
-static std::vector<char> readFile(const std::string& filename)
-{
-	std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
-	if (!file.is_open())
-	{
-		throw std::runtime_error("failed to open file!");
-	}
-	size_t fileSize = (size_t)file.tellg();
-	std::vector<char> buffer(fileSize);
-
-	file.seekg(0);
-	file.read(buffer.data(), fileSize);
-
-	file.close();
-
-	return buffer;
-}
 
 USING_NAMESPACE(Spectre)
 
+
+static uint32_t VertexAttributeToSize(VertexAttribute attribute)
+{
+	// count * sizeof(float)
+	if (attribute == VertexAttribute::VertexAttribute_Position)
+	{
+		return 3 * sizeof(float);
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_UV0)
+	{
+		return 2 * sizeof(float);
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_UV1)
+	{
+		return 2 * sizeof(float);
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_Normal)
+	{
+		return 3 * sizeof(float);
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_Tangent)
+	{
+		return 4 * sizeof(float);
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_Color)
+	{
+		return 4 * sizeof(float);
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_SkinWeight)
+	{
+		return 4 * sizeof(float);
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_SkinIndex)
+	{
+		return 4 * sizeof(float);
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_SkinPack)
+	{
+		return 3 * sizeof(float);
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_Custom0 ||
+		attribute == VertexAttribute::VertexAttribute_Custom1 ||
+		attribute == VertexAttribute::VertexAttribute_Custom2 ||
+		attribute == VertexAttribute::VertexAttribute_Custom3
+		)
+	{
+		return 4 * sizeof(float);
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_InstanceFloat1)
+	{
+		return 1 * sizeof(float);
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_InstanceFloat2)
+	{
+		return 2 * sizeof(float);
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_InstanceFloat3)
+	{
+		return 3 * sizeof(float);
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_InstanceFloat4)
+	{
+		return 4 * sizeof(float);
+	}
+
+	return 0;
+}
+
+static VkFormat VertexAttributeToVkFormat(VertexAttribute attribute)
+{
+	VkFormat format = VK_FORMAT_R32G32B32_SFLOAT;
+	if (attribute == VertexAttribute::VertexAttribute_Position)
+	{
+		format = VK_FORMAT_R32G32B32_SFLOAT;
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_UV0)
+	{
+		format = VK_FORMAT_R32G32_SFLOAT;
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_UV1)
+	{
+		format = VK_FORMAT_R32G32_SFLOAT;
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_Normal)
+	{
+		format = VK_FORMAT_R32G32B32_SFLOAT;
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_Tangent)
+	{
+		format = VK_FORMAT_R32G32B32A32_SFLOAT;
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_Color)
+	{
+		format = VK_FORMAT_R32G32B32_SFLOAT;
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_SkinPack)
+	{
+		format = VK_FORMAT_R32G32B32_SFLOAT;
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_SkinWeight)
+	{
+		format = VK_FORMAT_R32G32B32A32_SFLOAT;
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_SkinIndex)
+	{
+		format = VK_FORMAT_R32G32B32A32_SFLOAT;
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_Custom0 ||
+		attribute == VertexAttribute::VertexAttribute_Custom1 ||
+		attribute == VertexAttribute::VertexAttribute_Custom2 ||
+		attribute == VertexAttribute::VertexAttribute_Custom3
+		)
+	{
+		format = VK_FORMAT_R32G32B32A32_SFLOAT;
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_InstanceFloat1)
+	{
+		format = VK_FORMAT_R32_SFLOAT;
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_InstanceFloat2)
+	{
+		format = VK_FORMAT_R32G32_SFLOAT;
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_InstanceFloat3)
+	{
+		format = VK_FORMAT_R32G32B32_SFLOAT;
+	}
+	else if (attribute == VertexAttribute::VertexAttribute_InstanceFloat4)
+	{
+		format = VK_FORMAT_R32G32B32A32_SFLOAT;
+	}
+
+	return format;
+}
+
+
 std::shared_ptr<VulkanPipelineCache> VulkanPipelineCache::Create(VkDevice device)
 {
-	auto* pPipeline = new VulkanPipelineCache(device);
-	return std::shared_ptr<VulkanPipelineCache>(pPipeline);
+	auto* pPipelineCache = new VulkanPipelineCache(device);
+	return std::shared_ptr<VulkanPipelineCache>(pPipelineCache);
 }
 
 VulkanPipelineCache::~VulkanPipelineCache()
 {
 	Destory();
 }
-
-void VulkanPipelineCache::SetVertexDescription(const std::vector<VkVertexInputBindingDescription>& bindingDescriptions,
-	const std::vector<VkVertexInputAttributeDescription>& attributeDescriptions)
+void VulkanPipelineCache::SetVertexDescription(const std::vector<VertexAttribute>& VertexAttributes)
 {
-	m_BindingDescriptions = bindingDescriptions;
-	m_AttributeDescriptions = attributeDescriptions;
+	std::vector<VkVertexInputBindingDescription> bindingDescriptions;
+	std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
+
+	uint32_t stride = 0;
+	for (uint32_t i = 0; i < VertexAttributes.size(); ++i) {
+		stride += VertexAttributeToSize(VertexAttributes[i]);
+	}
+
+	m_BindingDescriptions.resize(1);
+	m_BindingDescriptions[0].binding = 0;
+	m_BindingDescriptions[0].stride = stride;
+	m_BindingDescriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+	//create VertexInputAttributeDescription
+	m_AttributeDescriptions.resize(VertexAttributes.size());
+	uint32_t offset = 0;
+	for (uint32_t i = 0; i < VertexAttributes.size(); ++i)
+	{
+		m_AttributeDescriptions[i].binding = 0;
+		m_AttributeDescriptions[i].location = i;
+		m_AttributeDescriptions[i].format = VertexAttributeToVkFormat(VertexAttributes[i]);
+		m_AttributeDescriptions[i].offset = offset;
+		offset += VertexAttributeToSize(VertexAttributes[i]);
+	}
 
 	m_VertexInputState = {};
 	m_VertexInputState.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -108,11 +248,7 @@ void VulkanPipelineCache::CreatePipelineInstance(const VulkanRenderPass& renderP
 	pipelineCreateInfo.pDepthStencilState = &m_DepthStencilState;
 	pipelineCreateInfo.pDynamicState = &dynamicState;
 	vkCreateGraphicsPipelines(m_VkDevice, m_VkPipelineCache, 1, &pipelineCreateInfo, nullptr, &m_VkPipeline);
-	
-	for (auto& shaderStage : m_ShaderStages)
-	{
-		vkDestroyShaderModule(m_VkDevice, shaderStage.module, nullptr);
-	}
+
 }
 void VulkanPipelineCache::BindDescriptorSets(const VkCommandBuffer& commandBuffer)
 {
@@ -126,13 +262,17 @@ void VulkanPipelineCache::BindPipeline(const VkCommandBuffer& commandBuffer)
 
 void VulkanPipelineCache::Destory()
 {
-	VkDevice device = m_VkDevice;
-	vkDestroyPipelineLayout(device, m_VkPipelineLayout, nullptr);
-	vkDestroyPipeline(device, m_VkPipeline, nullptr);
-	vkDestroyPipelineCache(device, m_VkPipelineCache, nullptr);
+	for (auto& shaderStage : m_ShaderStages)
+	{
+		vkDestroyShaderModule(m_VkDevice, shaderStage.module, nullptr);
+	}
 
-	vkDestroyDescriptorSetLayout(device, m_VkDescriptorSetLayout, nullptr);
-	vkDestroyDescriptorPool(device, m_VkDescriptorPool, nullptr);
+	vkDestroyPipelineLayout(m_VkDevice, m_VkPipelineLayout, nullptr);
+	vkDestroyPipeline(m_VkDevice, m_VkPipeline, nullptr);
+	vkDestroyPipelineCache(m_VkDevice, m_VkPipelineCache, nullptr);
+
+	vkDestroyDescriptorSetLayout(m_VkDevice, m_VkDescriptorSetLayout, nullptr);
+	vkDestroyDescriptorPool(m_VkDevice, m_VkDescriptorPool, nullptr);
 }
 
 VulkanPipelineCache::VulkanPipelineCache(VkDevice device):
@@ -245,8 +385,17 @@ void VulkanPipelineCache::CreateDescriptorSetLayout()
 	vkCreateDescriptorSetLayout(m_VkDevice, &descSetLayoutInfo, nullptr, &m_VkDescriptorSetLayout);
 }
 
-void VulkanPipelineCache::CreateDescriptorSet(VkDescriptorBufferInfo  MVPDescriptor)
+
+void VulkanPipelineCache::CreateUniformBuffer(uint32_t  bufferSize)
 {
+	m_MVPBuffer = VulkanBuffer::Create(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, nullptr);
+
+	VkDescriptorBufferInfo MVPDescriptor;
+	MVPDescriptor.buffer = m_MVPBuffer->GetVkBuffer();
+	MVPDescriptor.offset = 0;
+	MVPDescriptor.range = bufferSize;
+
 	VkDescriptorSetAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	allocInfo.descriptorPool = m_VkDescriptorPool;

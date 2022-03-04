@@ -1,12 +1,7 @@
 #pragma once
 #include "SpectreDef.h"
+#include <vector>
 BEGIN_NAMESPACE_SPECTRE
-
-struct SwapChainDesc
-{
-	uint32_t                  Width = 0;
-	uint32_t                  Height = 0;
-};
 
 typedef enum CommandPoolTypes
 {
@@ -54,5 +49,18 @@ typedef enum ShaderType
 	ShaderType_Tess_control = 5,
 	ShaderType_Tess_evaluation = 6
 }ShaderType;
+
+struct SwapChainDesc
+{
+	uint32_t                  Width = 0;
+	uint32_t                  Height = 0;
+};
+struct PipelineDesc
+{
+	std::vector<VertexAttribute>       VertexAttributes;
+	std::vector<std::vector<uint32_t>> VertexShaders;
+	std::vector<std::vector<uint32_t>> FragmentShaders;
+	uint32_t						   UniformBufferSizes;
+};
 
 END_NAMESPACE_SPECTRE

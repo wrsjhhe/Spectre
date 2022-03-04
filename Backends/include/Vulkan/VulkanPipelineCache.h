@@ -1,7 +1,10 @@
 #pragma once
 #include <map>
+#include "RenderDef.h"
 
 BEGIN_NAMESPACE_SPECTRE
+
+
 
 class VulkanPipelineCache : public Noncopyable
 {
@@ -14,12 +17,13 @@ public:
 public:
 	~VulkanPipelineCache();
 
-	void SetVertexDescription(const std::vector<VkVertexInputBindingDescription>& bindingDescriptions,
-		const std::vector<VkVertexInputAttributeDescription>& attributeDescriptions);
+	void SetVertexDescription(const std::vector<VertexAttribute>& VertexAttributes);
 
 	void CreateShaderModules(const std::vector<std::vector<uint32_t>>& vertexShaders, const std::vector<std::vector<uint32_t>>& fragmentShaders);
 
-	void CreateDescriptorSet(VkDescriptorBufferInfo  MVPDescriptor);
+	void CreateUniformBuffer(uint32_t  bufferSize);
+
+	std::shared_ptr<VulkanBuffer> GetUniformBuffer() { return m_MVPBuffer; }
 
 	void CreatePipelineInstance(const VulkanRenderPass& renderPass);
 
@@ -62,6 +66,7 @@ private:
 
 	std::vector<std::vector<uint32_t>>						m_VertexShaders;
 	std::vector<std::vector<uint32_t>>						m_FragmentShaders;
+	std::shared_ptr<VulkanBuffer>							m_MVPBuffer;
 };
 
 END_NAMESPACE_SPECTRE

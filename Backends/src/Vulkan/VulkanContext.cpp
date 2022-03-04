@@ -195,7 +195,6 @@ VulkanContext::~VulkanContext()
 
 void VulkanContext::SetVertexDesc(const std::vector<VertexAttribute>& attrs)
 {
-	//create VertexInputBindingDescription
 	uint32_t stride = 0;
 	for (uint32_t i = 0; i < attrs.size(); ++i) {
 		stride += VertexAttributeToSize(attrs[i]);

@@ -6,15 +6,13 @@
 #include "Math/MathDef.h"
 #include "NativeWindow.h"
 #include "RenderDef.h"
+
 namespace Spectre
 {
 	struct RenderContextDesc
 	{
 		bool Headless = false;
 		NativeWindow Window;
-		std::vector<VertexAttribute> VertexAttrs;
-		std::vector<std::vector<uint32_t>> VertexShaders;
-		std::vector<std::vector<uint32_t>> FragmentShaders;
 	};
 	class VulkanEngine;
 	class VulkanContext;
@@ -30,15 +28,11 @@ namespace Spectre
 	class VulkanPipelineCache;
 	class VulkanGui;
 	typedef std::shared_ptr<VulkanCommand> VulkanCommandPtr;
+	typedef std::shared_ptr<VulkanPipelineCache> VulkanPipelineCachePtr;
+	typedef std::shared_ptr<VulkanBuffer> VulkanBufferPtr;
 
 	class RenderSystemVK
 	{
-	private:
-		struct UBOData
-		{
-			Matrix MVPMatrix;
-		};
-
 	public:
 		explicit RenderSystemVK() noexcept;
 		~RenderSystemVK();
@@ -48,8 +42,12 @@ namespace Spectre
 
 		void CreateMeshBuffers(std::vector<float>& vertices,std::vector<uint32_t>& indices);
 
-		void CreateUniformBuffers();
+		void CreatePipeline(const PipelineDesc& pipelineDesc);
+
 		void UpdateUniformBuffers(const Matrix& mat);
+
+		void CompileResources();
+
 		void Setup();
 
 		void Draw();
@@ -83,11 +81,11 @@ namespace Spectre
 
 		std::shared_ptr<VulkanIndexBuffer>		m_IndicesBuffer;
 
-		std::shared_ptr<VulkanBuffer>			m_MVPBuffer;
+		VulkanBufferPtr							m_MVPBuffer;
 
 		std::vector<VulkanCommandPtr>			m_RenderCommandBuffers;
 
-		std::shared_ptr<VulkanPipelineCache>    m_PipelineCache;
+		std::vector<VulkanPipelineCachePtr>     m_PipelineCaches;
 
 		std::shared_ptr<VulkanSemaphore>		m_PresentComplete;
 

@@ -43,19 +43,26 @@ void Renderer::Resize(uint32_t width, uint32_t height)
 	}
 }
 
-
+struct UBOData
+{
+	Matrix MVPMatrix;
+};
 void Renderer::Setup()
 {
 	RenderContextDesc renderDesc{};
 	renderDesc.Window = m_Window;
-	renderDesc.VertexAttrs = m_ScenePtr->GetMeshes()[0]->GetBufferGeometry()->VertexAttributes();
 	MeshBasicMaterialPtr pMaterial = m_ScenePtr->GetMeshes()[0]->GetMaterial();
 	pMaterial->CompileSpv();
-	renderDesc.VertexShaders = { pMaterial->GetVertexSPV() };
-	renderDesc.FragmentShaders = { pMaterial->GetFragmentSPV() };
+
+	PipelineDesc pipelineDesc;
+	pipelineDesc.VertexAttributes = m_ScenePtr->GetMeshes()[0]->GetBufferGeometry()->VertexAttributes();
+	pipelineDesc.VertexShaders = { pMaterial->GetVertexSPV() };
+	pipelineDesc.FragmentShaders = { pMaterial->GetFragmentSPV() };
+	pipelineDesc.UniformBufferSizes = sizeof(UBOData);
 
 	m_pRenderSystem = new RenderSystemVK();
 	m_pRenderSystem->CreateRenderContext(renderDesc);
+	m_pRenderSystem->CreatePipeline(pipelineDesc);
 
 	SwapChainDesc swapChainDesc;
 	swapChainDesc.Width = m_Width;
@@ -90,7 +97,7 @@ void Renderer::Setup()
 	m_pRenderSystem->CreateMeshBuffers(vertices, indices);
 
 	m_MVPData = m_PerspectiveCameraPtr->GetViewProjection();
-
+	m_pRenderSystem->CompileResources();
 	m_pRenderSystem->Setup();
 
 	m_Prepared = true;
