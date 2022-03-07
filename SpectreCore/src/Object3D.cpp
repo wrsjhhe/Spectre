@@ -1,4 +1,4 @@
-#include "Objects/Object3D.h"
+#include "Object3D.h"
 
 USING_NAMESPACE(Spectre)
 

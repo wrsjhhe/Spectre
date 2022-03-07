@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "Objects/Object3D.h"
+#include "Object3D.h"
 #include "Objects/Mesh.h"
 BEGIN_NAMESPACE_SPECTRE
 

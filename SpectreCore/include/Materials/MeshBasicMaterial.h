@@ -32,4 +32,5 @@ private:
 	std::vector<uint32_t> m_FragSpvCache;
 };
 
+typedef std::shared_ptr<MeshBasicMaterial> MeshBasicMaterialPtr;
 END_NAMESPACE_SPECTRE

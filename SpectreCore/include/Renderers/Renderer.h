@@ -1,8 +1,8 @@
 #pragma once
 #include "Object.h"
-#include "Objects/Scene.h"
+#include "Scenes/Scene.h"
 #include "Cameras/PerspectiveCamera.h"
-#include "Materials/Materials.h"
+#include "Materials/BufferMaterial.h"
 #include "NativeWindow.h"
 
 BEGIN_NAMESPACE_SPECTRE
@@ -38,7 +38,7 @@ private:
 	bool                              m_Prepared = false;
 	NativeWindow					  m_Window;
 	Scene*							  m_ScenePtr = nullptr;
-	MeshBasicMaterialPtr              m_MaterialPtr = nullptr;
+	BufferMaterialPtr				  m_MaterialPtr = nullptr;
 	PerspectiveCamera*				  m_PerspectiveCameraPtr = nullptr;
 	Matrix                            m_MVPData;
 };

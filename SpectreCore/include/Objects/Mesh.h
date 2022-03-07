@@ -1,7 +1,7 @@
 #pragma once
 #include "Object3D.h"
 #include "Geometries/BufferGeometry.h"
-#include "Materials/Materials.h"
+#include "Materials/BufferMaterial.h"
 #include "Math/MathDef.h"
 
 BEGIN_NAMESPACE_SPECTRE
@@ -10,23 +10,23 @@ class Mesh : public Object3D
 {
 public:
 	SpectreObject(Mesh)
-	static Mesh* Create(BufferGeometry* pGeometry, MeshBasicMaterialPtr pMaterial);
+	static Mesh* Create(BufferGeometry* pGeometry, BufferMaterialPtr pMaterial);
 public:
 
 	virtual ~Mesh();
 
 	BufferGeometry* GetBufferGeometry() const { return m_GeometryPtr; }
-	MeshBasicMaterialPtr GetMaterial() const { return m_MaterialPtr; }
+	BufferMaterialPtr GetMaterial() const { return m_MaterialPtr; }
 
 	void Transform(const Matrix& mat);
 
 	const Matrix& GetTransformMatrix()const { return m_Transform; }
 private:
-	Mesh(BufferGeometry* pGeometry, MeshBasicMaterialPtr pMaterial);
+	Mesh(BufferGeometry* pGeometry, BufferMaterialPtr pMaterial);
 
 private:
 	BufferGeometry*					m_GeometryPtr;
-	MeshBasicMaterialPtr			m_MaterialPtr;
+	BufferMaterialPtr				m_MaterialPtr;
 	Matrix                          m_Transform;
 };
 

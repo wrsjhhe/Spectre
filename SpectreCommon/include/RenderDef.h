@@ -1,6 +1,7 @@
 #pragma once
 #include "SpectreDef.h"
 #include <vector>
+#include <string>
 BEGIN_NAMESPACE_SPECTRE
 
 typedef enum CommandPoolTypes
@@ -57,10 +58,10 @@ struct SwapChainDesc
 };
 struct PipelineDesc
 {
-	std::vector<VertexAttribute>       VertexAttributes;
-	std::vector<std::vector<uint32_t>> VertexShaders;
-	std::vector<std::vector<uint32_t>> FragmentShaders;
-	uint32_t						   UniformBufferSizes;
+	std::vector<VertexAttribute>			VertexAttributes;
+	std::vector<std::string>				VertexShaders;
+	std::vector<std::string>				FragmentShaders;
+	uint32_t								UniformBufferSizes;
 };
 
 END_NAMESPACE_SPECTRE

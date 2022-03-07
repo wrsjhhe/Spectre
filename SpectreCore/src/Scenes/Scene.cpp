@@ -1,4 +1,4 @@
-#include "Objects/Scene.h"
+#include "Scenes/Scene.h"
 
 USING_NAMESPACE(Spectre)
 

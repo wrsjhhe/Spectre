@@ -51,25 +51,26 @@ void Renderer::Setup()
 {
 	RenderContextDesc renderDesc{};
 	renderDesc.Window = m_Window;
-	MeshBasicMaterialPtr pMaterial = m_ScenePtr->GetMeshes()[0]->GetMaterial();
-	pMaterial->CompileSpv();
-
-	PipelineDesc pipelineDesc;
-	pipelineDesc.VertexAttributes = m_ScenePtr->GetMeshes()[0]->GetBufferGeometry()->VertexAttributes();
-	pipelineDesc.VertexShaders = { pMaterial->GetVertexSPV() };
-	pipelineDesc.FragmentShaders = { pMaterial->GetFragmentSPV() };
-	pipelineDesc.UniformBufferSizes = sizeof(UBOData);
-
 	m_pRenderSystem = new RenderSystemVK();
 	m_pRenderSystem->CreateRenderContext(renderDesc);
-	m_pRenderSystem->CreatePipeline(pipelineDesc);
 
 	SwapChainDesc swapChainDesc;
 	swapChainDesc.Width = m_Width;
 	swapChainDesc.Height = m_Height;
 	m_pRenderSystem->CreateSwapChain(swapChainDesc);
 
-	auto& meshes = m_ScenePtr->GetMeshes();
+	auto meshes = m_ScenePtr->GetMeshes();
+	for (auto* pMesh : meshes)
+	{
+		BufferMaterialPtr pMaterial = pMesh->GetMaterial();
+		PipelineDesc pipelineDesc;
+		pipelineDesc.VertexAttributes = m_ScenePtr->GetMeshes()[0]->GetBufferGeometry()->VertexAttributes();
+		pipelineDesc.VertexShaders = { pMaterial->VertexShader };
+		pipelineDesc.FragmentShaders = { pMaterial->FragmentShader };
+		pipelineDesc.UniformBufferSizes = sizeof(UBOData);
+
+		m_pRenderSystem->CreatePipeline(pipelineDesc);
+	}
 
 	uint32_t recordVertexIndex = 0;
 	std::vector<float> vertices;
@@ -94,10 +95,8 @@ void Renderer::Setup()
 		}
 		recordVertexIndex += vertices.size();
 	}
-	m_pRenderSystem->CreateMeshBuffers(vertices, indices);
+	m_pRenderSystem->AddMeshBuffer(vertices, indices);
 
-	m_MVPData = m_PerspectiveCameraPtr->GetViewProjection();
-	m_pRenderSystem->CompileResources();
 	m_pRenderSystem->Setup();
 
 	m_Prepared = true;

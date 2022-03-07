@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <unordered_map>
 #include "Math/MathDef.h"
 #include "NativeWindow.h"
 #include "RenderDef.h"
@@ -28,8 +29,14 @@ namespace Spectre
 	class VulkanPipelineCache;
 	class VulkanGui;
 	typedef std::shared_ptr<VulkanCommand> VulkanCommandPtr;
-	typedef std::shared_ptr<VulkanPipelineCache> VulkanPipelineCachePtr;
 	typedef std::shared_ptr<VulkanBuffer> VulkanBufferPtr;
+
+	struct VulkanPrimitive
+	{
+		std::shared_ptr<VulkanVertexBuffer>		VertexBufferPtr;
+
+		std::shared_ptr <VulkanIndexBuffer>		IndicesBufferPtr;
+	};
 
 	class RenderSystemVK
 	{
@@ -40,13 +47,11 @@ namespace Spectre
 
 		void CreateSwapChain(const SwapChainDesc& desc);
 
-		void CreateMeshBuffers(std::vector<float>& vertices,std::vector<uint32_t>& indices);
+		void AddMeshBuffer(std::vector<float>& vertices,std::vector<uint32_t>& indices);
 
 		void CreatePipeline(const PipelineDesc& pipelineDesc);
 
 		void UpdateUniformBuffers(const Matrix& mat);
-
-		void CompileResources();
 
 		void Setup();
 
@@ -77,15 +82,13 @@ namespace Spectre
 
 		std::shared_ptr<VulkanSemaphore>		m_RenderComplete;
 
-		std::shared_ptr<VulkanVertexBuffer>		m_VertexBuffer;
-
-		std::shared_ptr<VulkanIndexBuffer>		m_IndicesBuffer;
+		std::unordered_map<void*, VulkanPrimitive*>   m_Primitives;
 
 		VulkanBufferPtr							m_MVPBuffer;
 
 		std::vector<VulkanCommandPtr>			m_RenderCommandBuffers;
 
-		std::vector<VulkanPipelineCachePtr>     m_PipelineCaches;
+		std::vector<VulkanPipelineCache*>       m_PipelineCachePtrs;
 
 		std::shared_ptr<VulkanSemaphore>		m_PresentComplete;
 

@@ -14,11 +14,11 @@ include_directories(${INC_DIR})
 
 set(PUBLIC_HDRS 
 				${INC_DIR}Object.h
+				${INC_DIR}Object3D.h
 				${INC_DIR}Geometries/BufferGeometry.h
-				${INC_DIR}Materials/MeshBasicMaterial.h				
-				${INC_DIR}Materials/Materials.h				
-				${INC_DIR}Objects/Object3D.h
-				${INC_DIR}Objects/Scene.h
+				${INC_DIR}Materials/BufferMaterial.h		
+				${INC_DIR}Materials/MeshBasicMaterial.h			
+				${INC_DIR}Scenes/Scene.h
 				${INC_DIR}Objects/Mesh.h								
 				${INC_DIR}Renderers/Renderer.h
 				${INC_DIR}Cameras/Camera.h
@@ -35,11 +35,11 @@ set(SRC_DIR ./src/)
 
 set(SRCS 
 		 ${SRC_DIR}Object.cpp
+		 ${SRC_DIR}Object3D.cpp
 		 ${SRC_DIR}Geometries/BufferGeometry.cpp
-		 ${SRC_DIR}Materials/MeshBasicMaterial.cpp		 
-		 ${SRC_DIR}Materials/Materials.cpp		 
-		 ${SRC_DIR}Objects/Object3D.cpp
-		 ${SRC_DIR}Objects/Scene.cpp
+		 ${SRC_DIR}Materials/BufferMaterial.cpp		 
+		 ${SRC_DIR}Materials/MeshBasicMaterial.cpp		 		
+		 ${SRC_DIR}Scenes/Scene.cpp
 		 ${SRC_DIR}Objects/Mesh.cpp
 		 ${SRC_DIR}Renderers/Renderer.cpp
 		 ${SRC_DIR}Cameras/Camera.cpp

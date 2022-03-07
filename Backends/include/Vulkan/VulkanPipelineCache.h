@@ -5,7 +5,6 @@
 BEGIN_NAMESPACE_SPECTRE
 
 
-
 class VulkanPipelineCache : public Noncopyable
 {
 private:
@@ -13,13 +12,13 @@ private:
 	static constexpr uint32_t DESCRIPTOR_TYPE_COUNT = 3;
 
 public:
-	static std::shared_ptr<VulkanPipelineCache> Create(VkDevice device);
+	static VulkanPipelineCache* Create(VkDevice device);
 public:
 	~VulkanPipelineCache();
 
 	void SetVertexDescription(const std::vector<VertexAttribute>& VertexAttributes);
 
-	void CreateShaderModules(const std::vector<std::vector<uint32_t>>& vertexShaders, const std::vector<std::vector<uint32_t>>& fragmentShaders);
+	void CreateShaderModules(const std::vector<std::string>& vertexShaders, const std::vector<std::string>& fragmentShaders);
 
 	void CreateUniformBuffer(uint32_t  bufferSize);
 
@@ -37,7 +36,7 @@ public:
 	void Destory();
 private:
 	VulkanPipelineCache(VkDevice device);
-	VkShaderModule LoadSPIPVShader(const std::vector<uint32_t>& shaderCode);
+	VkShaderModule LoadSPIPVShader(const std::string& shaderCode, ShaderType type);
 
 	void CreateDescriptorPool();
 	void CreateDescriptorSetLayout();

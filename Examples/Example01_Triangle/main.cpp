@@ -1,5 +1,5 @@
-#include "Objects/Scene.h"
-#include "Materials/Materials.h"
+#include "Scenes/Scene.h"
+#include "Materials/BufferMaterial.h"
 #include "Geometries/BufferGeometry.h"
 #include "Renderers/Renderer.h"
 #include "Timer.h"
@@ -38,7 +38,7 @@ public:
 
 		std::vector<VertexAttribute> VertexAttrs = { VertexAttribute_Position, VertexAttribute_Color };
 
-		MeshBasicMaterialPtr pMat = MeshBasicMaterial::Create();
+		BufferMaterialPtr pMat = BufferMaterial::Create();
 		pMat->VertexShader = FileUtils::ReadFile("Shaders/triangle.vert");
 		pMat->FragmentShader = FileUtils::ReadFile("Shaders/triangle.frag");
 
@@ -47,7 +47,7 @@ public:
 		std::vector<float> vertices = {
 				1.0f, 1.0f, 0.0f ,     1.0f, 0.0f, 0.0f ,1.0f,
 				-1.0f,1.0f, 0.0f ,     0.0f, 1.0f, 0.0f,1.0f,
-				 0.0f, -1.0f, 0.0f ,   0.0f, 0.0f, 1.0f,1.0f,
+				0.0f, -1.0f, 0.0f ,    0.0f, 0.0f, 1.0f,1.0f,
 		};
 
 		// Ë÷ÒýÊý¾Ý
