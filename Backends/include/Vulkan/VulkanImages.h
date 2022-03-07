@@ -18,7 +18,7 @@ struct VulkanImageInfo
 
 class VulkanSwapChain;
 
-class VulkanImages : public Noncopyable
+class VulkanImages
 {
 public:
 	static std::shared_ptr<VulkanImages> CreateSwapChainImage(const VulkanSwapChain& swapChain);

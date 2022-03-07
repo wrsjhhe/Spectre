@@ -2,7 +2,7 @@
 #include <memory>
 BEGIN_NAMESPACE_SPECTRE
 
-class VulkanSemaphore : public Noncopyable
+class VulkanSemaphore
 {
 public:
 	static std::shared_ptr<VulkanSemaphore> CreateSemaphore();

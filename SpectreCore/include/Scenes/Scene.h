@@ -7,7 +7,7 @@ BEGIN_NAMESPACE_SPECTRE
 class Scene : Object3D
 {
 public:
-	SpectreObject(Scene)
+	DefineClass(Scene)
 	Scene();
 	virtual ~Scene();
 

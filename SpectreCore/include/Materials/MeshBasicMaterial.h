@@ -2,13 +2,13 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include "Object.h"
+#include "SpectreApi.h"
 BEGIN_NAMESPACE_SPECTRE
 
-class MeshBasicMaterial :public Object
+class MeshBasicMaterial :public SpectreApi
 {
 public:
-	SpectreObject(MeshBasicMaterial)
+	DefineClass(MeshBasicMaterial)
 
 	std::string VertexShader;
 	std::string FragmentShader;

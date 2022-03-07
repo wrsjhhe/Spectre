@@ -3,7 +3,7 @@
 BEGIN_NAMESPACE_SPECTRE
 #include <memory>
 #include <vector>
-class VulkanFrameBuffer : public Noncopyable
+class VulkanFrameBuffer
 {
 public:
 	static std::shared_ptr<VulkanFrameBuffer> CreateFrameBuffer(const VulkanRenderPass& renderPass,

@@ -8,12 +8,10 @@
 #include "VulkanRenderPass.h"
 #include "VulkanFrameBuffer.h"
 #include "VulkanSemaphore.h"
-#include "VulkanPipelineCache.h"
-#include "VulkanIndexBuffer.h"
-#include "VulkanVertexBuffer.h"
+#include "VulkanPipeline.h"
+#include "VulkanPrimitive.h"
 #include "VulkanGui.h"
 #include "imgui.h"
-#include "VulkanPipelineCache.h"
 #include "RenderSystemVK.h"
 
 USING_NAMESPACE(Spectre)
@@ -38,12 +36,6 @@ RenderSystemVK::~RenderSystemVK()
 	{
 		delete pPrimitive.second;
 		pPrimitive.second = nullptr;
-	}
-
-	for (auto* pPipeline : m_PipelineCachePtrs) 
-	{
-		delete pPipeline;
-		pPipeline = nullptr;
 	}
 }
 
@@ -127,16 +119,14 @@ void RenderSystemVK::Setup()
 			vkCmdBeginRenderPass(cmdBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
 			vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
-			m_PipelineCachePtrs[0]->BindDescriptorSets(cmdBuffer);
-			m_PipelineCachePtrs[0]->BindPipeline(cmdBuffer);
 			for(auto kvMesh: m_Primitives)
 			{
-				kvMesh.second->VertexBufferPtr->CmdBind(cmdBuffer, offsets);
-				kvMesh.second->IndicesBufferPtr->CmdBind(cmdBuffer);
-				vkCmdDrawIndexed(cmdBuffer, kvMesh.second->IndicesBufferPtr->GetIndexCount(), 1, 0, 0, 0);
+				kvMesh.second->PipelinePtr->BindDescriptorSets(cmdBuffer);
+				kvMesh.second->PipelinePtr->BindPipeline(cmdBuffer);
+				kvMesh.second->BindDrawCmd(cmdBuffer);
 			}
 			
-			m_GuiPtr->BindDrawCmd(cmdBuffer, m_RenderPass->GetVkRenderPass());
+			//m_GuiPtr->BindDrawCmd(cmdBuffer, m_RenderPass->GetVkRenderPass());
 			vkCmdEndRenderPass(cmdBuffer);		
 		});
 
@@ -146,7 +136,7 @@ void RenderSystemVK::Setup()
 
 void RenderSystemVK::Draw()
 {
-	m_GuiPtr->StartFrame();
+	/*m_GuiPtr->StartFrame();
 
 	ImGui::Begin("ImGUI!", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
@@ -160,7 +150,7 @@ void RenderSystemVK::Draw()
 	if (m_GuiPtr->Update())
 	{
 		Setup();
-	}
+	}*/
 	VkDevice device = m_VulkanEnginePtr->GetVkDevice();
 	VulkanQueue queue = m_VulkanEnginePtr->GetGraphicQueue();
 	int32_t backBufferIndex = m_SwapChain->AcquireImageIndex(m_PresentComplete);
@@ -221,15 +211,16 @@ void RenderSystemVK::CreateSemaphores()
 	m_RenderComplete = VulkanSemaphore::CreateSemaphore();
 }
 
-void RenderSystemVK::AddMeshBuffer(std::vector<float>& vertices,std::vector<uint32_t>& indices)
+VulkanPrimitive* RenderSystemVK::AddPrimitive(std::shared_ptr<VulkanPipeline> pPipeline,
+	float* vertices, uint32_t vertCount, uint32_t* indices, uint32_t indCount)
 {
 	VkDevice device = m_VulkanEnginePtr->GetVkDevice();
 	VulkanQueue queue = m_VulkanEnginePtr->GetGraphicQueue();
 
 	VulkanPrimitive* pPrimitive = new VulkanPrimitive();
-	pPrimitive->IndicesBufferPtr = VulkanIndexBuffer::Create(indices, VK_INDEX_TYPE_UINT32);
-
-	pPrimitive->VertexBufferPtr = VulkanVertexBuffer::Create( vertices);
+	pPrimitive->IndicesBufferPtr = VulkanIndexBuffer::Create(indices, indCount, VK_INDEX_TYPE_UINT32);
+	pPrimitive->IndicesCount = indCount;
+	pPrimitive->VertexBufferPtr = VulkanVertexBuffer::Create(vertices, vertCount);
 
 	auto xferCmdBuffer = VulkanCommand::Create(m_ContextPtr->GetVkGraphicCommandPool(), 1)[0];
 
@@ -237,24 +228,31 @@ void RenderSystemVK::AddMeshBuffer(std::vector<float>& vertices,std::vector<uint
 		pPrimitive->VertexBufferPtr->Synchronize(cmdBuffer);
 		pPrimitive->IndicesBufferPtr->Synchronize(cmdBuffer);
 	});
-
+	
 	xferCmdBuffer->Submit(queue);
 
+	pPrimitive->PipelinePtr = pPipeline;
+
 	m_Primitives[pPrimitive] = pPrimitive;
+
+	return pPrimitive;
 }
-void RenderSystemVK::CreatePipeline(const PipelineDesc& pipelineDesc)
+std::shared_ptr<VulkanPipeline> RenderSystemVK::CreatePipeline(const PipelineDesc& pipelineDesc)
 {
-	auto pipeline = VulkanPipelineCache::Create(m_VulkanEnginePtr->GetVkDevice());
+	auto pipeline = VulkanPipeline::Create(m_VulkanEnginePtr->GetVkDevice());
 	pipeline->CreateShaderModules(pipelineDesc.VertexShaders, pipelineDesc.FragmentShaders);
 	pipeline->SetVertexDescription(pipelineDesc.VertexAttributes);
 	pipeline->CreateUniformBuffer(pipelineDesc.UniformBufferSizes);
 	pipeline->CreatePipelineInstance(*m_RenderPass);
-	m_PipelineCachePtrs.emplace_back(pipeline);
+	return pipeline;
 }
 
-void RenderSystemVK::UpdateUniformBuffers(const Matrix& mat)
+void RenderSystemVK::UpdateUniformBuffers(const void* pBuffe)
 {
-	m_PipelineCachePtrs[0]->GetUniformBuffer()->UpdateHostBuffer(&mat);
+	for (auto primKV : m_Primitives)
+	{
+		primKV.second->PipelinePtr->GetUniformBuffer()->UpdateHostBuffer(pBuffe);
+	}
 }
 
 

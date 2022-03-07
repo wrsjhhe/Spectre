@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include <RenderDef.h>
+#include <RenderTypes.h>
 
 BEGIN_NAMESPACE_SPECTRE
 

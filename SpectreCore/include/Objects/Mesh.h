@@ -9,7 +9,7 @@ BEGIN_NAMESPACE_SPECTRE
 class Mesh : public Object3D
 {
 public:
-	SpectreObject(Mesh)
+	DefineClass(Mesh)
 	static Mesh* Create(BufferGeometry* pGeometry, BufferMaterialPtr pMaterial);
 public:
 

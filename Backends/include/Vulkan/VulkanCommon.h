@@ -5,7 +5,6 @@
 #include "SpectreDef.h"
 #include "Platform.h"
 #include "LogManager.h"
-#include "Noncopyable.h"
 #if defined(SPE_DEBUG)
 #	define VKB_DEBUG
 #endif

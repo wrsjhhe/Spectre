@@ -12,12 +12,12 @@ include_directories(${INC_DIR})
 
 
 set(PUBLIC_HDRS ${INC_DIR}SpectreDef.h
+				${INC_DIR}SpectreApi.h
 				${INC_DIR}Allocator.h
 				${INC_DIR}Platform.h
 				${INC_DIR}Mutex.h
 				${INC_DIR}FormotString.h
-				${INC_DIR}LogManager.h
-				${INC_DIR}Noncopyable.h
+				${INC_DIR}LogManager.h			
 				${INC_DIR}NativeWindow.h
 				${INC_DIR}Timer.h
 				${INC_DIR}FileUtils.h

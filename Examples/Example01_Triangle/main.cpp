@@ -41,32 +41,47 @@ public:
 		BufferMaterialPtr pMat = BufferMaterial::Create();
 		pMat->VertexShader = FileUtils::ReadFile("Shaders/triangle.vert");
 		pMat->FragmentShader = FileUtils::ReadFile("Shaders/triangle.frag");
-
-		BufferGeometry* geometry = BufferGeometry::Create(VertexAttrs);
+		pMat->DefineAttributes(VertexAttrs);
+		BufferGeometry* geometry1 = BufferGeometry::Create(VertexAttrs);
 		// 顶点数据
-		std::vector<float> vertices = {
-				1.0f, 1.0f, 0.0f ,     1.0f, 0.0f, 0.0f ,1.0f,
-				-1.0f,1.0f, 0.0f ,     0.0f, 1.0f, 0.0f,1.0f,
-				0.0f, -1.0f, 0.0f ,    0.0f, 0.0f, 1.0f,1.0f,
+		std::vector<float> vertices1 = {
+				1.0f, 1.0f, 10.0f ,     1.0f, 0.0f, 0.0f ,1.0f,
+				-1.0f,1.0f, 10.0f ,     0.0f, 1.0f, 0.0f,1.0f,
+				0.0f, -1.0f, 10.0f ,    0.0f, 0.0f, 1.0f,1.0f,
 		};
 
 		// 索引数据
-		std::vector<uint32_t> indices = { 0, 1, 2 };
-		geometry->SetVertices(vertices.data(), vertices.size());
-		geometry->SetFaceIndex(indices.data(), indices.size());
+		std::vector<uint32_t> indices1 = { 0, 1, 2 };
+		geometry1->SetVertices(vertices1.data(), vertices1.size());
+		geometry1->SetFaceIndex(indices1.data(), indices1.size());
 
-		Mesh* pMesh = Mesh::Create(geometry, pMat);
+		Mesh* pMesh1 = Mesh::Create(geometry1, pMat);
+
+		BufferGeometry* geometry2 = BufferGeometry::Create(VertexAttrs);
+		// 顶点数据
+		std::vector<float> vertices2 = {
+				10.0f, 10.0f, 0.0f ,     1.0f, 0.0f, 0.0f ,1.0f,
+				-10.0f,10.0f, 0.0f ,     0.0f, 1.0f, 0.0f,1.0f,
+				0.0f, -10.0f, 0.0f ,    0.0f, 0.0f, 1.0f,1.0f,
+		};
+
+		// 索引数据
+		std::vector<uint32_t> indices2 = { 0, 1, 2 };
+		geometry2->SetVertices(vertices2.data(), vertices2.size());
+		geometry2->SetFaceIndex(indices2.data(), indices2.size());
+
+		Mesh* pMesh2 = Mesh::Create(geometry2, pMat);
 
 		Scene scene;
-		scene.Add(pMesh);
-
+		scene.Add(pMesh1);
+		scene.Add(pMesh2);
 		renderer.Attach({ context.GetWindowHandle() });
 		renderer.BindScene(&scene);
 		renderer.Resize(g_Width, g_Height);
 
 		
 		PerspectiveCamera camera(DegreesToRadians(75.f), (float)g_Width/ (float)g_Height, 0.1, 3000.0f);
-		camera.LookAt({ 0.f,0.f, 2.5f }, { 0.f,0.f, 0.f }, { 0.f,1.f, 0.f });
+		camera.LookAt({ 0.f,0.f, 15.f }, { 0.f,0.f, 0.f }, { 0.f,1.f, 0.f });
 		renderer.BindCamera(&camera);
 
 		renderer.Setup();
@@ -99,7 +114,7 @@ public:
 			g_CurrTime = g_CurrTime + elapsedTime;
 
 			Matrix rMat = Matrix::CreateRotationZ(DegreesToRadians(90.0f) * elapsedTime);
-			pMesh->Transform(rMat);
+			pMesh1->Transform(rMat);
 		}
 	}
 	

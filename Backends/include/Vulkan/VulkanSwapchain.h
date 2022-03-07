@@ -1,14 +1,14 @@
 #pragma once
 #include "NativeWindow.h"
 #include "VulkanImages.h"
-#include "RenderDef.h"
+#include "RenderTypes.h"
 #include "VulkanContext.h"
 BEGIN_NAMESPACE_SPECTRE
 
 class VulkanSurface;
 class VulkanSemaphore;
 
-class VulkanSwapChain : public Noncopyable
+class VulkanSwapChain
 {
 public:
 	enum class SwapStatus

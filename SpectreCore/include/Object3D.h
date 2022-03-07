@@ -1,12 +1,12 @@
 #pragma once
-#include "Object.h"
+#include "SpectreApi.h"
 
 BEGIN_NAMESPACE_SPECTRE
 
-class Object3D :public Object
+class Object3D :public SpectreApi
 {
 public:
-	SpectreObject(Object3D)
+	DefineClass(Object3D)
 
 	virtual ~Object3D();
 };

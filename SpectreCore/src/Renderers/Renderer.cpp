@@ -63,39 +63,28 @@ void Renderer::Setup()
 	for (auto* pMesh : meshes)
 	{
 		BufferMaterialPtr pMaterial = pMesh->GetMaterial();
-		PipelineDesc pipelineDesc;
-		pipelineDesc.VertexAttributes = m_ScenePtr->GetMeshes()[0]->GetBufferGeometry()->VertexAttributes();
-		pipelineDesc.VertexShaders = { pMaterial->VertexShader };
-		pipelineDesc.FragmentShaders = { pMaterial->FragmentShader };
-		pipelineDesc.UniformBufferSizes = sizeof(UBOData);
-
-		m_pRenderSystem->CreatePipeline(pipelineDesc);
-	}
-
-	uint32_t recordVertexIndex = 0;
-	std::vector<float> vertices;
-	std::vector<uint32_t> indices;
-
-
-	for (auto& mesh : meshes)
-	{
-		uint32_t curVerticesSize = vertices.size();
-		uint32_t* pFace = mesh->GetBufferGeometry()->Indices();
-		for (uint32_t i = 0; i < mesh->GetBufferGeometry()->IndicesCount(); ++i)
+		std::shared_ptr<VulkanPipeline> pPipeline;
+		auto iter =	m_pipelineCache.find(pMaterial->Id());
+		if (iter == m_pipelineCache.end())
 		{
-			indices.emplace_back(*pFace + vertices.size());
-			++pFace;
+			PipelineDesc pipelineDesc;
+			pipelineDesc.VertexAttributes = pMaterial->GetAttributes();
+			pipelineDesc.VertexShaders = { pMaterial->VertexShader };
+			pipelineDesc.FragmentShaders = { pMaterial->FragmentShader };
+			pipelineDesc.UniformBufferSizes = sizeof(UBOData);
+
+			pPipeline = m_pRenderSystem->CreatePipeline(pipelineDesc);
+			m_pipelineCache[pMaterial->Id()] = pPipeline;
+		}
+		else
+		{
+			pPipeline = iter->second;
 		}
 
-		float* pVertex = mesh->GetBufferGeometry()->Vertices();
-		for (uint32_t i = 0; i < mesh->GetBufferGeometry()->VerticesCount(); ++i)
-		{
-			vertices.emplace_back(*pVertex);
-			++pVertex;
-		}
-		recordVertexIndex += vertices.size();
+		m_pRenderSystem->AddPrimitive(pPipeline,
+			pMesh->GetBufferGeometry()->Vertices(), pMesh->GetBufferGeometry()->VerticesCount(),
+			pMesh->GetBufferGeometry()->Indices(), pMesh->GetBufferGeometry()->IndicesCount());
 	}
-	m_pRenderSystem->AddMeshBuffer(vertices, indices);
 
 	m_pRenderSystem->Setup();
 
@@ -111,11 +100,6 @@ void Renderer::Render()
 		m_MVPData = pMesh->GetTransformMatrix() * m_MVPData;
 	}
 
-	m_pRenderSystem->UpdateUniformBuffers(m_MVPData);
+	m_pRenderSystem->UpdateUniformBuffers(&m_MVPData);
 	m_pRenderSystem->Draw();
-}
-
-void Renderer::CreatePipeline()
-{
-
 }

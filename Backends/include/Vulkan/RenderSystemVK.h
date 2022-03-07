@@ -1,12 +1,10 @@
 #pragma once
-
 #include <memory>
 #include <vector>
 #include <string>
 #include <unordered_map>
-#include "Math/MathDef.h"
 #include "NativeWindow.h"
-#include "RenderDef.h"
+#include "RenderTypes.h"
 
 namespace Spectre
 {
@@ -19,24 +17,15 @@ namespace Spectre
 	class VulkanContext;
 	class VulkanSwapChain;
 	class VulkanBuffer;
-	class VulkanIndexBuffer;
-	class VulkanVertexBuffer;
+	class VulkanPrimitive;
 	class VulkanCommand;
 	class VulkanImages;
 	class VulkanRenderPass;
 	class VulkanFrameBuffer;
 	class VulkanSemaphore;
-	class VulkanPipelineCache;
+	class VulkanPipeline;
 	class VulkanGui;
 	typedef std::shared_ptr<VulkanCommand> VulkanCommandPtr;
-	typedef std::shared_ptr<VulkanBuffer> VulkanBufferPtr;
-
-	struct VulkanPrimitive
-	{
-		std::shared_ptr<VulkanVertexBuffer>		VertexBufferPtr;
-
-		std::shared_ptr <VulkanIndexBuffer>		IndicesBufferPtr;
-	};
 
 	class RenderSystemVK
 	{
@@ -47,11 +36,12 @@ namespace Spectre
 
 		void CreateSwapChain(const SwapChainDesc& desc);
 
-		void AddMeshBuffer(std::vector<float>& vertices,std::vector<uint32_t>& indices);
+		VulkanPrimitive* AddPrimitive(std::shared_ptr<VulkanPipeline> pPipeline,
+			float* vertices,uint32_t vertCount, uint32_t* indices,uint32_t indCount);
 
-		void CreatePipeline(const PipelineDesc& pipelineDesc);
+		std::shared_ptr<VulkanPipeline> CreatePipeline(const PipelineDesc& pipelineDesc);
 
-		void UpdateUniformBuffers(const Matrix& mat);
+		void UpdateUniformBuffers(const void* pBuffe);
 
 		void Setup();
 
@@ -68,8 +58,8 @@ namespace Spectre
 
 		bool UpdateUI();
 	private:
-		uint32_t                                m_Width = 1400;
-		uint32_t                                m_Height = 900;
+		uint32_t                                m_Width = 0;
+		uint32_t                                m_Height = 0;
 		VulkanEngine*							m_VulkanEnginePtr;
 		std::shared_ptr<VulkanContext>			m_ContextPtr;
 		std::shared_ptr<VulkanSwapChain>		m_SwapChain;
@@ -84,11 +74,7 @@ namespace Spectre
 
 		std::unordered_map<void*, VulkanPrimitive*>   m_Primitives;
 
-		VulkanBufferPtr							m_MVPBuffer;
-
 		std::vector<VulkanCommandPtr>			m_RenderCommandBuffers;
-
-		std::vector<VulkanPipelineCache*>       m_PipelineCachePtrs;
 
 		std::shared_ptr<VulkanSemaphore>		m_PresentComplete;
 

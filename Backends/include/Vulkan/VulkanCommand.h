@@ -7,7 +7,7 @@ BEGIN_NAMESPACE_SPECTRE
 
 class VulkanCommandPool;
 
-class VulkanCommand : public Noncopyable
+class VulkanCommand
 {
 public:
 	static std::vector<std::shared_ptr<VulkanCommand>> Create(

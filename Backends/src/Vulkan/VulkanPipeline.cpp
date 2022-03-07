@@ -1,7 +1,7 @@
 #include "VulkanCommon.h"
 #include "VulkanRenderPass.h"
 #include "VulkanBuffer.h"
-#include "VulkanPipelineCache.h"
+#include "VulkanPipeline.h"
 #include "ShaderTool.h"
 #include <fstream>
 
@@ -144,17 +144,17 @@ static VkFormat VertexAttributeToVkFormat(VertexAttribute attribute)
 }
 
 
-VulkanPipelineCache* VulkanPipelineCache::Create(VkDevice device)
+std::shared_ptr<VulkanPipeline> VulkanPipeline::Create(VkDevice device)
 {
-	auto* pPipelineCache = new VulkanPipelineCache(device);
-	return pPipelineCache;
+	auto* pPipeline = new VulkanPipeline(device);
+	return std::shared_ptr<VulkanPipeline>(pPipeline);
 }
 
-VulkanPipelineCache::~VulkanPipelineCache()
+VulkanPipeline::~VulkanPipeline()
 {
 	Destory();
 }
-void VulkanPipelineCache::SetVertexDescription(const std::vector<VertexAttribute>& VertexAttributes)
+void VulkanPipeline::SetVertexDescription(const std::vector<VertexAttribute>& VertexAttributes)
 {
 	std::vector<VkVertexInputBindingDescription> bindingDescriptions;
 	std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
@@ -189,7 +189,7 @@ void VulkanPipelineCache::SetVertexDescription(const std::vector<VertexAttribute
 	m_VertexInputState.pVertexAttributeDescriptions = m_AttributeDescriptions.data();
 }
 
-void VulkanPipelineCache::CreateShaderModules(const std::vector<std::string>& vertexShaders,
+void VulkanPipeline::CreateShaderModules(const std::vector<std::string>& vertexShaders,
 	const std::vector<std::string>& fragmentShaders)
 {
 	uint32_t offset = 0;
@@ -215,7 +215,7 @@ void VulkanPipelineCache::CreateShaderModules(const std::vector<std::string>& ve
 	}
 }
 
-void VulkanPipelineCache::CreatePipelineInstance(const VulkanRenderPass& renderPass)
+void VulkanPipeline::CreatePipelineInstance(const VulkanRenderPass& renderPass)
 {
 	if (m_VkPipeline != VK_NULL_HANDLE)
 	{
@@ -250,17 +250,17 @@ void VulkanPipelineCache::CreatePipelineInstance(const VulkanRenderPass& renderP
 	vkCreateGraphicsPipelines(m_VkDevice, m_VkPipelineCache, 1, &pipelineCreateInfo, nullptr, &m_VkPipeline);
 
 }
-void VulkanPipelineCache::BindDescriptorSets(const VkCommandBuffer& commandBuffer)
+void VulkanPipeline::BindDescriptorSets(const VkCommandBuffer& commandBuffer)
 {
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 0, 1, &m_VkDescriptorSet, 0, nullptr);
 }
 
-void VulkanPipelineCache::BindPipeline(const VkCommandBuffer& commandBuffer)
+void VulkanPipeline::BindPipeline(const VkCommandBuffer& commandBuffer)
 {
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipeline);
 }
 
-void VulkanPipelineCache::Destory()
+void VulkanPipeline::Destory()
 {
 	for (auto& shaderStage : m_ShaderStages)
 	{
@@ -275,7 +275,7 @@ void VulkanPipelineCache::Destory()
 	vkDestroyDescriptorPool(m_VkDevice, m_VkDescriptorPool, nullptr);
 }
 
-VulkanPipelineCache::VulkanPipelineCache(VkDevice device):
+VulkanPipeline::VulkanPipeline(VkDevice device):
 	m_VkDevice(device)
 {
 	CreateDescriptorPool();
@@ -342,7 +342,7 @@ VulkanPipelineCache::VulkanPipelineCache(VkDevice device):
 	m_MultisampleState.pSampleMask = nullptr;
 }
 
-VkShaderModule VulkanPipelineCache::LoadSPIPVShader(const std::string& shaderCode, ShaderType type)
+VkShaderModule VulkanPipeline::LoadSPIPVShader(const std::string& shaderCode, ShaderType type)
 {
 	std::vector<uint32_t> spvCode = ShaderTool::Compile_glsl(shaderCode, type);
 
@@ -357,7 +357,7 @@ VkShaderModule VulkanPipelineCache::LoadSPIPVShader(const std::string& shaderCod
 	return shaderModule;
 }
 
-void VulkanPipelineCache::CreateDescriptorPool()
+void VulkanPipeline::CreateDescriptorPool()
 {
 	VkDescriptorPoolSize poolSize = {};
 	poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -371,7 +371,7 @@ void VulkanPipelineCache::CreateDescriptorPool()
 	vkCreateDescriptorPool(m_VkDevice, &descriptorPoolInfo, nullptr, &m_VkDescriptorPool);
 }
 
-void VulkanPipelineCache::CreateDescriptorSetLayout()
+void VulkanPipeline::CreateDescriptorSetLayout()
 {
 	VkDescriptorSetLayoutBinding layoutBinding;
 	layoutBinding.binding = 0;
@@ -388,7 +388,7 @@ void VulkanPipelineCache::CreateDescriptorSetLayout()
 }
 
 
-void VulkanPipelineCache::CreateUniformBuffer(uint32_t  bufferSize)
+void VulkanPipeline::CreateUniformBuffer(uint32_t  bufferSize)
 {
 	m_MVPBuffer = VulkanBuffer::Create(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, nullptr);

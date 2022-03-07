@@ -1,6 +1,6 @@
 #include "VulkanCommon.h"
 #include "VulkanEngine.h"
-#include "RenderDef.h"
+#include "RenderTypes.h"
 #include "VulkanBuffer.h"
 
 USING_NAMESPACE(Spectre)

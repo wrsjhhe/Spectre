@@ -2,15 +2,15 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include "Object.h"
-#include "RenderDef.h"
+#include "SpectreApi.h"
+#include "RenderTypes.h"
 
 BEGIN_NAMESPACE_SPECTRE
 
-class BufferMaterial :public Object
+class BufferMaterial :public SpectreApi
 {
 public:
-	SpectreObject(BufferMaterial)
+	DefineClass(BufferMaterial)
 
 	static std::shared_ptr<BufferMaterial> Create();
 public:
@@ -19,6 +19,7 @@ public:
 
 	void DefineAttributes(const std::vector<VertexAttribute>& attrs);
 
+	const std::vector<VertexAttribute> GetAttributes() const { return m_Attributes; }
 
 	~BufferMaterial();
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "Object.h"
+#include "SpectreApi.h"
 #include "Scenes/Scene.h"
 #include "Cameras/PerspectiveCamera.h"
 #include "Materials/BufferMaterial.h"
@@ -9,10 +9,11 @@ BEGIN_NAMESPACE_SPECTRE
 
 
 class RenderSystemVK;
-class Renderer :public Object
+class VulkanPipeline;
+class Renderer :public SpectreApi
 {
 public:
-	SpectreObject(Renderer);
+	DefineClass(Renderer);
 	Renderer();
 	~Renderer();
 	void Attach(const NativeWindow& wnd);
@@ -28,9 +29,6 @@ public:
 	void Render();
 
 private:
-	void CreatePipeline();
-
-private:
 	RenderSystemVK* m_pRenderSystem = nullptr;
 
 	uint32_t                          m_Width = 0;
@@ -41,6 +39,7 @@ private:
 	BufferMaterialPtr				  m_MaterialPtr = nullptr;
 	PerspectiveCamera*				  m_PerspectiveCameraPtr = nullptr;
 	Matrix                            m_MVPData;
+	std::unordered_map<SpectrId, std::shared_ptr<VulkanPipeline>> m_pipelineCache;
 };
 
 END_NAMESPACE_SPECTRE

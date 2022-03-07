@@ -1,20 +1,23 @@
 #pragma once
 #include <map>
-#include "RenderDef.h"
-
+#include "RenderTypes.h"
+#include "VulkanBuffer.h"
+#include "SpectreApi.h"
 BEGIN_NAMESPACE_SPECTRE
 
-
-class VulkanPipelineCache : public Noncopyable
+class VulkanRenderPass;
+class VulkanPipeline : public SpectreApi
 {
 private:
 	// Three descriptor set layouts: uniforms, combined image samplers, and input attachments.
 	static constexpr uint32_t DESCRIPTOR_TYPE_COUNT = 3;
 
 public:
-	static VulkanPipelineCache* Create(VkDevice device);
+	DefineClass(VulkanPipeline)
+
+	static std::shared_ptr<VulkanPipeline> Create(VkDevice device);
 public:
-	~VulkanPipelineCache();
+	~VulkanPipeline();
 
 	void SetVertexDescription(const std::vector<VertexAttribute>& VertexAttributes);
 
@@ -35,7 +38,7 @@ public:
 
 	void Destory();
 private:
-	VulkanPipelineCache(VkDevice device);
+	VulkanPipeline(VkDevice device);
 	VkShaderModule LoadSPIPVShader(const std::string& shaderCode, ShaderType type);
 
 	void CreateDescriptorPool();

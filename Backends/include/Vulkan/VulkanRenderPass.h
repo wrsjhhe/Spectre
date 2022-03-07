@@ -3,7 +3,7 @@
 #include <vector>
 BEGIN_NAMESPACE_SPECTRE
 
-class VulkanRenderPass : public Noncopyable
+class VulkanRenderPass
 {
 public:
 	static std::shared_ptr<VulkanRenderPass> CreateCommonRenderPass(VkFormat colorAttachmentFormat);

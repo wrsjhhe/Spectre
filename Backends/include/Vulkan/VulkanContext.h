@@ -1,6 +1,6 @@
 #pragma once
 #include <map>
-#include "RenderDef.h"
+#include "RenderTypes.h"
 #include "VulkanEngine.h"
 BEGIN_NAMESPACE_SPECTRE
 
