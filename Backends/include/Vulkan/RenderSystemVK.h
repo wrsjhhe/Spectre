@@ -1,11 +1,12 @@
 #pragma once
+#include "SpectreApi.h"
 #include <memory>
 #include <vector>
 #include <string>
 #include <unordered_map>
 #include "NativeWindow.h"
 #include "RenderTypes.h"
-#include "SpectreApi.h"
+#include "VulkanPipeline.h"
 namespace Spectre
 {
 	struct RenderContextDesc
@@ -72,7 +73,7 @@ namespace Spectre
 
 		std::shared_ptr<VulkanSemaphore>		m_RenderComplete;
 
-		std::unordered_map<SpectrId, VulkanPrimitive*>   m_Primitives;
+		std::unordered_map<SpectreId, VulkanPrimitive*>   m_Primitives;
 
 		std::vector<VulkanCommandPtr>			m_RenderCommands;
 

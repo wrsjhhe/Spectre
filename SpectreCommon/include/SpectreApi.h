@@ -10,7 +10,7 @@ static bool Desc(T* ptr)					 \
 	return dynamic_cast<T*>(ptr) != nullptr; \
 }											 \
 
-typedef uint32_t SpectrId;
+typedef uint32_t SpectreId;
 
 class SpectreApi
 {
@@ -23,9 +23,9 @@ public:
 	SpectreApi& operator = (SpectreApi&&) = delete;
 
 
-	virtual SpectrId Id()
+	virtual SpectreId Id() const
 	{
-		return (SpectrId)this;
+		return (SpectreId)this;
 	}
 
 protected:

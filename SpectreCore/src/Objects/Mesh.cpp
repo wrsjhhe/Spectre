@@ -16,8 +16,6 @@ Mesh::Mesh(BufferGeometry* pGeometry, BufferMaterialPtr pMaterial):
 
 Mesh::~Mesh()
 {
-	delete m_GeometryPtr;
-	m_GeometryPtr = nullptr;
 }
 
 void Mesh::Transform(const Matrix& mat)

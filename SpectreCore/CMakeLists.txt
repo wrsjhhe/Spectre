@@ -1,9 +1,6 @@
 ﻿cmake_minimum_required (VERSION 3.8)
 project ("SpectreCore")
 
-include_directories (../Backends/include/)
-include_directories(../SpectreCommon/include/)
-
 
 # ==================================================================================================
 # 项目头文件设置
@@ -24,6 +21,7 @@ set(PUBLIC_HDRS ${INC_DIR}Object3D.h
 				${INC_DIR}Cameras/PerspectiveCamera.h
 				${INC_DIR}Buffers/Buffer.h
 				${INC_DIR}Buffers/VertexBuffer.h
+				${INC_DIR}Buffers/IndexBuffer.h
 
 )
 
@@ -43,9 +41,9 @@ set(SRCS ${SRC_DIR}Object3D.cpp
 		 ${SRC_DIR}Objects/Mesh.cpp
 		 ${SRC_DIR}Renderers/Renderer.cpp
 		 ${SRC_DIR}Cameras/Camera.cpp
-		 ${SRC_DIR}Cameras/PerspectiveCamera.cpp
-		 
+		 ${SRC_DIR}Cameras/PerspectiveCamera.cpp		 
 		 ${SRC_DIR}Buffers/VertexBuffer.cpp
+		 ${SRC_DIR}Buffers/IndexBuffer.cpp
 )
 
 add_library (SpectreCore STATIC ${PUBLIC_HDRS} ${PRIVATE_HDRS} ${SRCS} )

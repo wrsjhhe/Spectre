@@ -49,6 +49,7 @@ struct UBOData
 };
 void Renderer::Setup()
 {
+	//先统计DescriptorSet的大小，分配一个大的buffer，
 	RenderContextDesc renderDesc{};
 	renderDesc.Window = m_Window;
 	m_pRenderSystem = new RenderSystemVK();
@@ -60,6 +61,7 @@ void Renderer::Setup()
 	m_pRenderSystem->CreateSwapChain(swapChainDesc);
 
 	auto meshes = m_ScenePtr->GetMeshes();
+	PipelineBufferManager pipelineBufferMgr;
 	for (auto* pMesh : meshes)
 	{
 		BufferMaterialPtr pMaterial = pMesh->GetMaterial();
@@ -72,9 +74,10 @@ void Renderer::Setup()
 			pipelineDesc.VertexShaders = { pMaterial->VertexShader };
 			pipelineDesc.FragmentShaders = { pMaterial->FragmentShader };
 			pipelineDesc.UniformBufferSizes = sizeof(UBOData);
-
 			pPipeline = m_pRenderSystem->CreatePipeline(pipelineDesc);
-			m_pipelineCache[pMaterial->Id()] = pPipeline;
+
+			PipelineBufferManagerPtr bufferMsg = std::make_shared<PipelineBufferManager>();
+			m_pipelineCache[pMaterial->Id()] = { pPipeline,bufferMsg };
 		}
 		else
 		{

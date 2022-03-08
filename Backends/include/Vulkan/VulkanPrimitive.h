@@ -13,7 +13,7 @@ public:
 
 	std::shared_ptr <VulkanIndexBuffer>		IndicesBufferPtr;
 
-	std::shared_ptr<VulkanPipeline>    PipelinePtr;
+	std::shared_ptr<VulkanPipeline>			PipelinePtr;
 
 	uint32_t                                IndicesCount;
 

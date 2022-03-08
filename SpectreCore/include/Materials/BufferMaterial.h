@@ -6,7 +6,8 @@
 #include "RenderTypes.h"
 
 BEGIN_NAMESPACE_SPECTRE
-
+class BufferMaterial;
+typedef std::shared_ptr<BufferMaterial> BufferMaterialPtr;
 class BufferMaterial :public SpectreApi
 {
 public:
@@ -30,6 +31,6 @@ private:
 private:
 	std::vector<VertexAttribute> m_Attributes;
 };
-typedef std::shared_ptr<BufferMaterial> BufferMaterialPtr;
+
 
 END_NAMESPACE_SPECTRE

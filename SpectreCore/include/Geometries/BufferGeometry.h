@@ -1,9 +1,12 @@
 #pragma once
 #include <vector>
+#include <memory>
 #include <RenderTypes.h>
 
 BEGIN_NAMESPACE_SPECTRE
 
+class BufferGeometry;
+typedef std::shared_ptr<BufferGeometry> BufferGeometryPtr;
 class BufferGeometry
 {
 public:

@@ -1,7 +1,5 @@
 include_directories(../ThirdParty/DirectXMath/include)
 include_directories(../ThirdParty/GLFW/include/)
-include_directories(../Backends/include/)
-include_directories(../SpectreCommon/include/)
 include_directories (../SpectreCore/include/)
 include_directories (../SpectreComponents/include/)
 

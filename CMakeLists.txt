@@ -28,6 +28,9 @@ link_directories(./ThirdParty/GLFW/lib)
 include_directories(./ThirdParty/spdlog/include)
 include_directories(./ThirdParty/VulkanSDK/include/)
 include_directories(./ThirdParty/imgui/)
+
+include_directories (./Backends/include/)
+include_directories (./SpectreCommon/include/)
 # 包含子项目。
 add_subdirectory ("SpectreCommon")
 add_subdirectory ("Backends")

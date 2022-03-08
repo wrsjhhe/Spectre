@@ -390,6 +390,13 @@ void VulkanPipeline::CreateDescriptorSetLayout()
 
 void VulkanPipeline::CreateUniformBuffer(uint32_t  bufferSize)
 {
+	VkDescriptorSetAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	allocInfo.descriptorPool = m_VkDescriptorPool;
+	allocInfo.descriptorSetCount = 1;
+	allocInfo.pSetLayouts = &m_VkDescriptorSetLayout;
+	vkAllocateDescriptorSets(m_VkDevice, &allocInfo, &m_VkDescriptorSet);
+
 	m_MVPBuffer = VulkanBuffer::Create(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, nullptr);
 
@@ -397,13 +404,6 @@ void VulkanPipeline::CreateUniformBuffer(uint32_t  bufferSize)
 	MVPDescriptor.buffer = m_MVPBuffer->GetVkBuffer();
 	MVPDescriptor.offset = 0;
 	MVPDescriptor.range = bufferSize;
-
-	VkDescriptorSetAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.descriptorPool = m_VkDescriptorPool;
-	allocInfo.descriptorSetCount = 1;
-	allocInfo.pSetLayouts = &m_VkDescriptorSetLayout;
-	vkAllocateDescriptorSets(m_VkDevice, &allocInfo, &m_VkDescriptorSet);
 
 	VkWriteDescriptorSet writeDescriptorSet{};
 	writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

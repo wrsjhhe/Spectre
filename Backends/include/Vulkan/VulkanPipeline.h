@@ -1,11 +1,14 @@
 #pragma once
 #include <map>
+#include <memory>
 #include "RenderTypes.h"
 #include "VulkanBuffer.h"
 #include "SpectreApi.h"
 BEGIN_NAMESPACE_SPECTRE
 
 class VulkanRenderPass;
+class VulkanPipeline;
+typedef std::shared_ptr<VulkanPipeline> VulkanPipelinePtr;
 class VulkanPipeline : public SpectreApi
 {
 private:
