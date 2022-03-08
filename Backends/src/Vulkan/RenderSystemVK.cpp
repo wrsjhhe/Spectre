@@ -233,7 +233,7 @@ VulkanPrimitive* RenderSystemVK::AddPrimitive(std::shared_ptr<VulkanPipeline> pP
 
 	pPrimitive->PipelinePtr = pPipeline;
 
-	m_Primitives[pPrimitive] = pPrimitive;
+	m_Primitives[pPrimitive->Id()] = pPrimitive;
 
 	return pPrimitive;
 }

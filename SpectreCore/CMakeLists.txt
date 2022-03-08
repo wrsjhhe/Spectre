@@ -13,6 +13,7 @@ set(INC_DIR ./include/)
 include_directories(${INC_DIR})
 
 set(PUBLIC_HDRS ${INC_DIR}Object3D.h
+				${INC_DIR}PipelineBufferManager.h
 				${INC_DIR}Geometries/BufferGeometry.h
 				${INC_DIR}Materials/BufferMaterial.h		
 				${INC_DIR}Materials/MeshBasicMaterial.h			
@@ -32,6 +33,7 @@ set(PRIVATE_HDRS )
 set(SRC_DIR ./src/)
 
 set(SRCS ${SRC_DIR}Object3D.cpp
+		 ${SRC_DIR}PipelineBufferManager.cpp
 		 ${SRC_DIR}Geometries/BufferGeometry.cpp
 		 ${SRC_DIR}Materials/BufferMaterial.cpp		 
 		 ${SRC_DIR}Materials/MeshBasicMaterial.cpp		 		

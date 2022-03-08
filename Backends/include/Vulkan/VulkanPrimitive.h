@@ -4,8 +4,10 @@
 
 BEGIN_NAMESPACE_SPECTRE
 
-class VulkanPrimitive
+class VulkanPrimitive:public SpectreApi
 {
+public:
+	DefineClass(SpectreApi)
 public:
 	std::shared_ptr<VulkanVertexBuffer>		VertexBufferPtr;
 
