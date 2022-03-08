@@ -3,6 +3,7 @@
 #include <vector>
 #include <functional>
 #include <vulkan.h>
+#include "VulkanEngine.h"
 BEGIN_NAMESPACE_SPECTRE
 
 class VulkanCommandPool;

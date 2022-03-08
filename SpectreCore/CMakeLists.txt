@@ -22,6 +22,8 @@ set(PUBLIC_HDRS ${INC_DIR}Object3D.h
 				${INC_DIR}Renderers/Renderer.h
 				${INC_DIR}Cameras/Camera.h
 				${INC_DIR}Cameras/PerspectiveCamera.h
+				${INC_DIR}Buffers/Buffer.h
+				${INC_DIR}Buffers/VertexBuffer.h
 
 )
 
@@ -42,6 +44,8 @@ set(SRCS ${SRC_DIR}Object3D.cpp
 		 ${SRC_DIR}Renderers/Renderer.cpp
 		 ${SRC_DIR}Cameras/Camera.cpp
 		 ${SRC_DIR}Cameras/PerspectiveCamera.cpp
+		 
+		 ${SRC_DIR}Buffers/VertexBuffer.cpp
 )
 
 add_library (SpectreCore STATIC ${PUBLIC_HDRS} ${PRIVATE_HDRS} ${SRCS} )

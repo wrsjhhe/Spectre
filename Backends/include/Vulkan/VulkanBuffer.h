@@ -4,14 +4,15 @@
 
 BEGIN_NAMESPACE_SPECTRE
 
-class VulkanDevice;
+class VulkanBuffer;
+typedef std::shared_ptr<VulkanBuffer> VulkanBufferPtr;
 
 class VulkanBuffer
 {
 public:
 
 public:
-	static std::shared_ptr<VulkanBuffer> Create(uint32_t size, 
+	static VulkanBufferPtr Create(uint32_t size,
 		VkBufferUsageFlagBits usage, VkMemoryPropertyFlags memoryFlags,const void* data = nullptr);
 
 public:

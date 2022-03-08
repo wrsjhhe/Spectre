@@ -4,12 +4,14 @@
 
 BEGIN_NAMESPACE_SPECTRE
 
-class VulkanDevice;
+
+class VulkanIndexBuffer;
+typedef std::shared_ptr<VulkanIndexBuffer> VulkanIndexBufferPtr;
 class VulkanIndexBuffer
 {
 public:
 	template<typename T>
-	static std::shared_ptr<VulkanIndexBuffer> Create(T* indices, uint32_t count, VkIndexType indexType)
+	static VulkanIndexBufferPtr Create(T* indices, uint32_t count, VkIndexType indexType)
 	{
 		auto* pIndexBuffer = new VulkanIndexBuffer(std::forward<T*>(indices), count, indexType);
 		return std::shared_ptr<VulkanIndexBuffer>{pIndexBuffer};
@@ -25,8 +27,8 @@ public:
 
 	VkIndexType GetIndexType() const { return m_IndexType; }
 private:
-	std::shared_ptr<VulkanBuffer>   m_HostBuffer;
-	std::shared_ptr<VulkanBuffer>   m_DeviceBuffer;
+	VulkanBufferPtr					m_HostBuffer;
+	VulkanBufferPtr					m_DeviceBuffer;
 	VkIndexType						m_IndexType;
 };
 

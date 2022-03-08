@@ -94,8 +94,8 @@ void RenderSystemVK::Setup()
 	renderPassBeginInfo.renderArea.offset.y = 0;
 	renderPassBeginInfo.renderArea.extent.width = m_SwapChain->GetWidth();
 	renderPassBeginInfo.renderArea.extent.height = m_SwapChain->GetHeight();
-	m_RenderCommandBuffers = VulkanCommand::Create(m_ContextPtr->GetVkGraphicCommandPool(), m_SwapChain->GetImageCount());
-	for (uint32_t i = 0; i < m_RenderCommandBuffers.size(); ++i)
+	m_RenderCommands = VulkanCommand::Create(m_ContextPtr->GetVkGraphicCommandPool(), m_SwapChain->GetImageCount());
+	for (uint32_t i = 0; i < m_RenderCommands.size(); ++i)
 	{
 		renderPassBeginInfo.framebuffer = m_FrameBuffers[i]->GetVkFrameBuffer();
 
@@ -115,7 +115,7 @@ void RenderSystemVK::Setup()
 
 		VkDeviceSize offsets[1] = { 0 };
 
-		m_RenderCommandBuffers[i]->RecordCommond([&](VkCommandBuffer cmdBuffer) {
+		m_RenderCommands[i]->RecordCommond([&](VkCommandBuffer cmdBuffer) {
 			vkCmdBeginRenderPass(cmdBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
 			vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
@@ -163,11 +163,11 @@ void RenderSystemVK::Draw()
 	// Ìá½»»æÖÆÃüÁî
 	VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
-	m_RenderCommandBuffers[backBufferIndex]->SignalSemaphore = { m_RenderComplete->GetVkSemaphore() };
-	m_RenderCommandBuffers[backBufferIndex]->WaitSemaphore = { m_PresentComplete->GetVkSemaphore() };
-	m_RenderCommandBuffers[backBufferIndex]->WaitStageMask = { waitStageMask };
+	m_RenderCommands[backBufferIndex]->SignalSemaphore = { m_RenderComplete->GetVkSemaphore() };
+	m_RenderCommands[backBufferIndex]->WaitSemaphore = { m_PresentComplete->GetVkSemaphore() };
+	m_RenderCommands[backBufferIndex]->WaitStageMask = { waitStageMask };
 
-	m_RenderCommandBuffers[backBufferIndex]->Submit(queue);
+	m_RenderCommands[backBufferIndex]->Submit(queue);
 	
 	// present
 	m_SwapChain->Present(
@@ -281,7 +281,7 @@ void RenderSystemVK::DestorySwapchain()
 
 	m_DepthStencilImage = nullptr;
 
-	m_RenderCommandBuffers.clear();
+	m_RenderCommands.clear();
 
 	m_RenderPass = nullptr;
 
