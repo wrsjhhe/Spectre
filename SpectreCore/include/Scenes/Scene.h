@@ -4,6 +4,17 @@
 #include "Objects/Mesh.h"
 BEGIN_NAMESPACE_SPECTRE
 
+struct RenderObject {
+
+	Mesh* MeshPtr;
+	BufferMaterial* MaterialPtr;
+
+	uint32_t updateIndex;
+	uint32_t customSortKey{ 0 };
+
+	Matrix transformMatrix;
+};
+
 class Scene : Object3D
 {
 public:

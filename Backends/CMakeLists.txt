@@ -35,7 +35,7 @@ set(INTERFACEE_DIR ./interface/)
 include_directories(${INTERFACEE_DIR})
 
 
-set(INC_VULKAN_DIR ./include/Vulkan/)
+set(INC_VULKAN_DIR ./include/)
 include_directories(${INC_VULKAN_DIR})
 set(VULKAN_PUBLIC_HDRS 
 ${INC_VULKAN_DIR}RenderSystemVK.h
@@ -44,7 +44,7 @@ ${INC_VULKAN_DIR}RenderSystemVK.h
 # ==================================================================================================
 # 项目源文件设置
 # ==================================================================================================
-set(SRC_VULKAN_DIR ./src/Vulkan/)
+set(SRC_VULKAN_DIR ./src/)
 set(VULKAN_SRCS 
 ${SRC_VULKAN_DIR}VulkanCommon.cpp
 ${SRC_VULKAN_DIR}VulkanEngine.cpp

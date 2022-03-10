@@ -6,7 +6,7 @@ BEGIN_NAMESPACE_SPECTRE
 class IndexBuffer;
 class Mesh;
 typedef std::shared_ptr<IndexBuffer> IndexBufferPtr;
-class IndexBuffer :public Buffer<float>, private std::enable_shared_from_this<VertexBuffer>
+class IndexBuffer :public Buffer<float>, private std::enable_shared_from_this<IndexBuffer>
 {
 public:
 	DefineClass(IndexBuffer);

@@ -5,7 +5,7 @@
 #include "Materials/BufferMaterial.h"
 #include "NativeWindow.h"
 #include "PipelineBufferManager.h"
-#include "Vulkan/VulkanPipeline.h"
+#include "VulkanPipeline.h"
 
 BEGIN_NAMESPACE_SPECTRE
 
