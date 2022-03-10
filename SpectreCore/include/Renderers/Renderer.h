@@ -4,7 +4,6 @@
 #include "Cameras/PerspectiveCamera.h"
 #include "Materials/BufferMaterial.h"
 #include "NativeWindow.h"
-#include "PipelineBufferManager.h"
 #include "VulkanPipeline.h"
 
 BEGIN_NAMESPACE_SPECTRE
@@ -14,12 +13,6 @@ class RenderSystemVK;
 class VulkanPipeline;
 class Renderer :public SpectreApi
 {
-	struct PipelineRequired
-	{
-		VulkanPipelinePtr PipelinePtr;
-		PipelineBufferManagerPtr BufferManagerPtr;
-	};
-
 public:
 	DefineClass(Renderer);
 	Renderer();
@@ -47,7 +40,6 @@ private:
 	BufferMaterialPtr				  m_MaterialPtr = nullptr;
 	PerspectiveCamera*				  m_PerspectiveCameraPtr = nullptr;
 	Matrix                            m_MVPData;
-	std::unordered_map<SpectreId, PipelineRequired> m_pipelineCache;
 };
 
 END_NAMESPACE_SPECTRE

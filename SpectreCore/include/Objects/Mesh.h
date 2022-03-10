@@ -8,6 +8,8 @@
 
 BEGIN_NAMESPACE_SPECTRE
 
+class Mesh;
+typedef std::shared_ptr<Mesh> MeshPtr;
 class Mesh : public Object3D
 {
 public:

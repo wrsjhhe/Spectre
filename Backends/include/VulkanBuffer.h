@@ -1,25 +1,21 @@
 #pragma once
 #include <memory>
-
-
+#include "RenderTypes.h"
+#include "SpectreApi.h"
+#include "VulkanCommon.h"
 BEGIN_NAMESPACE_SPECTRE
 
 class VulkanBuffer;
 typedef std::shared_ptr<VulkanBuffer> VulkanBufferPtr;
 
-class VulkanBuffer
+class VulkanBuffer:public SpectreApi
 {
 public:
+	DefineClass(VulkanBuffer);
+public:
+	static VulkanBufferPtr Create(uint32_t size, VkBufferUsageFlagBits usage, VkMemoryPropertyFlags memoryFlags);
 
 public:
-	static VulkanBufferPtr Create(uint32_t size,
-		VkBufferUsageFlagBits usage, VkMemoryPropertyFlags memoryFlags,const void* data = nullptr);
-
-public:
-	VulkanBuffer(const VulkanBuffer&) = delete;
-	VulkanBuffer(VulkanBuffer&&) = delete;
-	VulkanBuffer& operator = (const VulkanBuffer&) = delete;
-	VulkanBuffer& operator = (VulkanBuffer&&) = delete;
 
 	~VulkanBuffer();
 
@@ -27,28 +23,28 @@ public:
 
 	VkBuffer& GetVkBuffer() { return m_VkbBuffer; }
 
+	uint64_t GetSize()const { return m_Size; }
 
-	void CopyTo(VulkanBuffer& dstBuffer, const VkCommandBuffer& commandBuffer);
+	void CopyTo(VulkanBufferPtr dstBuffer, const VkCommandBuffer& commandBuffer);
 
-	VkResult Map(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+	void Map(void* ptr,bool keepMap = false);
 
 	void UnMap();
 
-	void UpdateHostBuffer(const void* const ptr);
-
-	VkResult Flush(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+	void Flush();
 
 	void Destroy();
 
 private:
-	explicit VulkanBuffer();
-	void CreateBuffer(const void* ptr, uint32_t size, VkBufferUsageFlagBits usage, VkMemoryPropertyFlags memoryFlags);
+	VulkanBuffer(uint32_t size, VkBufferUsageFlagBits usage, VkMemoryPropertyFlags memoryFlags);
+public:
+	void* MapPointerCache = nullptr;
 
 private:
 	uint32_t                                     m_Size = 0;
 	VkDeviceMemory				                 m_VkMemory = VK_NULL_HANDLE;
 	VkBuffer					                 m_VkbBuffer = VK_NULL_HANDLE;
-	void*										 m_DataPtr = nullptr;
 };
+
 
 END_NAMESPACE_SPECTRE

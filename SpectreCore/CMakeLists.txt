@@ -10,7 +10,6 @@ set(INC_DIR ./include/)
 include_directories(${INC_DIR})
 
 set(PUBLIC_HDRS ${INC_DIR}Object3D.h
-				${INC_DIR}PipelineBufferManager.h
 				${INC_DIR}Geometries/BufferGeometry.h
 				${INC_DIR}Materials/BufferMaterial.h		
 				${INC_DIR}Materials/MeshBasicMaterial.h			
@@ -22,6 +21,7 @@ set(PUBLIC_HDRS ${INC_DIR}Object3D.h
 				${INC_DIR}Buffers/Buffer.h
 				${INC_DIR}Buffers/VertexBuffer.h
 				${INC_DIR}Buffers/IndexBuffer.h
+				${INC_DIR}Buffers/BufferBlock.h
 
 )
 
@@ -33,7 +33,6 @@ set(PRIVATE_HDRS )
 set(SRC_DIR ./src/)
 
 set(SRCS ${SRC_DIR}Object3D.cpp
-		 ${SRC_DIR}PipelineBufferManager.cpp
 		 ${SRC_DIR}Geometries/BufferGeometry.cpp
 		 ${SRC_DIR}Materials/BufferMaterial.cpp		 
 		 ${SRC_DIR}Materials/MeshBasicMaterial.cpp		 		
@@ -44,6 +43,7 @@ set(SRCS ${SRC_DIR}Object3D.cpp
 		 ${SRC_DIR}Cameras/PerspectiveCamera.cpp		 
 		 ${SRC_DIR}Buffers/VertexBuffer.cpp
 		 ${SRC_DIR}Buffers/IndexBuffer.cpp
+		 ${SRC_DIR}Buffers/BufferBlock.cpp
 )
 
 add_library (SpectreCore STATIC ${PUBLIC_HDRS} ${PRIVATE_HDRS} ${SRCS} )

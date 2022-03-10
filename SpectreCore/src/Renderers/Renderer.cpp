@@ -49,7 +49,6 @@ struct UBOData
 };
 void Renderer::Setup()
 {
-	//先统计DescriptorSet的大小，分配一个大的buffer，
 	RenderContextDesc renderDesc{};
 	renderDesc.Window = m_Window;
 	m_pRenderSystem = new RenderSystemVK();
@@ -61,28 +60,16 @@ void Renderer::Setup()
 	m_pRenderSystem->CreateSwapChain(swapChainDesc);
 
 	auto meshes = m_ScenePtr->GetMeshes();
-	PipelineBufferManager pipelineBufferMgr;
 	for (auto* pMesh : meshes)
 	{
 		BufferMaterialPtr pMaterial = pMesh->GetMaterial();
 		std::shared_ptr<VulkanPipeline> pPipeline;
-		auto iter =	m_pipelineCache.find(pMaterial->Id());
-		if (iter == m_pipelineCache.end())
-		{
-			PipelineDesc pipelineDesc;
-			pipelineDesc.VertexAttributes = pMaterial->GetAttributes();
-			pipelineDesc.VertexShaders = { pMaterial->VertexShader };
-			pipelineDesc.FragmentShaders = { pMaterial->FragmentShader };
-			pipelineDesc.UniformBufferSizes = sizeof(UBOData);
-			pPipeline = m_pRenderSystem->CreatePipeline(pipelineDesc);
-
-			PipelineBufferManagerPtr bufferMsg = std::make_shared<PipelineBufferManager>();
-			m_pipelineCache[pMaterial->Id()] = { pPipeline,bufferMsg };
-		}
-		else
-		{
-			//pPipeline = iter->second;
-		}
+		PipelineDesc pipelineDesc;
+		pipelineDesc.VertexAttributes = pMaterial->GetAttributes();
+		pipelineDesc.VertexShaders = { pMaterial->VertexShader };
+		pipelineDesc.FragmentShaders = { pMaterial->FragmentShader };
+		pipelineDesc.UniformBufferSizes = sizeof(UBOData);
+		pPipeline = m_pRenderSystem->CreatePipeline(pipelineDesc);
 
 		m_pRenderSystem->AddPrimitive(pPipeline,
 			pMesh->GetBufferGeometry()->Vertices(), pMesh->GetBufferGeometry()->VerticesCount(),

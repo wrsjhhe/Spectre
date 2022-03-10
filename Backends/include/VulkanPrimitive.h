@@ -1,7 +1,6 @@
 #pragma once
-#include "VulkanVertexBuffer.h"
-#include "VulkanIndexBuffer.h"
-
+#include "VulkanBuffer.h"
+#include "VulkanPipeline.h"
 BEGIN_NAMESPACE_SPECTRE
 
 class VulkanPrimitive:public SpectreApi
@@ -9,9 +8,9 @@ class VulkanPrimitive:public SpectreApi
 public:
 	DefineClass(SpectreApi)
 public:
-	std::shared_ptr<VulkanVertexBuffer>		VertexBufferPtr;
+	std::shared_ptr<VulkanBuffer>			VertexBufferPtr;
 
-	std::shared_ptr <VulkanIndexBuffer>		IndicesBufferPtr;
+	std::shared_ptr <VulkanBuffer>			IndicesBufferPtr;
 
 	std::shared_ptr<VulkanPipeline>			PipelinePtr;
 

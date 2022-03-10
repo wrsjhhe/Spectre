@@ -397,7 +397,7 @@ void VulkanPipeline::CreateUniformBuffer(uint32_t  bufferSize)
 	vkAllocateDescriptorSets(m_VkDevice, &allocInfo, &m_VkDescriptorSet);
 
 	m_MVPBuffer = VulkanBuffer::Create(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, nullptr);
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 
 	VkDescriptorBufferInfo MVPDescriptor;
 	MVPDescriptor.buffer = m_MVPBuffer->GetVkBuffer();

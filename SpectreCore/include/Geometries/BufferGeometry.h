@@ -2,7 +2,7 @@
 #include <vector>
 #include <memory>
 #include <RenderTypes.h>
-
+#include "Math/MathDef.h"
 BEGIN_NAMESPACE_SPECTRE
 
 class BufferGeometry;
@@ -15,10 +15,10 @@ public:
 	void SetVertexAttributes();
 	const std::vector<VertexAttribute>& VertexAttributes() const { return m_VertexAttrs; }
 
-	void SetVertices(const float* vertices, uint32_t count);
-	void SetFaceIndex(const uint32_t* faces, uint32_t count);
+	void SetVertices(const Vertex* vertices, uint32_t count);
+	void SetFaceIndex(const uint32_t* indices, uint32_t count);
 
-	float* Vertices() { return m_Vertices; }
+	Vertex* Vertices() { return m_Vertices; }
 	uint32_t* Indices() { return m_Indices; }
 
 	uint32_t VerticesCount() { return m_VerticesCount; }
@@ -32,11 +32,11 @@ private:
 private:
 	std::vector<VertexAttribute> m_VertexAttrs;
 
-	uint32_t			m_VerticesCount;
-	float* m_Vertices = nullptr;
+	uint32_t			m_VerticesCount = 0;
+	Vertex*				m_Vertices = nullptr;
 
-	uint32_t			m_IndicesCount;
-	uint32_t* m_Indices = nullptr;
+	uint32_t			m_IndicesCount = 0;
+	uint32_t*			m_Indices = nullptr;
 
 };
 

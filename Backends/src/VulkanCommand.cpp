@@ -67,6 +67,10 @@ void VulkanCommand::Submit(VulkanQueue& queue)
 void VulkanCommand::Reset()
 {
 	vkResetCommandBuffer(m_VkCommandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+	VkCommandBufferBeginInfo cmdBufferBeginInfo{};
+	cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	vkBeginCommandBuffer(m_VkCommandBuffer, &cmdBufferBeginInfo);
+	m_IsEnd = false;
 }
 
 VulkanCommand::VulkanCommand(const VkCommandPool& commandPool, VkCommandBuffer buffer) :

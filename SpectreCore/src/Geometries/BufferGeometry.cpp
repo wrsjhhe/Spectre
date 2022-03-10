@@ -24,20 +24,20 @@ BufferGeometry::~BufferGeometry()
 }
 
 
-void BufferGeometry::SetVertices(const float* vertices, uint32_t count)
+void BufferGeometry::SetVertices(const Vertex* vertices, uint32_t count)
 {
-	uint32_t size = sizeof(float) * count;
-	m_Vertices = (float*)heap_alloc(size);
+	uint32_t size = sizeof(Vertex) * count;
+	m_Vertices = (Vertex*)heap_alloc(size);
 	std::memcpy(m_Vertices, vertices, size);
 
 	m_VerticesCount = count;
 }
 
-void BufferGeometry::SetFaceIndex(const uint32_t* faces, uint32_t count)
+void BufferGeometry::SetFaceIndex(const uint32_t* indices, uint32_t count)
 {
 	uint32_t size = sizeof(uint32_t) * count;
 	m_Indices = (uint32_t*)heap_alloc(sizeof(uint32_t) * count);
-	std::memcpy(m_Indices, faces, size);
+	std::memcpy(m_Indices, indices, size);
 
 	m_IndicesCount = count;
 }

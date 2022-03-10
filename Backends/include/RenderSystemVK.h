@@ -7,6 +7,7 @@
 #include "NativeWindow.h"
 #include "RenderTypes.h"
 #include "VulkanPipeline.h"
+#include "Math/MathDef.h"
 namespace Spectre
 {
 	struct RenderContextDesc
@@ -38,11 +39,11 @@ namespace Spectre
 		void CreateSwapChain(const SwapChainDesc& desc);
 
 		VulkanPrimitive* AddPrimitive(std::shared_ptr<VulkanPipeline> pPipeline,
-			float* vertices,uint32_t vertCount, uint32_t* indices,uint32_t indCount);
+			Vertex* vertices,uint32_t vertCount, uint32_t* indices,uint32_t indCount);
 
 		std::shared_ptr<VulkanPipeline> CreatePipeline(const PipelineDesc& pipelineDesc);
 
-		void UpdateUniformBuffers(const void* pBuffe);
+		void UpdateUniformBuffers(void* pBuffe);
 
 		void Setup();
 
@@ -53,7 +54,6 @@ namespace Spectre
 		void CreateDepthStencil();
 		void CreateRenderPass();
 		void CreateFrameBuffer();
-		void CreateSemaphores();
 
 		void DestorySwapchain();
 

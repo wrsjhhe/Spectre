@@ -11,12 +11,6 @@ typedef enum CommandPoolTypes
 	CommandPool_Type_Transfer = 3,
 }CommandPoolTypes;
 
-typedef enum BufferType
-{
-	Buffer_Type_Undefined = -1,
-	Buffer_Type_Host = 1,
-	Buffer_Type_Device = 2
-}BufferType;
 
 typedef enum VertexAttribute
 {
@@ -50,6 +44,34 @@ typedef enum ShaderType
 	ShaderType_Tess_control = 5,
 	ShaderType_Tess_evaluation = 6
 }ShaderType;
+
+typedef enum BufferType
+{
+	BufferType_Transfer_Src = 0x00000001,
+	BufferType_Transfer_Dst = 0x00000002,
+	BufferType_Uniform_Texel = 0x00000004,
+	BufferType_Storage_Texel = 0x00000008,
+	BufferType_Uniform = 0x00000010,
+	BufferType_Storage = 0x00000020,
+	BufferType_Index = 0x000000040,
+	BufferType_Vertex = 0x00000080,
+	BufferType_Indirect = 0x00000100,
+	BufferType_Shader_Device_Address = 0x00020000,
+}BufferType;
+
+typedef enum MemoryProperty
+{
+	MemoryProperty_Device_Local = 0x00000001,
+	MemoryProperty_Host_Visible = 0x00000002,
+	MemoryProperty_Host_Coherent = 0x00000004,
+	MemoryProperty_Host_Cached = 0x00000008,
+	MemoryProperty_Lazily_Allocated = 0x00000010,
+	MemoryProperty_Protected = 0x00000020,
+	MemoryProperty_Device_Coherentamd = 0x00000040,
+	MemoryProperty_Device_Uncached_amd = 0x00000080,
+	MemoryProperty_Rdma_Capable_Nv = 0x00000100,
+	MemoryProperty_Flag_Max = 0x7fFFFFFF
+};
 
 struct SwapChainDesc
 {

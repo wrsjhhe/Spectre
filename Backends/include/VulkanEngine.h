@@ -38,6 +38,8 @@ public:
 
 	uint32_t GetMemoryTypeIndex(uint32_t memoryTypeBitsRequirement,
 		VkMemoryPropertyFlags requiredProperties) const;
+
+	VkPhysicalDeviceLimits GetVkPhysicalDeviceLimits();
 private:
 	VulkanEngine(const VulkanEngineCreateInfo& CI);
 	~VulkanEngine();

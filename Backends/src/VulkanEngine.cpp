@@ -427,3 +427,10 @@ uint32_t VulkanEngine::GetMemoryTypeIndex(uint32_t memoryTypeBitsRequirement,
     }
     return ~uint32_t{ 0 };
 }
+
+VkPhysicalDeviceLimits VulkanEngine::GetVkPhysicalDeviceLimits()
+{
+    VkPhysicalDeviceProperties props;
+    vkGetPhysicalDeviceProperties(m_VkPhysicalDevice, &props);
+    return props.limits;
+}
