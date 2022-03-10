@@ -2,13 +2,13 @@
 #include "SpectreApi.h"
 #include "Allocator.h"
 BEGIN_NAMESPACE_SPECTRE
-
+constexpr uint32_t lowSize = 1024 * 1024 * 10;
+constexpr uint32_t highSize = 1024 * 1024 * 100;
 template<typename T>
 class Buffer :public SpectreApi
 {
 private:
-	constexpr uint32_t lowSize = 1024 * 1024 * 10;
-	constexpr uint32_t highSize = 1024 * 1024 * 100;
+
 public:
 	DefineClass(Buffer);
 
@@ -62,14 +62,14 @@ public:
 				newSize = newSize * 1.5;
 			}
 
-			m_DataPtr = (T*)Spectre::aligned_realloc(newSize, sizeof(T));
+			m_DataPtr = (T*)Spectre::heap_realloc(m_DataPtr,newSize, sizeof(T));
 			m_Capacity = newSize;
 		}
 		else if (newSize < m_Size)
 		{
 			if (newSize < 0.5 * m_Capacity)
 			{
-				m_DataPtr = (T*)Spectre::aligned_realloc(0.5 * m_Capacity, sizeof(T));
+				m_DataPtr = (T*)Spectre::heap_realloc(m_DataPtr,0.5 * m_Capacity, sizeof(T));
 				m_Capacity = 0.5 * m_Capacity;
 			}
 		}

@@ -1,9 +1,13 @@
 #pragma once
+
+#include "SpectreApi.h"
+#include "VulkanCommon.h"
 #include <map>
 #include <memory>
 #include "RenderTypes.h"
 #include "VulkanBuffer.h"
-#include "SpectreApi.h"
+
+
 BEGIN_NAMESPACE_SPECTRE
 
 class VulkanRenderPass;

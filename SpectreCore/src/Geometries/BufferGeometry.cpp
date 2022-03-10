@@ -19,15 +19,15 @@ BufferGeometry::BufferGeometry()
 
 BufferGeometry::~BufferGeometry()
 {
-	HEAP_Free(m_Vertices);
-	HEAP_Free(m_Indices);
+	Spectre::free(m_Vertices);
+	Spectre::free(m_Indices);
 }
 
 
 void BufferGeometry::SetVertices(const float* vertices, uint32_t count)
 {
 	uint32_t size = sizeof(float) * count;
-	m_Vertices = (float*)HEAP_ALLOC(size);
+	m_Vertices = (float*)heap_alloc(size);
 	std::memcpy(m_Vertices, vertices, size);
 
 	m_VerticesCount = count;

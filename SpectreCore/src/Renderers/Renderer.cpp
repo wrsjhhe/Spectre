@@ -1,4 +1,4 @@
-#include "Vulkan/RenderSystemVK.h"
+#include "RenderSystemVK.h"
 #include "Renderers/Renderer.h"
 
 USING_NAMESPACE(Spectre)
@@ -81,7 +81,7 @@ void Renderer::Setup()
 		}
 		else
 		{
-			pPipeline = iter->second;
+			//pPipeline = iter->second;
 		}
 
 		m_pRenderSystem->AddPrimitive(pPipeline,
