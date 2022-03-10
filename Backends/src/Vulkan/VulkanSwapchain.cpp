@@ -12,7 +12,7 @@ VulkanSwapChain::VulkanSwapChain(const VulkanContext& context, const SwapChainDe
 	auto* pEngine = VulkanEngine::GetInstance();
 	VkPhysicalDevice physicalDevice = pEngine->GetVkPhysicalDevice();
 
-	m_ImageCount = m_Context.m_VkSurfaceCapabilities.minImageCount + 1;
+	m_ImageCount = g_ImageSize;
 	if (m_Context.m_VkSurfaceCapabilities.maxImageCount > 0 && m_ImageCount > m_Context.m_VkSurfaceCapabilities.maxImageCount)
 	{
 		m_ImageCount = m_Context.m_VkSurfaceCapabilities.maxImageCount;

@@ -22,6 +22,8 @@ public:
 
 	void Submit(VulkanQueue& queue);
 
+	void Reset();
+
 	void Free();
 private:
 	VulkanCommand(const VkCommandPool& commandPool, VkCommandBuffer buffer);

@@ -64,6 +64,11 @@ void VulkanCommand::Submit(VulkanQueue& queue)
 	vkWaitForFences(pEngine->GetVkDevice(), 1, &m_VkFence, true, 0x7fffffffffffffff);
 }
 
+void VulkanCommand::Reset()
+{
+	vkResetCommandBuffer(m_VkCommandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+}
+
 VulkanCommand::VulkanCommand(const VkCommandPool& commandPool, VkCommandBuffer buffer) :
 	m_CommandPool(commandPool),
 	m_VkCommandBuffer(buffer)

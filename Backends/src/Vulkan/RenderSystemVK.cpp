@@ -42,7 +42,7 @@ RenderSystemVK::~RenderSystemVK()
 void RenderSystemVK::CreateRenderContext(const RenderContextDesc& desc)
 {
 	m_ContextPtr->InitCommandPool();
-
+	m_RenderCommands = VulkanCommand::Create(m_ContextPtr->GetVkGraphicCommandPool(), g_ImageSize);
 	//´´½¨Surface
 	VkSurfaceKHR surface = VK_NULL_HANDLE;
 	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
@@ -94,9 +94,11 @@ void RenderSystemVK::Setup()
 	renderPassBeginInfo.renderArea.offset.y = 0;
 	renderPassBeginInfo.renderArea.extent.width = m_SwapChain->GetWidth();
 	renderPassBeginInfo.renderArea.extent.height = m_SwapChain->GetHeight();
-	m_RenderCommands = VulkanCommand::Create(m_ContextPtr->GetVkGraphicCommandPool(), m_SwapChain->GetImageCount());
+
+
 	for (uint32_t i = 0; i < m_RenderCommands.size(); ++i)
 	{
+		m_RenderCommands[i]->Reset();
 		renderPassBeginInfo.framebuffer = m_FrameBuffers[i]->GetVkFrameBuffer();
 
 		VkViewport viewport = {};
