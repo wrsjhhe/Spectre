@@ -45,9 +45,9 @@ public:
 		BufferGeometry* geometry1 = BufferGeometry::Create(VertexAttrs);
 		// 顶点数据
 		std::vector<Vertex> vertices1 = {
-			{{1.0f, 1.0f, 0.0f} ,    { 1.0f, 0.0f, 0.0f,1.f}},
-			{	{-1.0f,1.0f, 0.0f} , {    0.0f, 1.0f, 0.0f,1.f}},
-			{{	0.0f, -1.0f, 0.0f} ,{    0.0f, 0.0f, 1.0f,1.f}}
+			{{10.0f, 10.0f, 0.0f} ,    { 1.0f, 0.0f, 0.0f}},
+			{	{-10.0f,10.0f, 0.0f} , {    0.0f, 1.0f, 0.0f}},
+			{{	0.0f, -10.0f, 0.0f} ,{    0.0f, 0.0f, 1.0f}}
 		};
 
 		// 索引数据
