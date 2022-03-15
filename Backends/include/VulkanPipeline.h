@@ -22,7 +22,7 @@ private:
 public:
 	DefineClass(VulkanPipeline)
 
-	static std::shared_ptr<VulkanPipeline> Create(VkDevice device);
+	static std::shared_ptr<VulkanPipeline> Create();
 public:
 	~VulkanPipeline();
 
@@ -45,7 +45,7 @@ public:
 
 	void Destory();
 private:
-	VulkanPipeline(VkDevice device);
+	VulkanPipeline();
 	VkShaderModule LoadSPIPVShader(const std::string& shaderCode, ShaderType type);
 
 	void CreateDescriptorPool();
@@ -53,7 +53,6 @@ private:
 
 
 private:
-	VkDevice							m_VkDevice = VK_NULL_HANDLE;;
 	VkPipelineLayout					m_VkPipelineLayout = VK_NULL_HANDLE;
 	VkPipeline							m_VkPipeline = VK_NULL_HANDLE;
 	VkPipelineCache						m_VkPipelineCache = VK_NULL_HANDLE;

@@ -43,10 +43,7 @@ void Renderer::Resize(uint32_t width, uint32_t height)
 	}
 }
 
-struct UBOData
-{
-	Matrix MVPMatrix;
-};
+
 void Renderer::Setup()
 {
 	RenderContextDesc renderDesc{};
@@ -61,24 +58,34 @@ void Renderer::Setup()
 
 	
 	m_ScenePtr->PrepareStageBuffer();
-	/*auto meshes = m_ScenePtr->GetMeshes();
-	for (auto* pMesh : meshes)
+	m_pRenderSystem->CreatePipeline(m_ScenePtr->TestPipeline);
+	m_ScenePtr->RefreshGPUBuffer();
+	//auto meshes = m_ScenePtr->GetMeshes();
+	//for (auto* pMesh : meshes)
+	//{
+	//	BufferMaterialPtr pMaterial = pMesh->GetMaterial();
+	//	PipelineDesc pipelineDesc;
+	//	pipelineDesc.VertexAttributes = pMaterial->GetAttributes();
+	//	pipelineDesc.VertexShaders = { pMaterial->GetVertexShader() };
+	//	pipelineDesc.FragmentShaders = { pMaterial->GetFragmentShader() };
+	//	pipelineDesc.UniformBufferSizes = sizeof(UBOData);
+	//	m_ScenePtr->TestPipeline = m_pRenderSystem->CreatePipeline(pipelineDesc);
+
+
+	//	//m_pRenderSystem->AddPrimitive(pPipeline,
+	//	//	pMesh->GetBufferGeometry()->Vertices(), pMesh->GetBufferGeometry()->VerticesCount(),
+	//	//	pMesh->GetBufferGeometry()->Indices(), pMesh->GetBufferGeometry()->IndicesCount());
+	//}
+
+	m_pRenderSystem->RecordCmd([this](VkCommandBuffer cmdBuffer)
 	{
-		BufferMaterialPtr pMaterial = pMesh->GetMaterial();
-		std::shared_ptr<VulkanPipeline> pPipeline;
-		PipelineDesc pipelineDesc;
-		pipelineDesc.VertexAttributes = pMaterial->GetAttributes();
-		pipelineDesc.VertexShaders = { pMaterial->VertexShader };
-		pipelineDesc.FragmentShaders = { pMaterial->FragmentShader };
-		pipelineDesc.UniformBufferSizes = sizeof(UBOData);
-		pPipeline = m_pRenderSystem->CreatePipeline(pipelineDesc);
-
-		m_pRenderSystem->AddPrimitive(pPipeline,
-			pMesh->GetBufferGeometry()->Vertices(), pMesh->GetBufferGeometry()->VerticesCount(),
-			pMesh->GetBufferGeometry()->Indices(), pMesh->GetBufferGeometry()->IndicesCount());
-	}*/
-
-	//m_pRenderSystem->Setup();
+		m_ScenePtr->TestPipeline->BindDescriptorSets(cmdBuffer);
+		m_ScenePtr->TestPipeline->BindPipeline(cmdBuffer);
+		VkDeviceSize offsets[1] = { 0 };
+	/*	vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &VertexBufferPtr->GetVkBuffer(), offsets);
+		vkCmdBindIndexBuffer(cmdBuffer, IndicesBufferPtr->GetVkBuffer(), 0, VK_INDEX_TYPE_UINT32);
+		vkCmdDrawIndexed(cmdBuffer, IndicesCount, 1, 0, 0, 0);*/
+	});
 
 	m_Prepared = true;
 

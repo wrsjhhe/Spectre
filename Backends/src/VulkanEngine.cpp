@@ -3,6 +3,73 @@
 
 USING_NAMESPACE(Spectre)
 
+VulkanCommand::VulkanCommand(VkDevice device,const VkCommandPool& commandPool) :
+    m_VkDevice(device),
+	m_CommandPool(commandPool)
+{
+	VkCommandBufferAllocateInfo cmdBufferInfo{};
+	cmdBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	cmdBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	cmdBufferInfo.commandBufferCount = 1;
+	cmdBufferInfo.commandPool = commandPool;
+
+	vkAllocateCommandBuffers(m_VkDevice, &cmdBufferInfo, &m_VkCommandBuffer);
+
+	VkCommandBufferBeginInfo cmdBufferBeginInfo{};
+	cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	vkBeginCommandBuffer(m_VkCommandBuffer, &cmdBufferBeginInfo);
+
+	VkFenceCreateInfo fenceInfo{};
+	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceInfo.flags = 0;
+
+	vkCreateFence(m_VkDevice, &fenceInfo, nullptr, &m_VkFence);
+}
+
+
+VulkanCommand::~VulkanCommand()
+{
+	vkFreeCommandBuffers(m_VkDevice, m_CommandPool, 1, &m_VkCommandBuffer);
+	vkDestroyFence(m_VkDevice, m_VkFence, nullptr);
+}
+
+
+void VulkanCommand::RecordCommond(std::function<void(VkCommandBuffer)> recordCmd)
+{
+	recordCmd(m_VkCommandBuffer);
+}
+
+void VulkanCommand::Submit(VulkanQueue& queue)
+{
+	vkEndCommandBuffer(m_VkCommandBuffer);
+	
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &m_VkCommandBuffer;
+	submitInfo.signalSemaphoreCount = SignalSemaphore.size();
+	submitInfo.pSignalSemaphores = SignalSemaphore.data();
+	submitInfo.waitSemaphoreCount = WaitSemaphore.size();
+	submitInfo.pWaitSemaphores = WaitSemaphore.data();
+	submitInfo.pWaitDstStageMask = WaitStageMask.data();
+
+	vkResetFences(m_VkDevice, 1, &m_VkFence);
+	vkQueueSubmit(queue.VkQueue, 1, &submitInfo, m_VkFence);
+	vkWaitForFences(m_VkDevice, 1, &m_VkFence, true, 0x7fffffffffffffff);
+
+    Reset();
+}
+
+void VulkanCommand::Reset()
+{
+	vkResetCommandBuffer(m_VkCommandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+	VkCommandBufferBeginInfo cmdBufferBeginInfo{};
+	cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	vkBeginCommandBuffer(m_VkCommandBuffer, &cmdBufferBeginInfo);
+}
+
+
+
 
 static constexpr const char* ValidationLayerNames[] =
 {
@@ -74,6 +141,7 @@ VulkanEngine::VulkanEngine(const VulkanEngineCreateInfo& ci):
     CreateVkInstance();
     CreateVkPhysicalDevice();
     CreateVkDevice();
+    CreateCommands();
 }
 
 VulkanEngine::~VulkanEngine()
@@ -355,6 +423,22 @@ void VulkanEngine::CreateVkDevice()
     else
     {
         m_TransferQueue = m_GraphicQueue;
+    }
+}
+
+void VulkanEngine::CreateCommands()
+{
+	VkCommandPoolCreateInfo cmdPoolInfo{};
+	cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	cmdPoolInfo.queueFamilyIndex = m_GraphicQueue.QueueFamilyIndex;
+	cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+	VK_CHECK(vkCreateCommandPool(m_VkDevice, &cmdPoolInfo, nullptr, &m_VkCommandPool), "Failed created VkCommandPool!");
+
+    m_TransformCmdPtr = std::make_shared<VulkanCommand>(m_VkDevice,m_VkCommandPool);
+    m_RenderCmdPtrs.reserve(g_ImageSize);
+    for (uint32_t i = 0 ;i < g_ImageSize;++i)
+    {
+        m_RenderCmdPtrs.push_back(std::make_shared<VulkanCommand>(m_VkDevice, m_VkCommandPool));
     }
 }
 

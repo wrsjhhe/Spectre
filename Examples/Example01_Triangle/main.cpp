@@ -39,8 +39,8 @@ public:
 		std::vector<VertexAttribute> VertexAttrs = { VertexAttribute_Position, VertexAttribute_Color };
 
 		BufferMaterialPtr pMat = BufferMaterial::Create();
-		pMat->VertexShader = FileUtils::ReadFile("Shaders/triangle.vert");
-		pMat->FragmentShader = FileUtils::ReadFile("Shaders/triangle.frag");
+		pMat->SetVertexShader(FileUtils::ReadFile("Shaders/triangle.vert")) ;
+		pMat->SetFragmentShader(FileUtils::ReadFile("Shaders/triangle.frag"));
 		pMat->DefineAttributes(VertexAttrs);
 		BufferGeometry* geometry1 = BufferGeometry::Create(VertexAttrs);
 		// ¶¥µãÊý¾Ý

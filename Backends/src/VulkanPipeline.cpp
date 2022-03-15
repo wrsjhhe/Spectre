@@ -2,6 +2,7 @@
 #include "VulkanRenderPass.h"
 #include "VulkanBuffer.h"
 #include "ShaderTool.h"
+#include "VulkanEngine.h"
 #include <fstream>
 
 
@@ -143,9 +144,9 @@ static VkFormat VertexAttributeToVkFormat(VertexAttribute attribute)
 }
 
 
-std::shared_ptr<VulkanPipeline> VulkanPipeline::Create(VkDevice device)
+std::shared_ptr<VulkanPipeline> VulkanPipeline::Create()
 {
-	auto* pPipeline = new VulkanPipeline(device);
+	auto* pPipeline = new VulkanPipeline();
 	return std::shared_ptr<VulkanPipeline>(pPipeline);
 }
 
@@ -216,9 +217,10 @@ void VulkanPipeline::CreateShaderModules(const std::vector<std::string>& vertexS
 
 void VulkanPipeline::CreatePipelineInstance(const VulkanRenderPass& renderPass)
 {
+	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
 	if (m_VkPipeline != VK_NULL_HANDLE)
 	{
-		vkDestroyPipeline(m_VkDevice, m_VkPipeline, nullptr);
+		vkDestroyPipeline(device, m_VkPipeline, nullptr);
 		m_VkPipeline = nullptr;
 	}
 
@@ -246,7 +248,7 @@ void VulkanPipeline::CreatePipelineInstance(const VulkanRenderPass& renderPass)
 	pipelineCreateInfo.pViewportState = &m_ViewportState;
 	pipelineCreateInfo.pDepthStencilState = &m_DepthStencilState;
 	pipelineCreateInfo.pDynamicState = &dynamicState;
-	vkCreateGraphicsPipelines(m_VkDevice, m_VkPipelineCache, 1, &pipelineCreateInfo, nullptr, &m_VkPipeline);
+	vkCreateGraphicsPipelines(device, m_VkPipelineCache, 1, &pipelineCreateInfo, nullptr, &m_VkPipeline);
 
 }
 void VulkanPipeline::BindDescriptorSets(const VkCommandBuffer& commandBuffer)
@@ -261,25 +263,25 @@ void VulkanPipeline::BindPipeline(const VkCommandBuffer& commandBuffer)
 
 void VulkanPipeline::Destory()
 {
+	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
 	for (auto& shaderStage : m_ShaderStages)
 	{
-		vkDestroyShaderModule(m_VkDevice, shaderStage.module, nullptr);
+		vkDestroyShaderModule(device, shaderStage.module, nullptr);
 	}
 
-	vkDestroyPipelineLayout(m_VkDevice, m_VkPipelineLayout, nullptr);
-	vkDestroyPipeline(m_VkDevice, m_VkPipeline, nullptr);
-	vkDestroyPipelineCache(m_VkDevice, m_VkPipelineCache, nullptr);
+	vkDestroyPipelineLayout(device, m_VkPipelineLayout, nullptr);
+	vkDestroyPipeline(device, m_VkPipeline, nullptr);
+	vkDestroyPipelineCache(device, m_VkPipelineCache, nullptr);
 
-	vkDestroyDescriptorSetLayout(m_VkDevice, m_VkDescriptorSetLayout, nullptr);
-	vkDestroyDescriptorPool(m_VkDevice, m_VkDescriptorPool, nullptr);
+	vkDestroyDescriptorSetLayout(device, m_VkDescriptorSetLayout, nullptr);
+	vkDestroyDescriptorPool(device, m_VkDescriptorPool, nullptr);
 }
 
-VulkanPipeline::VulkanPipeline(VkDevice device):
-	m_VkDevice(device)
+VulkanPipeline::VulkanPipeline()
 {
 	CreateDescriptorPool();
 	CreateDescriptorSetLayout();
-
+	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
 
 	VkPipelineLayoutCreateInfo pipeLayoutInfo{};
 	pipeLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -343,6 +345,7 @@ VulkanPipeline::VulkanPipeline(VkDevice device):
 
 VkShaderModule VulkanPipeline::LoadSPIPVShader(const std::string& shaderCode, ShaderType type)
 {
+	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
 	std::vector<uint32_t> spvCode = ShaderTool::Compile_glsl(shaderCode, type);
 
 	VkShaderModuleCreateInfo moduleCreateInfo{};
@@ -351,13 +354,14 @@ VkShaderModule VulkanPipeline::LoadSPIPVShader(const std::string& shaderCode, Sh
 	moduleCreateInfo.pCode = spvCode.data();
 
 	VkShaderModule shaderModule;
-	vkCreateShaderModule(m_VkDevice, &moduleCreateInfo, nullptr, &shaderModule);
+	vkCreateShaderModule(device, &moduleCreateInfo, nullptr, &shaderModule);
 
 	return shaderModule;
 }
 
 void VulkanPipeline::CreateDescriptorPool()
 {
+	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
 	VkDescriptorPoolSize poolSize = {};
 	poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	poolSize.descriptorCount = DESCRIPTOR_TYPE_COUNT;
@@ -367,11 +371,12 @@ void VulkanPipeline::CreateDescriptorPool()
 	descriptorPoolInfo.poolSizeCount = 1;
 	descriptorPoolInfo.pPoolSizes = &poolSize;
 	descriptorPoolInfo.maxSets = 1;
-	vkCreateDescriptorPool(m_VkDevice, &descriptorPoolInfo, nullptr, &m_VkDescriptorPool);
+	vkCreateDescriptorPool(device, &descriptorPoolInfo, nullptr, &m_VkDescriptorPool);
 }
 
 void VulkanPipeline::CreateDescriptorSetLayout()
 {
+	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
 	VkDescriptorSetLayoutBinding layoutBinding;
 	layoutBinding.binding = 0;
 	layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -383,18 +388,19 @@ void VulkanPipeline::CreateDescriptorSetLayout()
 	descSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 	descSetLayoutInfo.bindingCount = 1;
 	descSetLayoutInfo.pBindings = &layoutBinding;
-	vkCreateDescriptorSetLayout(m_VkDevice, &descSetLayoutInfo, nullptr, &m_VkDescriptorSetLayout);
+	vkCreateDescriptorSetLayout(device, &descSetLayoutInfo, nullptr, &m_VkDescriptorSetLayout);
 }
 
 
 void VulkanPipeline::CreateUniformBuffer(uint32_t  bufferSize)
 {
+	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
 	VkDescriptorSetAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	allocInfo.descriptorPool = m_VkDescriptorPool;
 	allocInfo.descriptorSetCount = 1;
 	allocInfo.pSetLayouts = &m_VkDescriptorSetLayout;
-	vkAllocateDescriptorSets(m_VkDevice, &allocInfo, &m_VkDescriptorSet);
+	vkAllocateDescriptorSets(device, &allocInfo, &m_VkDescriptorSet);
 
 	m_MVPBuffer = VulkanBuffer::Create(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
@@ -411,5 +417,5 @@ void VulkanPipeline::CreateUniformBuffer(uint32_t  bufferSize)
 	writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	writeDescriptorSet.pBufferInfo = &MVPDescriptor;
 	writeDescriptorSet.dstBinding = 0;
-	vkUpdateDescriptorSets(m_VkDevice, 1, &writeDescriptorSet, 0, nullptr);
+	vkUpdateDescriptorSets(device, 1, &writeDescriptorSet, 0, nullptr);
 }

@@ -23,11 +23,11 @@ public:
 
 	VkBuffer& GetVkBuffer() { return m_VkbBuffer; }
 
-	uint64_t GetSize()const { return m_Size; }
+	uint64_t GetTotalSize()const { return m_TotalSize; }
 
-	void CopyTo(VulkanBufferPtr dstBuffer, const VkCommandBuffer& commandBuffer);
+	void CopyTo(VulkanBufferPtr dstBuffer);
 
-	void Map(void* ptr,bool keepMap = false);
+	void Map(void* ptr,uint32_t size = VK_WHOLE_SIZE,uint32_t offset = 0,  bool keepMap = false);
 
 	void UnMap();
 
@@ -41,7 +41,7 @@ public:
 	void* MapPointerCache = nullptr;
 
 private:
-	uint32_t                                     m_Size = 0;
+	uint32_t                                     m_TotalSize = 0;
 	VkDeviceMemory				                 m_VkMemory = VK_NULL_HANDLE;
 	VkBuffer					                 m_VkbBuffer = VK_NULL_HANDLE;
 };

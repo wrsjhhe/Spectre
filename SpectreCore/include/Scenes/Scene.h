@@ -3,6 +3,7 @@
 #include "Object3D.h"
 #include "Objects/Mesh.h"
 #include "Buffers/BufferBlock.h"
+#include "VulkanPipeline.h"
 BEGIN_NAMESPACE_SPECTRE
 
 struct RenderObject 
@@ -15,7 +16,7 @@ struct RenderObject
 	uint32_t updateIndex;
 	uint32_t customSortKey{ 0 };
 
-	Matrix transformMatrix;
+	BufferBlock* Buffer;
 };
 
 class Scene : Object3D
@@ -29,7 +30,13 @@ public:
 
 	const std::vector<Mesh*>& GetMeshes() const { return m_Meshes; }
 
+	void CreatePipeline();
+
 	void PrepareStageBuffer();
+
+	void RefreshGPUBuffer();
+
+	VulkanPipelinePtr TestPipeline;
 
 private:
 	std::vector<Mesh*> m_Meshes;

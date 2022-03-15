@@ -59,7 +59,7 @@ void RenderSystemVK::CreateRenderContext(const RenderContextDesc& desc)
 	m_ContextPtr->CalcSwapchainParamaters(surface);
 	
 	m_RenderComplete = VulkanSemaphore::CreateSemaphore();
-	m_RenderCommands = VulkanCommand::Create(m_ContextPtr->GetVkGraphicCommandPool(), g_ImageSize);
+	//m_RenderCommands = VulkanCommand::Create(m_ContextPtr->GetVkGraphicCommandPool(), g_ImageSize);
 }
 
 
@@ -79,7 +79,7 @@ void RenderSystemVK::CreateSwapChain(const SwapChainDesc& desc)
 
 }
 
-void RenderSystemVK::Setup()
+void RenderSystemVK::RecordCmd(std::function<void(VkCommandBuffer)> cmdFn)
 {
 	VkClearValue clearValues[2];
 	clearValues[0].color = {
@@ -97,10 +97,9 @@ void RenderSystemVK::Setup()
 	renderPassBeginInfo.renderArea.extent.width = m_SwapChain->GetWidth();
 	renderPassBeginInfo.renderArea.extent.height = m_SwapChain->GetHeight();
 
-	
-	for (uint32_t i = 0; i < m_RenderCommands.size(); ++i)
+	auto cmd = VulkanEngine::GetInstance()->GetRenderCmd();
+	for (uint32_t i = 0; i < cmd.size(); ++i)
 	{
-		m_RenderCommands[i]->Reset();
 		renderPassBeginInfo.framebuffer = m_FrameBuffers[i]->GetVkFrameBuffer();
 
 		VkViewport viewport = {};
@@ -119,16 +118,17 @@ void RenderSystemVK::Setup()
 
 		VkDeviceSize offsets[1] = { 0 };
 
-		m_RenderCommands[i]->RecordCommond([&](VkCommandBuffer cmdBuffer) {
+		cmd[i]->RecordCommond([&](VkCommandBuffer cmdBuffer) {
 			vkCmdBeginRenderPass(cmdBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
 			vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
-			for (auto kvMesh : m_Primitives)
-			{
-				kvMesh.second->PipelinePtr->BindDescriptorSets(cmdBuffer);
-				kvMesh.second->PipelinePtr->BindPipeline(cmdBuffer);
-				kvMesh.second->BindDrawCmd(cmdBuffer);
-			}
+			cmdFn(cmdBuffer);
+			/*	for (auto kvMesh : m_Primitives)
+				{
+					kvMesh.second->PipelinePtr->BindDescriptorSets(cmdBuffer);
+					kvMesh.second->PipelinePtr->BindPipeline(cmdBuffer);
+					kvMesh.second->BindDrawCmd(cmdBuffer);
+				}*/
 			
 			//m_GuiPtr->BindDrawCmd(cmdBuffer, m_RenderPass->GetVkRenderPass());
 			vkCmdEndRenderPass(cmdBuffer);		
@@ -167,11 +167,12 @@ void RenderSystemVK::Draw()
 	// Ìá½»»æÖÆÃüÁî
 	VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
-	m_RenderCommands[backBufferIndex]->SignalSemaphore = { m_RenderComplete->GetVkSemaphore() };
-	m_RenderCommands[backBufferIndex]->WaitSemaphore = { m_PresentComplete->GetVkSemaphore() };
-	m_RenderCommands[backBufferIndex]->WaitStageMask = { waitStageMask };
+	auto cmd = VulkanEngine::GetInstance()->GetRenderCmd();
+	cmd[backBufferIndex]->SignalSemaphore = { m_RenderComplete->GetVkSemaphore() };
+	cmd[backBufferIndex]->WaitSemaphore = { m_PresentComplete->GetVkSemaphore() };
+	cmd[backBufferIndex]->WaitStageMask = { waitStageMask };
 
-	m_RenderCommands[backBufferIndex]->Submit(queue);
+	cmd[backBufferIndex]->Submit(queue);
 	
 	// present
 	m_SwapChain->Present(
@@ -211,48 +212,43 @@ void RenderSystemVK::CreateFrameBuffer()
 }
 
 
-VulkanPrimitive* RenderSystemVK::AddPrimitive(std::shared_ptr<VulkanPipeline> pPipeline,
-	Vertex* vertices, uint32_t vertCount, uint32_t* indices, uint32_t indCount)
+//VulkanPrimitive* RenderSystemVK::AddPrimitive(std::shared_ptr<VulkanPipeline> pPipeline,
+//	Vertex* vertices, uint32_t vertCount, uint32_t* indices, uint32_t indCount)
+//{
+//	VkDevice device = m_VulkanEnginePtr->GetVkDevice();
+//	VulkanQueue queue = m_VulkanEnginePtr->GetGraphicQueue();
+//
+//	auto tempIndexBuffer = VulkanBuffer::Create(indCount * sizeof(uint32_t), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+//	auto tempVertexBuffer = VulkanBuffer::Create(vertCount * sizeof(Vertex), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+//
+//	tempIndexBuffer->Map(indices);
+//	tempVertexBuffer->Map(vertices);
+//
+//	VulkanPrimitive* pPrimitive = new VulkanPrimitive();
+//	pPrimitive->IndicesBufferPtr = VulkanBuffer::Create(indCount * sizeof(uint32_t), VkBufferUsageFlagBits(VK_BUFFER_USAGE_TRANSFER_DST_BIT| VK_BUFFER_USAGE_INDEX_BUFFER_BIT),
+//		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+//	pPrimitive->IndicesCount = indCount;
+//	pPrimitive->VertexBufferPtr = VulkanBuffer::Create(vertCount * sizeof(Vertex), VkBufferUsageFlagBits(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT),
+//		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+//
+//	auto xferCmdBuffer = VulkanEngine::GetInstance()->GetTransformCmd();
+//
+//	xferCmdBuffer->RecordCommond([&](VkCommandBuffer cmdBuffer) {
+//		tempIndexBuffer->CopyTo(pPrimitive->IndicesBufferPtr, cmdBuffer);
+//		tempVertexBuffer->CopyTo(pPrimitive->VertexBufferPtr, cmdBuffer);
+//	});
+//	
+//	xferCmdBuffer->Submit(queue);
+//
+//	pPrimitive->PipelinePtr = pPipeline;
+//
+//	m_Primitives[pPrimitive->Id()] = pPrimitive;
+//
+//	return pPrimitive;
+//}
+void RenderSystemVK::CreatePipeline(VulkanPipelinePtr pipeline)
 {
-	VkDevice device = m_VulkanEnginePtr->GetVkDevice();
-	VulkanQueue queue = m_VulkanEnginePtr->GetGraphicQueue();
-
-	auto tempIndexBuffer = VulkanBuffer::Create(indCount * sizeof(uint32_t), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-	auto tempVertexBuffer = VulkanBuffer::Create(vertCount * sizeof(Vertex), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-	tempIndexBuffer->Map(indices);
-	tempVertexBuffer->Map(vertices);
-
-	VulkanPrimitive* pPrimitive = new VulkanPrimitive();
-	pPrimitive->IndicesBufferPtr = VulkanBuffer::Create(indCount * sizeof(uint32_t), VkBufferUsageFlagBits(VK_BUFFER_USAGE_TRANSFER_DST_BIT| VK_BUFFER_USAGE_INDEX_BUFFER_BIT),
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-	pPrimitive->IndicesCount = indCount;
-	pPrimitive->VertexBufferPtr = VulkanBuffer::Create(vertCount * sizeof(Vertex), VkBufferUsageFlagBits(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT),
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-	auto xferCmdBuffer = VulkanCommand::Create(m_ContextPtr->GetVkGraphicCommandPool(), 1)[0];
-
-	xferCmdBuffer->RecordCommond([&](VkCommandBuffer cmdBuffer) {
-		tempIndexBuffer->CopyTo(pPrimitive->IndicesBufferPtr, cmdBuffer);
-		tempVertexBuffer->CopyTo(pPrimitive->VertexBufferPtr, cmdBuffer);
-	});
 	
-	xferCmdBuffer->Submit(queue);
-
-	pPrimitive->PipelinePtr = pPipeline;
-
-	m_Primitives[pPrimitive->Id()] = pPrimitive;
-
-	return pPrimitive;
-}
-std::shared_ptr<VulkanPipeline> RenderSystemVK::CreatePipeline(const PipelineDesc& pipelineDesc)
-{
-	auto pipeline = VulkanPipeline::Create(m_VulkanEnginePtr->GetVkDevice());
-	pipeline->CreateShaderModules(pipelineDesc.VertexShaders, pipelineDesc.FragmentShaders);
-	pipeline->SetVertexDescription(pipelineDesc.VertexAttributes);
-	pipeline->CreateUniformBuffer(pipelineDesc.UniformBufferSizes);
-	pipeline->CreatePipelineInstance(*m_RenderPass);
-	return pipeline;
 }
 
 void RenderSystemVK::UpdateUniformBuffers(void* pBuffe)
@@ -262,7 +258,7 @@ void RenderSystemVK::UpdateUniformBuffers(void* pBuffe)
 		auto buffer = primKV.second->PipelinePtr->GetUniformBuffer();
 		if (buffer->MapPointerCache!=nullptr)
 		{
-			std::memcpy(buffer->MapPointerCache, pBuffe, buffer->GetSize());
+			std::memcpy(buffer->MapPointerCache, pBuffe, buffer->GetTotalSize());
 			buffer->Flush();
 		}
 		else
@@ -287,7 +283,7 @@ void RenderSystemVK::ReceateSwapchain(const SwapChainDesc& desc)
 	m_SwapChain = std::make_shared<VulkanSwapChain>(*m_ContextPtr, _desc);
 	CreateFrameBuffer();
 
-	Setup();
+	//Setup();
 }
 
 void RenderSystemVK::DestorySwapchain()

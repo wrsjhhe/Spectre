@@ -13,13 +13,13 @@ std::shared_ptr<VulkanBuffer> VulkanBuffer::Create(uint32_t size, VkBufferUsageF
 }
 
 VulkanBuffer::VulkanBuffer(uint32_t size, VkBufferUsageFlagBits usage, VkMemoryPropertyFlags memoryFlags):
-	m_Size(size)
+	m_TotalSize(size)
 {
 	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
 
 	VkBufferCreateInfo bufferCI{};
 	bufferCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	bufferCI.size = m_Size;
+	bufferCI.size = m_TotalSize;
 	bufferCI.usage = (VkBufferUsageFlags)usage;
 	vkCreateBuffer(device, &bufferCI, nullptr, &m_VkbBuffer);
 
@@ -41,19 +41,21 @@ VulkanBuffer::~VulkanBuffer()
 }
 
 
-void VulkanBuffer::CopyTo(VulkanBufferPtr dstBuffer ,const VkCommandBuffer& commandBuffer)
+void VulkanBuffer::CopyTo(VulkanBufferPtr dstBuffer)
 {
+	auto cmd = VulkanEngine::GetInstance()->GetTransformCmd();
 	VkBufferCopy copyRegion = {};
-	copyRegion.size = m_Size;
-	vkCmdCopyBuffer(commandBuffer, m_VkbBuffer, dstBuffer->m_VkbBuffer, 1, &copyRegion);
+	copyRegion.size = m_TotalSize;
+	vkCmdCopyBuffer(cmd->GetVkCommandBuffer(), m_VkbBuffer, dstBuffer->m_VkbBuffer, 1, &copyRegion);
 }
 
-void VulkanBuffer::Map(void* ptr, bool keepMap)
+void VulkanBuffer::Map(void* ptr, uint32_t size, uint32_t offset, bool keepMap)
 {
+	uint32_t mapSize = size;
 	MapPointerCache = nullptr;
 	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
-	vkMapMemory(device, m_VkMemory, 0, m_Size, 0, &MapPointerCache);
-	std::memcpy(MapPointerCache, ptr, m_Size);
+	vkMapMemory(device, m_VkMemory, offset, size, 0, &MapPointerCache);
+	std::memcpy(MapPointerCache, ptr, size);
 	Flush();
 
 	if (!keepMap)
@@ -82,7 +84,7 @@ void VulkanBuffer::Destroy()
 	vkFreeMemory(device, m_VkMemory, nullptr);
 	m_VkMemory = VK_NULL_HANDLE;
 
-	m_Size = 0;
+	m_TotalSize = 0;
 }
 
 

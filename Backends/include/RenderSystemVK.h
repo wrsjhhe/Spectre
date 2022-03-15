@@ -7,6 +7,7 @@
 #include "NativeWindow.h"
 #include "RenderTypes.h"
 #include "VulkanPipeline.h"
+#include "VulkanCommand.h"
 #include "Math/MathDef.h"
 namespace Spectre
 {
@@ -20,14 +21,12 @@ namespace Spectre
 	class VulkanSwapChain;
 	class VulkanBuffer;
 	class VulkanPrimitive;
-	class VulkanCommand;
 	class VulkanImages;
 	class VulkanRenderPass;
 	class VulkanFrameBuffer;
 	class VulkanSemaphore;
 	class VulkanPipeline;
 	class VulkanGui;
-	typedef std::shared_ptr<VulkanCommand> VulkanCommandPtr;
 
 	class RenderSystemVK
 	{
@@ -38,14 +37,14 @@ namespace Spectre
 
 		void CreateSwapChain(const SwapChainDesc& desc);
 
-		VulkanPrimitive* AddPrimitive(std::shared_ptr<VulkanPipeline> pPipeline,
-			Vertex* vertices,uint32_t vertCount, uint32_t* indices,uint32_t indCount);
+		//VulkanPrimitive* AddPrimitive(std::shared_ptr<VulkanPipeline> pPipeline,
+		//	Vertex* vertices,uint32_t vertCount, uint32_t* indices,uint32_t indCount);
 
-		std::shared_ptr<VulkanPipeline> CreatePipeline(const PipelineDesc& pipelineDesc);
+		void CreatePipeline(VulkanPipelinePtr pipeline);
 
 		void UpdateUniformBuffers(void* pBuffe);
 
-		void Setup();
+		void RecordCmd(std::function<void(VkCommandBuffer)> cmd);
 
 		void Draw();
 
@@ -75,7 +74,7 @@ namespace Spectre
 
 		std::unordered_map<SpectreId, VulkanPrimitive*>   m_Primitives;
 
-		std::vector<VulkanCommandPtr>			m_RenderCommands;
+		//std::vector<VulkanCommandPtr>			m_RenderCommands;
 
 		std::shared_ptr<VulkanSemaphore>		m_PresentComplete;
 
