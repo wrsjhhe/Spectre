@@ -45,9 +45,9 @@ public:
 		BufferGeometry* geometry1 = BufferGeometry::Create(VertexAttrs);
 		// 顶点数据
 		std::vector<Vertex> vertices1 = {
-			{{1.0f, 1.0f, 0.0f} ,    { 1.0f, 0.0f, 0.0f,1.f}},
-			{	{-1.0f,1.0f, 0.0f} , {    0.0f, 1.0f, 0.0f,1.f}},
-			{{	0.0f, -1.0f, 0.0f} ,{    0.0f, 0.0f, 1.0f,1.f}}
+			{{1.0f, 1.0f, 0.0f} ,    { 1.0f, 0.0f, 0.0f}},
+			{	{-1.0f,1.0f, 0.0f} , {    0.0f, 1.0f, 0.0f}},
+			{{	0.0f, -1.0f, 0.0f} ,{    0.0f, 0.0f, 1.0f}}
 		};
 
 		// 索引数据
@@ -55,7 +55,7 @@ public:
 		geometry1->SetVertices(vertices1.data(), vertices1.size());
 		geometry1->SetFaceIndex(indices1.data(), indices1.size());
 
-		Mesh* pMesh1 = Mesh::Create(geometry1, pMat);
+		MeshPtr pMesh1 = Mesh::Create(geometry1, pMat);
 
 		//BufferGeometry* geometry2 = BufferGeometry::Create(VertexAttrs);
 		//// 顶点数据
@@ -73,7 +73,7 @@ public:
 		//Mesh* pMesh2 = Mesh::Create(geometry2, pMat);
 
 		Scene scene;
-		scene.Add(pMesh1);
+		scene.AddMesh(pMesh1);
 		//scene.Add(pMesh2);
 		renderer.Attach({ context.GetWindowHandle() });
 		renderer.BindScene(&scene);

@@ -47,7 +47,7 @@ static __inline auto DegreesToRadians(T const& degVal) -> decltype(degVal* (PI /
 struct Vertex
 {
 	float Position[3];
-	float Color[4];
+	float Color[3];
 };
 
 END_NAMESPACE_SPECTRE

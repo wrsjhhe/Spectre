@@ -59,7 +59,9 @@ void Renderer::Setup()
 	swapChainDesc.Height = m_Height;
 	m_pRenderSystem->CreateSwapChain(swapChainDesc);
 
-	auto meshes = m_ScenePtr->GetMeshes();
+	
+	m_ScenePtr->PrepareStageBuffer();
+	/*auto meshes = m_ScenePtr->GetMeshes();
 	for (auto* pMesh : meshes)
 	{
 		BufferMaterialPtr pMaterial = pMesh->GetMaterial();
@@ -74,9 +76,9 @@ void Renderer::Setup()
 		m_pRenderSystem->AddPrimitive(pPipeline,
 			pMesh->GetBufferGeometry()->Vertices(), pMesh->GetBufferGeometry()->VerticesCount(),
 			pMesh->GetBufferGeometry()->Indices(), pMesh->GetBufferGeometry()->IndicesCount());
-	}
+	}*/
 
-	m_pRenderSystem->Setup();
+	//m_pRenderSystem->Setup();
 
 	m_Prepared = true;
 

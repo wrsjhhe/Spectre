@@ -12,28 +12,20 @@ Scene::~Scene()
 
 }
 
-void Scene::Add(Object3D* pObj)
-{
-	if (Mesh::Desc(pObj))
-	{
-		AddMesh(static_cast<Mesh*>(pObj));
-	}
-	
-}
 
-void Scene::AddMesh(Mesh* pMesh)
+void Scene::AddMesh(MeshPtr pMesh)
 {
 	RenderObject newObj;
+	newObj.MeshPtr = pMesh;
 	newObj.transformMatrix = pMesh->GetTransformMatrix();
-	newObj.MaterialPtr = pMesh->GetMaterial();
 	newObj.updateIndex = (uint32_t)-1;
 	newObj.customSortKey = 0;
 	m_PendingObjects.push_back(std::move(newObj));
 
-	m_Meshes.emplace_back(pMesh);
+	//m_Meshes.emplace_back(pMesh);
 }
 
-void Scene::ReflashPass()
+void Scene::PrepareStageBuffer()
 {
 	if (!m_PendingObjects.empty())
 	{
@@ -45,8 +37,8 @@ void Scene::ReflashPass()
 			pendingObj.FirstVertex = totalVertices;
 			pendingObj.FirstIndex = totalIndices;
 
-			totalVertices += pendingObj.FirstVertex;
-			totalIndices += pendingObj.FirstIndex;
+			totalVertices += pGeomtry->VerticesCount();
+			totalIndices += pGeomtry->IndicesCount();
 		}
 
 		m_MergedVertexBuffer.Alloc(totalVertices * sizeof(Vertex));

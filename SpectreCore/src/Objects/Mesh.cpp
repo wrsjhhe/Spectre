@@ -1,10 +1,10 @@
 #include "Objects/Mesh.h"
 USING_NAMESPACE(Spectre)
 
-Mesh* Mesh::Create(BufferGeometry* pGeometry, BufferMaterialPtr pMaterial)
+MeshPtr Mesh::Create(BufferGeometry* pGeometry, BufferMaterialPtr pMaterial)
 {
 	Mesh* pMesh = new Mesh(pGeometry, pMaterial);
-	return pMesh;
+	return std::shared_ptr<Mesh>(pMesh);
 }
 
 Mesh::Mesh(BufferGeometry* pGeometry, BufferMaterialPtr pMaterial):

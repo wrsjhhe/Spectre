@@ -14,7 +14,7 @@ class Mesh : public Object3D
 {
 public:
 	DefineClass(Mesh)
-	static Mesh* Create(BufferGeometry* pGeometry, BufferMaterialPtr pMaterial);
+	static MeshPtr Create(BufferGeometry* pGeometry, BufferMaterialPtr pMaterial);
 public:
 
 	virtual ~Mesh();
