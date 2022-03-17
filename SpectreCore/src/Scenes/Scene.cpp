@@ -87,7 +87,7 @@ void Scene::RefreshGPUBuffer()
 	{
 		VkDrawIndexedIndirectCommand command;
 		command.firstInstance = 0;
-		command.instanceCount = 0;
+		command.instanceCount = 1;
 		command.firstIndex = obj.FirstIndex;
 		command.vertexOffset = obj.FirstVertex;
 		command.indexCount = obj.MeshPtr->GetBufferGeometry()->IndicesCount();

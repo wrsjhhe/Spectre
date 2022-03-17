@@ -60,22 +60,7 @@ void Renderer::Setup()
 	m_pRenderSystem->CreatePipeline(m_ScenePtr->TestPipeline);
 	m_ScenePtr->PrepareStageBuffer();
 	m_ScenePtr->RefreshGPUBuffer();
-	//auto meshes = m_ScenePtr->GetMeshes();
-	//for (auto* pMesh : meshes)
-	//{
-	//	BufferMaterialPtr pMaterial = pMesh->GetMaterial();
-	//	PipelineDesc pipelineDesc;
-	//	pipelineDesc.VertexAttributes = pMaterial->GetAttributes();
-	//	pipelineDesc.VertexShaders = { pMaterial->GetVertexShader() };
-	//	pipelineDesc.FragmentShaders = { pMaterial->GetFragmentShader() };
-	//	pipelineDesc.UniformBufferSizes = sizeof(UBOData);
-	//	m_ScenePtr->TestPipeline = m_pRenderSystem->CreatePipeline(pipelineDesc);
 
-
-	//	//m_pRenderSystem->AddPrimitive(pPipeline,
-	//	//	pMesh->GetBufferGeometry()->Vertices(), pMesh->GetBufferGeometry()->VerticesCount(),
-	//	//	pMesh->GetBufferGeometry()->Indices(), pMesh->GetBufferGeometry()->IndicesCount());
-	//}
 
 	m_pRenderSystem->RecordCmd([this](VkCommandBuffer cmdBuffer)
 	{
@@ -86,18 +71,14 @@ void Renderer::Setup()
 		const std::vector<RenderObject>& psssObjs = m_ScenePtr->GetPassObjects();
 		vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &m_ScenePtr->m_MergedVertexBuffer.GetDeviceBuffer()->GetVkBuffer(), offsets);
 		vkCmdBindIndexBuffer(cmdBuffer, m_ScenePtr->m_MergedIndexBuffer.GetDeviceBuffer()->GetVkBuffer(), 0, VK_INDEX_TYPE_UINT32);
-		vkCmdDrawIndexed(cmdBuffer, 3, 1, 0, 0, 0);
-	/*	for (uint32_t i = 0; i < m_ScenePtr->TestIndirectCommands.size(); ++i)
+		//vkCmdDrawIndexed(cmdBuffer, 3, 1, 0, 0, 0);
+		for (uint32_t i = 0; i < m_ScenePtr->TestIndirectCommands.size(); ++i)
 		{
 			auto indirectCmd = m_ScenePtr->TestIndirectCommands[i];
 			vkCmdDrawIndexedIndirect(cmdBuffer, m_ScenePtr->TestIndirectBuffer->GetVkBuffer(),
 				i * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
 
-		}*/
-
-	/*	vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &VertexBufferPtr->GetVkBuffer(), offsets);
-		vkCmdBindIndexBuffer(cmdBuffer, IndicesBufferPtr->GetVkBuffer(), 0, VK_INDEX_TYPE_UINT32);
-		vkCmdDrawIndexed(cmdBuffer, IndicesCount, 1, 0, 0, 0);*/
+		}
 	});
 
 	m_Prepared = true;
