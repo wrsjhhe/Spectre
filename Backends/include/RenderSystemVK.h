@@ -42,7 +42,7 @@ namespace Spectre
 
 		void CreatePipeline(VulkanPipelinePtr pipeline);
 
-		void UpdateUniformBuffers(void* pBuffe);
+		//void UpdateUniformBuffers(void* pBuffe);
 
 		void RecordCmd(std::function<void(VkCommandBuffer)> cmd);
 

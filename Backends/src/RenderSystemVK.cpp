@@ -116,7 +116,7 @@ void RenderSystemVK::RecordCmd(std::function<void(VkCommandBuffer)> cmdFn)
 		scissor.offset.x = 0;
 		scissor.offset.y = 0;
 
-		VkDeviceSize offsets[1] = { 0 };
+		//VkDeviceSize offsets[1] = { 0 };
 
 		cmd[i]->RecordCommond([&](VkCommandBuffer cmdBuffer) {
 			vkCmdBeginRenderPass(cmdBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -172,7 +172,7 @@ void RenderSystemVK::Draw()
 	cmd[backBufferIndex]->WaitSemaphore = { m_PresentComplete->GetVkSemaphore() };
 	cmd[backBufferIndex]->WaitStageMask = { waitStageMask };
 
-	cmd[backBufferIndex]->Submit(queue);
+	cmd[backBufferIndex]->Submit(queue,false);
 	
 	// present
 	m_SwapChain->Present(
@@ -248,25 +248,25 @@ void RenderSystemVK::CreateFrameBuffer()
 //}
 void RenderSystemVK::CreatePipeline(VulkanPipelinePtr pipeline)
 {
-	
+	pipeline->CreatePipelineInstance(*m_RenderPass);
 }
 
-void RenderSystemVK::UpdateUniformBuffers(void* pBuffe)
-{
-	for (auto& primKV : m_Primitives)
-	{
-		auto buffer = primKV.second->PipelinePtr->GetUniformBuffer();
-		if (buffer->MapPointerCache!=nullptr)
-		{
-			std::memcpy(buffer->MapPointerCache, pBuffe, buffer->GetTotalSize());
-			buffer->Flush();
-		}
-		else
-		{
-			buffer->Map(pBuffe,true);
-		}	
-	}
-}
+//void RenderSystemVK::UpdateUniformBuffers(void* pBuffe)
+//{
+//	for (auto& primKV : m_Primitives)
+//	{
+//		auto buffer = primKV.second->PipelinePtr->GetUniformBuffer();
+//		if (buffer->MapPointerCache!=nullptr)
+//		{
+//			std::memcpy(buffer->MapPointerCache, pBuffe, buffer->GetTotalSize());
+//			buffer->Flush();
+//		}
+//		else
+//		{
+//			buffer->Map(pBuffe,true);
+//		}	
+//	}
+//}
 
 
 void RenderSystemVK::ReceateSwapchain(const SwapChainDesc& desc)

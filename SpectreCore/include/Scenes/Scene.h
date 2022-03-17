@@ -36,8 +36,16 @@ public:
 
 	void RefreshGPUBuffer();
 
-	VulkanPipelinePtr TestPipeline;
 
+
+	const std::vector<RenderObject>& GetPassObjects() const { return m_PassObjects; }
+
+public:
+	VulkanPipelinePtr TestPipeline;
+	std::vector<VkDrawIndexedIndirectCommand> TestIndirectCommands;
+	VulkanBufferPtr TestIndirectBuffer;
+	BufferBlock  m_MergedVertexBuffer;
+	BufferBlock  m_MergedIndexBuffer;
 private:
 	std::vector<Mesh*> m_Meshes;
 
@@ -45,8 +53,9 @@ private:
 	std::vector<RenderObject> m_DeletedObjects;
 	std::vector<RenderObject> m_ModifyObjects;
 
-	BufferBlock  m_MergedVertexBuffer;
-	BufferBlock  m_MergedIndexBuffer;
+	std::vector<RenderObject> m_PassObjects;
+
+
 };
 
 END_NAMESPACE_SPECTRE

@@ -64,7 +64,7 @@ void Scene::PrepareStageBuffer()
 				totalIndices.push_back(pGeomtry->Indices()[i]);
 			}
 
-			VkDrawIndexedIndirectCommand command;
+			m_PassObjects.push_back(std::move(pendingObj));	
 		}
 
 		uint32_t vertBufSize = totalVertices.size() * sizeof(Vertex);
@@ -82,6 +82,29 @@ void Scene::RefreshGPUBuffer()
 {
 	m_MergedVertexBuffer.Upload(VkBufferUsageFlagBits(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT));
 	m_MergedIndexBuffer.Upload(VkBufferUsageFlagBits(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT));
+
+	for (auto& obj : m_PassObjects)
+	{
+		VkDrawIndexedIndirectCommand command;
+		command.firstInstance = 0;
+		command.instanceCount = 0;
+		command.firstIndex = obj.FirstIndex;
+		command.vertexOffset = obj.FirstVertex;
+		command.indexCount = obj.MeshPtr->GetBufferGeometry()->IndicesCount();
+		TestIndirectCommands.push_back(std::move(command));
+	}
+
+	VulkanBufferPtr indirectStagingBuffer = VulkanBuffer::Create(TestIndirectCommands.size() * sizeof(VkDrawIndexedIndirectCommand),
+		VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+	);
+
+	indirectStagingBuffer->Map(TestIndirectCommands.data(), TestIndirectCommands.size() * sizeof(VkDrawIndexedIndirectCommand),0);
+
+	TestIndirectBuffer = VulkanBuffer::Create(TestIndirectCommands.size() * sizeof(VkDrawIndexedIndirectCommand),
+		VkBufferUsageFlagBits(VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT), VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+	);
+
+	indirectStagingBuffer->CopyTo(TestIndirectBuffer);
 }
 
 

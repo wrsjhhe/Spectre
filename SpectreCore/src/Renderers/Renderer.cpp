@@ -56,9 +56,9 @@ void Renderer::Setup()
 	swapChainDesc.Height = m_Height;
 	m_pRenderSystem->CreateSwapChain(swapChainDesc);
 
-	
-	m_ScenePtr->PrepareStageBuffer();
+	m_ScenePtr->CreatePipeline();
 	m_pRenderSystem->CreatePipeline(m_ScenePtr->TestPipeline);
+	m_ScenePtr->PrepareStageBuffer();
 	m_ScenePtr->RefreshGPUBuffer();
 	//auto meshes = m_ScenePtr->GetMeshes();
 	//for (auto* pMesh : meshes)
@@ -82,6 +82,19 @@ void Renderer::Setup()
 		m_ScenePtr->TestPipeline->BindDescriptorSets(cmdBuffer);
 		m_ScenePtr->TestPipeline->BindPipeline(cmdBuffer);
 		VkDeviceSize offsets[1] = { 0 };
+
+		const std::vector<RenderObject>& psssObjs = m_ScenePtr->GetPassObjects();
+		vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &m_ScenePtr->m_MergedVertexBuffer.GetDeviceBuffer()->GetVkBuffer(), offsets);
+		vkCmdBindIndexBuffer(cmdBuffer, m_ScenePtr->m_MergedIndexBuffer.GetDeviceBuffer()->GetVkBuffer(), 0, VK_INDEX_TYPE_UINT32);
+		vkCmdDrawIndexed(cmdBuffer, 3, 1, 0, 0, 0);
+	/*	for (uint32_t i = 0; i < m_ScenePtr->TestIndirectCommands.size(); ++i)
+		{
+			auto indirectCmd = m_ScenePtr->TestIndirectCommands[i];
+			vkCmdDrawIndexedIndirect(cmdBuffer, m_ScenePtr->TestIndirectBuffer->GetVkBuffer(),
+				i * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
+
+		}*/
+
 	/*	vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &VertexBufferPtr->GetVkBuffer(), offsets);
 		vkCmdBindIndexBuffer(cmdBuffer, IndicesBufferPtr->GetVkBuffer(), 0, VK_INDEX_TYPE_UINT32);
 		vkCmdDrawIndexed(cmdBuffer, IndicesCount, 1, 0, 0, 0);*/
@@ -94,11 +107,23 @@ void Renderer::Setup()
 void Renderer::Render()
 {
 	m_MVPData = m_PerspectiveCameraPtr->GetViewProjection();
-	for (auto* pMesh : m_ScenePtr->GetMeshes())
+
+	for (auto& obj : m_ScenePtr->GetPassObjects())
 	{
-		m_MVPData = pMesh->GetTransformMatrix() * m_MVPData;
+		auto m = obj.MeshPtr->GetTransformMatrix();
+		m_MVPData = m * m_MVPData;
+	}
+	auto& buffer = m_ScenePtr->TestPipeline->GetUniformBuffer();
+    auto s = buffer->GetTotalSize();
+	if (buffer->MapPointerCache != nullptr)
+	{
+		std::memcpy(buffer->MapPointerCache, &m_MVPData, buffer->GetTotalSize());
+		buffer->Flush();
+	}
+	else
+	{
+		buffer->Map(&m_MVPData, buffer->GetTotalSize(),0,true);
 	}
 
-	m_pRenderSystem->UpdateUniformBuffers(&m_MVPData);
 	m_pRenderSystem->Draw();
 }

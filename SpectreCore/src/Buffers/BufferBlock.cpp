@@ -11,7 +11,7 @@ void BufferBlock::Alloc(uint32_t size)
 
 void BufferBlock::PushBuffer(void* pBuffer, uint32_t size)
 {
-	m_StageBufferPtr->Map(pBuffer, size);
+	m_StageBufferPtr->Map(pBuffer, size,0);
 }
 
 void BufferBlock::Upload(VkBufferUsageFlagBits usage)

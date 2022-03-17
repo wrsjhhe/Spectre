@@ -27,7 +27,7 @@ public:
 
 	void CopyTo(VulkanBufferPtr dstBuffer);
 
-	void Map(void* ptr,uint32_t size = VK_WHOLE_SIZE,uint32_t offset = 0,  bool keepMap = false);
+	void Map(void* ptr,uint32_t size ,uint32_t offset,  bool keepMap = false);
 
 	void UnMap();
 

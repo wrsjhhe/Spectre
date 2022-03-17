@@ -46,7 +46,11 @@ void VulkanBuffer::CopyTo(VulkanBufferPtr dstBuffer)
 	auto cmd = VulkanEngine::GetInstance()->GetTransformCmd();
 	VkBufferCopy copyRegion = {};
 	copyRegion.size = m_TotalSize;
-	vkCmdCopyBuffer(cmd->GetVkCommandBuffer(), m_VkbBuffer, dstBuffer->m_VkbBuffer, 1, &copyRegion);
+	cmd->RecordCommond([&](VkCommandBuffer cmdBuffer) {
+		vkCmdCopyBuffer(cmdBuffer, m_VkbBuffer, dstBuffer->m_VkbBuffer, 1, &copyRegion);
+	});
+
+	cmd->Submit(VulkanEngine::GetInstance()->GetGraphicQueue());
 }
 
 void VulkanBuffer::Map(void* ptr, uint32_t size, uint32_t offset, bool keepMap)

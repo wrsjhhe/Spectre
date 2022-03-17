@@ -1,5 +1,5 @@
 #pragma once
-
+#include "VulkanCommon.h"
 BEGIN_NAMESPACE_SPECTRE
 
 
@@ -21,7 +21,7 @@ public:
 
 	void RecordCommond(std::function<void(VkCommandBuffer)> recordCmd);
 
-	void Submit(VulkanQueue& queue);
+	void Submit(VulkanQueue& queue, bool reset = true);
 
 	void Reset();
 
@@ -34,6 +34,7 @@ private:
 	VkCommandPool								 m_CommandPool;
 	VkCommandBuffer								 m_VkCommandBuffer;
 	VkFence										 m_VkFence = VK_NULL_HANDLE;
+	bool                                         m_OnRecording = false;
 };
 
 class VulkanEngine
@@ -59,17 +60,19 @@ public:
 	VkPhysicalDevice GetVkPhysicalDevice() const { return m_VkPhysicalDevice; }
 	VkDevice GetVkDevice() const { return m_VkDevice; }
 
-	const VulkanQueue& GetGraphicQueue() const { return m_GraphicQueue; }
-	const VulkanQueue& GetTransferQueue() const { return m_TransferQueue; }
-	const VulkanQueue& GetComputeQueue() const { return m_ComputeQueue; }
+	VulkanQueue& GetGraphicQueue() { return m_GraphicQueue; }
+	VulkanQueue& GetTransferQueue() { return m_TransferQueue; }
+	VulkanQueue& GetComputeQueue() { return m_ComputeQueue; }
 
 	uint32_t GetMemoryTypeIndex(uint32_t memoryTypeBitsRequirement,
 		VkMemoryPropertyFlags requiredProperties) const;
 
-	VkPhysicalDeviceLimits GetVkPhysicalDeviceLimits();
-
+	VkPhysicalDeviceProperties GetVkPhysicalDeviceProperties() const { return m_Properties; };
+	VkPhysicalDeviceFeatures GetVkPhysicalDeviceFeatures() const { return m_Features; }
 	VulkanCommandPtr GetTransformCmd() { return m_TransformCmdPtr; }
 	std::vector<VulkanCommandPtr>   GetRenderCmd() { return m_RenderCmdPtrs; }
+	
+	
 
 private:
 	VulkanEngine(const VulkanEngineCreateInfo& CI);

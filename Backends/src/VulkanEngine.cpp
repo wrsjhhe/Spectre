@@ -1,4 +1,3 @@
-#include "VulkanCommon.h"
 #include "VulkanEngine.h"
 
 USING_NAMESPACE(Spectre)
@@ -15,15 +14,8 @@ VulkanCommand::VulkanCommand(VkDevice device,const VkCommandPool& commandPool) :
 
 	vkAllocateCommandBuffers(m_VkDevice, &cmdBufferInfo, &m_VkCommandBuffer);
 
-	VkCommandBufferBeginInfo cmdBufferBeginInfo{};
-	cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	vkBeginCommandBuffer(m_VkCommandBuffer, &cmdBufferBeginInfo);
+    Reset();
 
-	VkFenceCreateInfo fenceInfo{};
-	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	fenceInfo.flags = 0;
-
-	vkCreateFence(m_VkDevice, &fenceInfo, nullptr, &m_VkFence);
 }
 
 
@@ -36,13 +28,18 @@ VulkanCommand::~VulkanCommand()
 
 void VulkanCommand::RecordCommond(std::function<void(VkCommandBuffer)> recordCmd)
 {
+    EXP_CHECK(m_OnRecording,"VkCommand is not ready to record!")
 	recordCmd(m_VkCommandBuffer);
 }
 
-void VulkanCommand::Submit(VulkanQueue& queue)
+void VulkanCommand::Submit(VulkanQueue& queue,bool reset)
 {
-	vkEndCommandBuffer(m_VkCommandBuffer);
-	
+    if (m_OnRecording)
+	{
+		vkEndCommandBuffer(m_VkCommandBuffer);
+    }
+    m_OnRecording = false;
+
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submitInfo.commandBufferCount = 1;
@@ -57,15 +54,33 @@ void VulkanCommand::Submit(VulkanQueue& queue)
 	vkQueueSubmit(queue.VkQueue, 1, &submitInfo, m_VkFence);
 	vkWaitForFences(m_VkDevice, 1, &m_VkFence, true, 0x7fffffffffffffff);
 
-    Reset();
+    if (reset)
+	{
+		Reset();
+    }
+    
 }
 
 void VulkanCommand::Reset()
 {
-	vkResetCommandBuffer(m_VkCommandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 	VkCommandBufferBeginInfo cmdBufferBeginInfo{};
 	cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	vkBeginCommandBuffer(m_VkCommandBuffer, &cmdBufferBeginInfo);
+
+    if (m_VkFence == VK_NULL_HANDLE)
+	{
+		VkFenceCreateInfo fenceInfo{};
+		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fenceInfo.flags = 0;
+
+		vkCreateFence(m_VkDevice, &fenceInfo, nullptr, &m_VkFence);
+    }
+    else
+    {
+        vkResetFences(m_VkDevice, 1, &m_VkFence);
+    }
+
+    m_OnRecording = true;
 }
 
 
@@ -146,6 +161,9 @@ VulkanEngine::VulkanEngine(const VulkanEngineCreateInfo& ci):
 
 VulkanEngine::~VulkanEngine()
 {
+    m_TransformCmdPtr = nullptr;
+    m_RenderCmdPtrs.clear();
+    vkDestroyCommandPool(m_VkDevice, m_VkCommandPool, nullptr);
 	if (debug_utils_messenger != VK_NULL_HANDLE)
 	{
 		PFN_vkDestroyDebugUtilsMessengerEXT destroyMsgCallback =
@@ -512,9 +530,3 @@ uint32_t VulkanEngine::GetMemoryTypeIndex(uint32_t memoryTypeBitsRequirement,
     return ~uint32_t{ 0 };
 }
 
-VkPhysicalDeviceLimits VulkanEngine::GetVkPhysicalDeviceLimits()
-{
-    VkPhysicalDeviceProperties props;
-    vkGetPhysicalDeviceProperties(m_VkPhysicalDevice, &props);
-    return props.limits;
-}
