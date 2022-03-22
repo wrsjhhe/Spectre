@@ -37,12 +37,7 @@ namespace Spectre
 
 		void CreateSwapChain(const SwapChainDesc& desc);
 
-		//VulkanPrimitive* AddPrimitive(std::shared_ptr<VulkanPipeline> pPipeline,
-		//	Vertex* vertices,uint32_t vertCount, uint32_t* indices,uint32_t indCount);
-
 		void CreatePipeline(VulkanPipelinePtr pipeline);
-
-		//void UpdateUniformBuffers(void* pBuffe);
 
 		void RecordCmd(std::function<void(VkCommandBuffer)> cmd);
 
@@ -50,7 +45,6 @@ namespace Spectre
 
 		void ReceateSwapchain( const SwapChainDesc& desc);
 	private:
-		void CreateDepthStencil();
 		void CreateRenderPass();
 		void CreateFrameBuffer();
 

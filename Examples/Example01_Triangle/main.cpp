@@ -45,9 +45,9 @@ public:
 		BufferGeometry* geometry1 = BufferGeometry::Create(VertexAttrs);
 		// 顶点数据
 		std::vector<Vertex> vertices1 = {
-			{{1.0f, 1.0f, 0.0f} ,    { 1.0f, 0.0f, 0.0f}},
-			{	{-1.0f,1.0f, 0.0f} , {    0.0f, 1.0f, 0.0f}},
-			{{	0.0f, -1.0f, 0.0f} ,{    0.0f, 0.0f, 1.0f}}
+			{{1.0f, 1.0f, 1.0f} ,    { 1.0f, 0.0f, 0.0f}},
+			{	{-1.0f,1.0f, 1.0f} , {    0.0f, 1.0f, 0.0f}},
+			{{	0.0f, -1.0f, 1.0f} ,{    0.0f, 0.0f, 1.0f}}
 		};
 
 		// 索引数据
@@ -57,31 +57,34 @@ public:
 
 		MeshPtr pMesh1 = Mesh::Create(geometry1, pMat);
 
-		//BufferGeometry* geometry2 = BufferGeometry::Create(VertexAttrs);
-		//// 顶点数据
-		//std::vector<float> vertices2 = {
-		//		10.0f, 10.0f, 0.0f ,     1.0f, 0.0f, 0.0f ,1.0f,
-		//		-10.0f,10.0f, 0.0f ,     0.0f, 1.0f, 0.0f,1.0f,
-		//		0.0f, -10.0f, 0.0f ,    0.0f, 0.0f, 1.0f,1.0f,
-		//};
+		BufferGeometry* geometry2 = BufferGeometry::Create(VertexAttrs);
+		// 顶点数据
+		std::vector<Vertex> vertices2 = {
+			{{10.0f, 10.0f, 0.0f} ,    { 1.0f, 0.0f, 0.0f}},
+			{	{-10.0f,10.0f, 0.0f} , {    0.0f, 1.0f, 0.0f}},
+			{{	0.0f, -10.0f, 0.0f} ,{    0.0f, 0.0f, 1.0f}}
+		};
 
-		//// 索引数据
-		//std::vector<uint32_t> indices2 = { 0, 1, 2 };
-		//geometry2->SetVertices(vertices2.data(), vertices2.size());
-		//geometry2->SetFaceIndex(indices2.data(), indices2.size());
+		// 索引数据
+		std::vector<uint32_t> indices2 = { 0, 1, 2 };
+		geometry2->SetVertices(vertices2.data(), vertices2.size());
+		geometry2->SetFaceIndex(indices2.data(), indices2.size());
 
-		//Mesh* pMesh2 = Mesh::Create(geometry2, pMat);
+		MeshPtr pMesh2 = Mesh::Create(geometry2, pMat);
 
 		Scene scene;
 		scene.AddMesh(pMesh1);
-		//scene.Add(pMesh2);
+		//scene.AddMesh(pMesh2);
 		renderer.Attach({ context.GetWindowHandle() });
 		renderer.BindScene(&scene);
 		renderer.Resize(g_Width, g_Height);
 
+		context.AddKeyEvent(KeyBoard_SPACE, [&](void* window) {
+			scene.AddMesh(pMesh2);
+		});
 		
 		PerspectiveCamera camera(DegreesToRadians(75.f), (float)g_Width/ (float)g_Height, 0.1, 3000.0f);
-		camera.LookAt({ 0.f,0.f, 3.f }, { 0.f,0.f, 0.f }, { 0.f,1.f, 0.f });
+		camera.LookAt({ 0.f,0.f, 12.f }, { 0.f,0.f, 0.f }, { 0.f,1.f, 0.f });
 		renderer.BindCamera(&camera);
 
 		renderer.Setup();

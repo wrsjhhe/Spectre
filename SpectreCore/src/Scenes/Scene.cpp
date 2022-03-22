@@ -20,8 +20,6 @@ void Scene::AddMesh(MeshPtr pMesh)
 	newObj.updateIndex = (uint32_t)-1;
 	newObj.customSortKey = 0;
 	m_PendingObjects.push_back(newObj);
-
-	//m_Meshes.emplace_back(pMesh);
 }
 struct UBOData
 {
@@ -66,7 +64,7 @@ void Scene::PrepareStageBuffer()
 
 			m_PassObjects.push_back(std::move(pendingObj));	
 		}
-
+		m_PendingObjects.clear();
 		uint32_t vertBufSize = totalVertices.size() * sizeof(Vertex);
 		uint32_t indexBufSize = totalIndices.size() * sizeof(uint32_t);
 

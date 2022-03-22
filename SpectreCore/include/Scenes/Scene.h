@@ -47,8 +47,6 @@ public:
 	BufferBlock  m_MergedVertexBuffer;
 	BufferBlock  m_MergedIndexBuffer;
 private:
-	std::vector<Mesh*> m_Meshes;
-
 	std::vector<RenderObject> m_PendingObjects;
 	std::vector<RenderObject> m_DeletedObjects;
 	std::vector<RenderObject> m_ModifyObjects;

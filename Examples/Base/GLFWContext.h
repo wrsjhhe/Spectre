@@ -12,6 +12,12 @@ class GLFWwindow;
 class GLFWContext
 {
 public:
+	typedef std::function<void(int, int)> WindowResizedCallbackFunc;
+	typedef std::function<void(void*)> InputCallbackFunc;
+
+	WindowResizedCallbackFunc OnResized = nullptr;
+	//InputCallbackFunc OnInputed;
+public:
 	GLFWContext();
 	~GLFWContext();
 
@@ -21,7 +27,11 @@ public:
 
 	void SetTitle(const std::string& title);
 
+	void AddKeyEvent(KeyBoardType key, InputCallbackFunc func);
+
 	void GetWindowSize(int* width,int* height);
+
+	const std::unordered_map<KeyBoardType, std::vector<InputCallbackFunc>>& GetKeyEvents() const { return m_Events; }
 
 	void* GetWindowHandle();
 
@@ -32,12 +42,7 @@ public:
 	void Close();
 
 	bool Closed();
-public:
-	typedef std::function<void(int, int)> WindowResizedCallbackFunc;
-	typedef std::function<void(KeyBoardType)> InputCallbackFunc;
 
-	WindowResizedCallbackFunc OnResized = nullptr;
-	InputCallbackFunc OnInputed;
 
 private:
 
@@ -48,5 +53,6 @@ private:
 	void InitEventMap();
 private:
 	GLFWwindow* m_Window = nullptr;
-	std::map<int, KeyBoardType> m_EventMap;
+	std::map<int, KeyBoardType> m_EventHandleMap;
+	std::unordered_map<KeyBoardType, std::vector<InputCallbackFunc>> m_Events;
 };

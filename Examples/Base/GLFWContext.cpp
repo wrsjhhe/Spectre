@@ -49,10 +49,15 @@ void GLFWContext::Create(const char* name, int width, int height)
 	glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
 		GLFWContext* pUser = reinterpret_cast<GLFWContext*>(glfwGetWindowUserPointer(window));
 
-		KeyBoardType type = pUser->m_EventMap[key];
-		if (pUser->OnInputed != nullptr)
+		KeyBoardType type = pUser->m_EventHandleMap[key];
+		auto events = pUser->GetKeyEvents();
+		auto iter = events.find(type);
+		if (iter != events.end())
 		{
-			pUser->OnInputed(type);
+			for(auto& ev : iter->second)
+			{
+				ev(window);
+			}
 		}
 	
 
@@ -67,13 +72,23 @@ void GLFWContext::Create(const char* name, int width, int height)
 		GLFWContext* pUser = reinterpret_cast<GLFWContext*>(glfwGetWindowUserPointer(window));
 		pUser->Close();
 		return;
-	
+	});
+
+	AddKeyEvent(KeyBoard_ESCAPE, [this](void* window) {
+		glfwSetWindowShouldClose((GLFWwindow*)window, GLFW_TRUE);
+		Close();
 	});
 }
 
 void GLFWContext::SetTitle(const std::string& title)
 {
 	glfwSetWindowTitle(m_Window,title.c_str());
+}
+
+void GLFWContext::AddKeyEvent(KeyBoardType key, InputCallbackFunc func)
+{
+	m_Events[key].push_back(func);
+
 }
 
 void GLFWContext::GetWindowSize(int* width, int* height)
@@ -121,5 +136,6 @@ HWND GLFWContext::GetWin32Window()
 
 void GLFWContext::InitEventMap()
 {
-	m_EventMap[GLFW_KEY_ESCAPE] = KeyBoard_ESCAPE;
+	m_EventHandleMap[GLFW_KEY_ESCAPE] = KeyBoard_ESCAPE;
+	m_EventHandleMap[GLFW_KEY_SPACE] = KeyBoard_SPACE;
 }

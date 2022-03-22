@@ -57,7 +57,7 @@ ${SRC_VULKAN_DIR}VulkanFrameBuffer.cpp
 ${SRC_VULKAN_DIR}VulkanSemaphore.cpp
 ${SRC_VULKAN_DIR}VulkanPipeline.cpp
 ${SRC_VULKAN_DIR}VulkanContext.cpp
-${SRC_VULKAN_DIR}VulkanPrimitive.cpp
+
 ${SRC_VULKAN_DIR}VulkanGui.cpp
 ${SRC_VULKAN_DIR}RenderSystemVK.cpp
 )
@@ -74,7 +74,7 @@ ${INC_VULKAN_DIR}VulkanFrameBuffer.h
 ${INC_VULKAN_DIR}VulkanSemaphore.h
 ${INC_VULKAN_DIR}VulkanPipeline.h
 ${INC_VULKAN_DIR}VulkanContext.h
-${INC_VULKAN_DIR}VulkanPrimitive.h
+
 ${INC_VULKAN_DIR}VulkanGui.h
 ${INC_VULKAN_DIR}RenderSystemVK.h
 )

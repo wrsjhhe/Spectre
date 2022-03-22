@@ -71,10 +71,9 @@ void Renderer::Setup()
 		const std::vector<RenderObject>& psssObjs = m_ScenePtr->GetPassObjects();
 		vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &m_ScenePtr->m_MergedVertexBuffer.GetDeviceBuffer()->GetVkBuffer(), offsets);
 		vkCmdBindIndexBuffer(cmdBuffer, m_ScenePtr->m_MergedIndexBuffer.GetDeviceBuffer()->GetVkBuffer(), 0, VK_INDEX_TYPE_UINT32);
-		//vkCmdDrawIndexed(cmdBuffer, 3, 1, 0, 0, 0);
+
 		for (uint32_t i = 0; i < m_ScenePtr->TestIndirectCommands.size(); ++i)
 		{
-			auto indirectCmd = m_ScenePtr->TestIndirectCommands[i];
 			vkCmdDrawIndexedIndirect(cmdBuffer, m_ScenePtr->TestIndirectBuffer->GetVkBuffer(),
 				i * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
 
@@ -95,7 +94,6 @@ void Renderer::Render()
 		m_MVPData = m * m_MVPData;
 	}
 	auto& buffer = m_ScenePtr->TestPipeline->GetUniformBuffer();
-    auto s = buffer->GetTotalSize();
 	if (buffer->MapPointerCache != nullptr)
 	{
 		std::memcpy(buffer->MapPointerCache, &m_MVPData, buffer->GetTotalSize());

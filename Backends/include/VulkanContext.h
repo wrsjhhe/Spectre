@@ -10,13 +10,10 @@ public:
 	VulkanContext(VulkanEngine* pEngine);
 	~VulkanContext();
 
-	void SetVertexDesc(const std::vector<VertexAttribute>& attrs);
-
 	void CalcSwapChainExtent(uint32_t& width, uint32_t& height);
 
 	void CalcSwapchainParamaters(VkSurfaceKHR surface);
 	void ReCalcSwapchainParamaters();
-	void InitCommandPool();
 
 
 	VkCommandPool GetVkGraphicCommandPool() const;
