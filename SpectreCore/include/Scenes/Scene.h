@@ -2,7 +2,6 @@
 #include <vector>
 #include "Object3D.h"
 #include "Objects/Mesh.h"
-#include "Buffers/BufferBlock.h"
 #include "VulkanPipeline.h"
 BEGIN_NAMESPACE_SPECTRE
 
