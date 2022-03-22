@@ -81,12 +81,12 @@ void Renderer::Render()
 		auto& buffer = pBatch->Pipeline->GetUniformBuffer();
 		if (buffer->MapPointerCache != nullptr)
 		{
-			std::memcpy(buffer->MapPointerCache, &m_MVPData, buffer->GetTotalSize());
+			std::memcpy(buffer->MapPointerCache, &m_MVPData, sizeof(Matrix)/*buffer->GetTotalSize()*/);
 			buffer->Flush();
 		}
 		else
 		{
-			buffer->Map(&m_MVPData, buffer->GetTotalSize(), 0, true);
+			buffer->Map(&m_MVPData, sizeof(Matrix), 0, true);
 		}
 	}
 

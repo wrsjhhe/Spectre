@@ -49,6 +49,12 @@ void GLFWContext::Create(const char* name, int width, int height)
 	glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
 		GLFWContext* pUser = reinterpret_cast<GLFWContext*>(glfwGetWindowUserPointer(window));
 
+		auto keyIter = pUser->m_EventHandleMap.find(key);
+		if (keyIter == pUser->m_EventHandleMap.end())
+		{
+			return;
+		}
+
 		KeyBoardType type = pUser->m_EventHandleMap[key];
 		auto events = pUser->GetKeyEvents();
 		auto iter = events.find(type);

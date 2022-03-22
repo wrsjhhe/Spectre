@@ -52,7 +52,7 @@ void Scene::PreparePipeline()
 			VulkanPipelinePtr newPipeline = VulkanPipeline::Create();
 			newPipeline->CreateShaderModules({ pMaterial->GetVertexShader() }, { pMaterial->GetFragmentShader() });
 			newPipeline->SetVertexDescription(pMaterial->GetAttributes());
-			newPipeline->CreateUniformBuffer(sizeof(UBOData));
+			newPipeline->CreateUniformBuffer(sizeof(Matrix));
 
 			pendingObj.Pipeline = newPipeline;
 			m_MatPipelineMap[matHash] = newPipeline;
