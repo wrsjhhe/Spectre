@@ -161,9 +161,9 @@ VulkanEngine::VulkanEngine(const VulkanEngineCreateInfo& ci):
 
 VulkanEngine::~VulkanEngine()
 {
-    m_TransformCmdPtr = nullptr;
-    m_RenderCmdPtrs.clear();
-    vkDestroyCommandPool(m_VkDevice, m_VkCommandPool, nullptr);
+	m_TransformCmdPtr = nullptr;
+	m_RenderCmdPtrs.clear();
+	vkDestroyCommandPool(m_VkDevice, m_VkCommandPool, nullptr);
 	if (debug_utils_messenger != VK_NULL_HANDLE)
 	{
 		PFN_vkDestroyDebugUtilsMessengerEXT destroyMsgCallback =
@@ -171,7 +171,7 @@ VulkanEngine::~VulkanEngine()
 				"vkDestroyDebugUtilsMessengerEXT");
 		destroyMsgCallback(m_VkInstance, debug_utils_messenger, nullptr);
 	}
-    vkDestroyDevice(m_VkDevice, nullptr);
+	vkDestroyDevice(m_VkDevice, nullptr);
 	vkDestroyInstance(m_VkInstance, nullptr);
 }
 

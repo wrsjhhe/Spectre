@@ -13,11 +13,31 @@ struct RenderObject
 	uint32_t FirstIndex;
 	uint32_t FirstVertex;
 
-	uint32_t updateIndex;
-	uint32_t customSortKey{ 0 };
-
-	BufferBlock* Buffer;
+	VulkanPipelinePtr Pipeline;
 };
+
+struct MeshBuffer
+{
+	VulkanBufferPtr VertexBuffer;
+	VulkanBufferPtr IndexBuffer;
+};
+
+struct RenderBatch
+{
+	std::vector<RenderObject> Objects;
+	std::vector<VkDrawIndexedIndirectCommand> IndirectCommands;
+	VulkanBufferPtr IndirectBuffer;
+
+	std::vector<Vertex> Vertices;
+	std::vector<uint32_t> Indices;
+
+	bool needupdate = false;
+
+	VulkanPipelinePtr Pipeline;
+
+	MeshBuffer GPUBuffer;
+};
+
 
 class Scene : Object3D
 {
@@ -28,32 +48,29 @@ public:
 
 	void AddMesh(MeshPtr pMesh);
 
-	const std::vector<Mesh*>& GetMeshes() const { return m_Meshes; }
-
-	void CreatePipeline();
+	void PreparePipeline();
 
 	void PrepareStageBuffer();
 
 	void RefreshGPUBuffer();
 
+	//const std::vector<RenderObject>& GetPassObjects() const { return m_PassObjects; }
 
+	const std::vector<RenderBatch*>& GetRenderBatchs() const { return m_PassBatchs; }
 
-	const std::vector<RenderObject>& GetPassObjects() const { return m_PassObjects; }
+	bool NeedUpdate() const { return m_NeedUpdate; }
 
-public:
-	VulkanPipelinePtr TestPipeline;
-	std::vector<VkDrawIndexedIndirectCommand> TestIndirectCommands;
-	VulkanBufferPtr TestIndirectBuffer;
-	BufferBlock  m_MergedVertexBuffer;
-	BufferBlock  m_MergedIndexBuffer;
 private:
 	std::vector<RenderObject> m_PendingObjects;
 	std::vector<RenderObject> m_DeletedObjects;
 	std::vector<RenderObject> m_ModifyObjects;
 
-	std::vector<RenderObject> m_PassObjects;
+	//std::vector<RenderObject> m_PassObjects;
+	std::vector<RenderBatch*> m_PassBatchs;
 
+	std::unordered_map<size_t, VulkanPipelinePtr> m_MatPipelineMap;
 
+	bool m_NeedUpdate = false;
 };
 
 END_NAMESPACE_SPECTRE

@@ -30,12 +30,6 @@ RenderSystemVK::RenderSystemVK() noexcept
 RenderSystemVK::~RenderSystemVK()
 {
 	m_GuiPtr->Destroy();
-
-	for (auto& pPrimitive : m_Primitives)
-	{
-		delete pPrimitive.second;
-		pPrimitive.second = nullptr;
-	}
 }
 
 void RenderSystemVK::CreateRenderContext(const RenderContextDesc& desc)
@@ -92,9 +86,10 @@ void RenderSystemVK::RecordCmd(std::function<void(VkCommandBuffer)> cmdFn)
 	renderPassBeginInfo.renderArea.extent.width = m_SwapChain->GetWidth();
 	renderPassBeginInfo.renderArea.extent.height = m_SwapChain->GetHeight();
 
-	auto cmd = VulkanEngine::GetInstance()->GetRenderCmd();
-	for (uint32_t i = 0; i < cmd.size(); ++i)
+	auto cmds = VulkanEngine::GetInstance()->GetRenderCmd();
+	for (uint32_t i = 0; i < cmds.size(); ++i)
 	{
+		
 		renderPassBeginInfo.framebuffer = m_FrameBuffers[i]->GetVkFrameBuffer();
 
 		VkViewport viewport = {};
@@ -111,8 +106,12 @@ void RenderSystemVK::RecordCmd(std::function<void(VkCommandBuffer)> cmdFn)
 		scissor.offset.x = 0;
 		scissor.offset.y = 0;
 
-
-		cmd[i]->RecordCommond([&](VkCommandBuffer cmdBuffer) {
+		if (!cmds[i]->IsOnRecording())
+		{
+			cmds[i]->Reset();
+		}
+	
+		cmds[i]->RecordCommond([&](VkCommandBuffer cmdBuffer) {
 			vkCmdBeginRenderPass(cmdBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
 			vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);

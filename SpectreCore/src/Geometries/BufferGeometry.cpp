@@ -19,8 +19,8 @@ BufferGeometry::BufferGeometry()
 
 BufferGeometry::~BufferGeometry()
 {
-	Spectre::free(m_Vertices);
-	Spectre::free(m_Indices);
+	Spectre::heap_free(m_Vertices);
+	Spectre::heap_free(m_Indices);
 }
 
 

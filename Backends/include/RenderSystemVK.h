@@ -66,8 +66,6 @@ namespace Spectre
 
 		std::shared_ptr<VulkanSemaphore>		m_RenderComplete;
 
-		std::unordered_map<SpectreId, VulkanPrimitive*>   m_Primitives;
-
 		//std::vector<VulkanCommandPtr>			m_RenderCommands;
 
 		std::shared_ptr<VulkanSemaphore>		m_PresentComplete;

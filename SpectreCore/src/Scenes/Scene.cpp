@@ -9,7 +9,12 @@ Scene::Scene()
 
 Scene::~Scene()
 {
-
+	for (auto pBatch : m_PassBatchs)
+	{
+		delete pBatch;
+		pBatch = nullptr;
+	}
+	m_PassBatchs.clear();
 }
 
 
@@ -17,92 +22,147 @@ void Scene::AddMesh(MeshPtr pMesh)
 {
 	RenderObject newObj;
 	newObj.MeshPtr = pMesh;
-	newObj.updateIndex = (uint32_t)-1;
-	newObj.customSortKey = 0;
 	m_PendingObjects.push_back(newObj);
+
+	m_NeedUpdate = true;
 }
 struct UBOData
 {
 	Matrix MVPMatrix;
 };
-void Scene::CreatePipeline()
+void Scene::PreparePipeline()
 {
-	BufferMaterialPtr pMaterial = m_PendingObjects[0].MeshPtr->GetMaterial();
-	PipelineDesc pipelineDesc;
-	pipelineDesc.VertexAttributes = pMaterial->GetAttributes();
-	pipelineDesc.VertexShaders = { pMaterial->GetVertexShader() };
-	pipelineDesc.FragmentShaders = { pMaterial->GetFragmentShader() };
-	pipelineDesc.UniformBufferSizes = sizeof(UBOData);
+	if (m_PendingObjects.empty())
+	{
+		return;
+	}
 
-	TestPipeline = VulkanPipeline::Create();
-	TestPipeline->CreateShaderModules(pipelineDesc.VertexShaders, pipelineDesc.FragmentShaders);
-	TestPipeline->SetVertexDescription(pipelineDesc.VertexAttributes);
-	TestPipeline->CreateUniformBuffer(pipelineDesc.UniformBufferSizes);
+	for (auto& pendingObj : m_PendingObjects)
+	{
+		BufferMaterialPtr pMaterial = pendingObj.MeshPtr->GetMaterial();
+		size_t matHash = pMaterial->GetHash();
+
+		auto iter = m_MatPipelineMap.find(matHash);
+		if (iter !=m_MatPipelineMap.end())
+		{
+			pendingObj.Pipeline = iter->second;
+		}
+		else
+		{
+			VulkanPipelinePtr newPipeline = VulkanPipeline::Create();
+			newPipeline->CreateShaderModules({ pMaterial->GetVertexShader() }, { pMaterial->GetFragmentShader() });
+			newPipeline->SetVertexDescription(pMaterial->GetAttributes());
+			newPipeline->CreateUniformBuffer(sizeof(UBOData));
+
+			pendingObj.Pipeline = newPipeline;
+			m_MatPipelineMap[matHash] = newPipeline;
+		}
+	}
+
 }
 
 void Scene::PrepareStageBuffer()
 {
 	if (!m_PendingObjects.empty())
 	{
-		std::vector<Vertex> totalVertices;
-		std::vector<uint32_t> totalIndices;
 		for (auto& pendingObj : m_PendingObjects)
 		{
-			pendingObj.FirstVertex = totalVertices.size();
-			pendingObj.FirstIndex = totalIndices.size();
+			RenderBatch* pPendingBatch = nullptr;
+			for (auto pBatch : m_PassBatchs)
+			{
+				if (pBatch->Pipeline == pendingObj.Pipeline)
+				{
+					pPendingBatch = pBatch;
+					break;;
+				}
+			}
+			if (pPendingBatch == nullptr)
+			{
+				pPendingBatch = new RenderBatch;
+				pPendingBatch->Pipeline = pendingObj.Pipeline;
+				m_PassBatchs.push_back(pPendingBatch);
+			}
+		
+			pPendingBatch->needupdate = true;
+			pendingObj.FirstVertex = pPendingBatch->Vertices.size();
+			pendingObj.FirstIndex = pPendingBatch->Indices.size();
 			auto pGeomtry = pendingObj.MeshPtr->GetBufferGeometry();
 
 			for (uint32_t i = 0;i < pGeomtry->VerticesCount();++i)
 			{
-				totalVertices.push_back(pGeomtry->Vertices()[i]);
+				pPendingBatch->Vertices.push_back(pGeomtry->Vertices()[i]);
 			}
 
 			for (uint32_t i = 0; i < pGeomtry->IndicesCount(); ++i)
 			{
-				totalIndices.push_back(pGeomtry->Indices()[i]);
+				pPendingBatch->Indices.push_back(pGeomtry->Indices()[i]);
 			}
 
-			m_PassObjects.push_back(std::move(pendingObj));	
+			pPendingBatch->Objects.push_back(std::move(pendingObj));
 		}
 		m_PendingObjects.clear();
-		uint32_t vertBufSize = totalVertices.size() * sizeof(Vertex);
-		uint32_t indexBufSize = totalIndices.size() * sizeof(uint32_t);
 
-		m_MergedVertexBuffer.Alloc(vertBufSize);
-		m_MergedIndexBuffer.Alloc(indexBufSize);
-
-		m_MergedVertexBuffer.PushBuffer(totalVertices.data(), vertBufSize);
-		m_MergedIndexBuffer.PushBuffer(totalIndices.data(), indexBufSize);
+		for (auto pBatch : m_PassBatchs)
+		{
+			if (pBatch->needupdate == false)
+			{
+				continue;
+			}
+			uint32_t vertBufSize = pBatch->Vertices.size() * sizeof(Vertex);
+			uint32_t indexBufSize = pBatch->Indices.size() * sizeof(uint32_t);
+		}
 	}
 }
 
 void Scene::RefreshGPUBuffer()
 {
-	m_MergedVertexBuffer.Upload(VkBufferUsageFlagBits(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT));
-	m_MergedIndexBuffer.Upload(VkBufferUsageFlagBits(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT));
-
-	for (auto& obj : m_PassObjects)
+	for (auto pBatch : m_PassBatchs)
 	{
-		VkDrawIndexedIndirectCommand command;
-		command.firstInstance = 0;
-		command.instanceCount = 1;
-		command.firstIndex = obj.FirstIndex;
-		command.vertexOffset = obj.FirstVertex;
-		command.indexCount = obj.MeshPtr->GetBufferGeometry()->IndicesCount();
-		TestIndirectCommands.push_back(std::move(command));
+		if (pBatch->needupdate == false)
+		{
+			continue;
+		}		
+		uint32_t vertBufSize = pBatch->Vertices.size() * sizeof(Vertex);
+		uint32_t indexBufSize = pBatch->Indices.size() * sizeof(uint32_t);
+		auto stageVertexBufferPtr = VulkanBuffer::Create(vertBufSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+		stageVertexBufferPtr->Map(pBatch->Vertices.data(), vertBufSize, 0);
+
+		auto stageIndexBufferPtr = VulkanBuffer::Create(indexBufSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+		stageIndexBufferPtr->Map(pBatch->Indices.data(), indexBufSize, 0);
+
+		pBatch->GPUBuffer.VertexBuffer = VulkanBuffer::Create(vertBufSize, VkBufferUsageFlagBits(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT),
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+		pBatch->GPUBuffer.IndexBuffer = VulkanBuffer::Create(vertBufSize, VkBufferUsageFlagBits(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT),
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+		stageVertexBufferPtr->CopyTo(pBatch->GPUBuffer.VertexBuffer);
+		stageIndexBufferPtr->CopyTo(pBatch->GPUBuffer.IndexBuffer);
+
+		pBatch->IndirectCommands.clear();
+		for (auto& obj : pBatch->Objects)
+		{
+			VkDrawIndexedIndirectCommand command;
+			command.firstInstance = 0;
+			command.instanceCount = 1;
+			command.firstIndex = obj.FirstIndex;
+			command.vertexOffset = obj.FirstVertex;
+			command.indexCount = obj.MeshPtr->GetBufferGeometry()->IndicesCount();
+			pBatch->IndirectCommands.push_back(std::move(command));
+		}
+
+		VulkanBufferPtr indirectStagingBuffer = VulkanBuffer::Create(pBatch->IndirectCommands.size() * sizeof(VkDrawIndexedIndirectCommand),
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+		);
+
+		indirectStagingBuffer->Map(pBatch->IndirectCommands.data(), pBatch->IndirectCommands.size() * sizeof(VkDrawIndexedIndirectCommand), 0);
+
+		pBatch->IndirectBuffer = VulkanBuffer::Create(pBatch->IndirectCommands.size() * sizeof(VkDrawIndexedIndirectCommand),
+			VkBufferUsageFlagBits(VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT), VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+		);
+
+		indirectStagingBuffer->CopyTo(pBatch->IndirectBuffer);
 	}
-
-	VulkanBufferPtr indirectStagingBuffer = VulkanBuffer::Create(TestIndirectCommands.size() * sizeof(VkDrawIndexedIndirectCommand),
-		VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-	);
-
-	indirectStagingBuffer->Map(TestIndirectCommands.data(), TestIndirectCommands.size() * sizeof(VkDrawIndexedIndirectCommand),0);
-
-	TestIndirectBuffer = VulkanBuffer::Create(TestIndirectCommands.size() * sizeof(VkDrawIndexedIndirectCommand),
-		VkBufferUsageFlagBits(VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT), VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-	);
-
-	indirectStagingBuffer->CopyTo(TestIndirectBuffer);
+	m_NeedUpdate = false;
 }
-
 

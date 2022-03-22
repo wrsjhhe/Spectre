@@ -25,6 +25,8 @@ public:
 
 	void Reset();
 
+	bool IsOnRecording()const { return m_OnRecording; }
+
 public:
 	std::vector<VkSemaphore> SignalSemaphore;
 	std::vector < VkPipelineStageFlags> WaitStageMask;

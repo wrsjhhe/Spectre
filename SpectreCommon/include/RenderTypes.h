@@ -78,12 +78,6 @@ struct SwapChainDesc
 	uint32_t                  Width = 0;
 	uint32_t                  Height = 0;
 };
-struct PipelineDesc
-{
-	std::vector<VertexAttribute>			VertexAttributes;
-	std::vector<std::string>				VertexShaders;
-	std::vector<std::string>				FragmentShaders;
-	uint32_t								UniformBufferSizes;
-};
+
 
 END_NAMESPACE_SPECTRE

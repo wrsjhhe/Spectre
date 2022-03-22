@@ -56,7 +56,7 @@ void GLFWContext::Create(const char* name, int width, int height)
 		{
 			for(auto& ev : iter->second)
 			{
-				ev(window);
+				ev(window, action);
 			}
 		}
 	
@@ -74,7 +74,7 @@ void GLFWContext::Create(const char* name, int width, int height)
 		return;
 	});
 
-	AddKeyEvent(KeyBoard_ESCAPE, [this](void* window) {
+	AddKeyEvent(KeyBoard_ESCAPE, [this](void* window,int action) {
 		glfwSetWindowShouldClose((GLFWwindow*)window, GLFW_TRUE);
 		Close();
 	});

@@ -13,7 +13,7 @@ class GLFWContext
 {
 public:
 	typedef std::function<void(int, int)> WindowResizedCallbackFunc;
-	typedef std::function<void(void*)> InputCallbackFunc;
+	typedef std::function<void(void*,int)> InputCallbackFunc;
 
 	WindowResizedCallbackFunc OnResized = nullptr;
 	//InputCallbackFunc OnInputed;

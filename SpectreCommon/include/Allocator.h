@@ -71,7 +71,7 @@ inline void* heap_realloc(void* block,size_t size, size_t align = alignof(std::m
 }
 
 
-inline void free(void* p) noexcept
+inline void heap_free(void* p) noexcept
 {
     aligned_free(p);
 }

@@ -30,6 +30,11 @@ public:
 	void Render();
 
 private:
+	void ReadyScene();
+
+	void RecordCommand();
+
+private:
 	RenderSystemVK* m_pRenderSystem = nullptr;
 
 	uint32_t                          m_Width = 0;
