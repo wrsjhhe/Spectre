@@ -35,15 +35,21 @@ namespace Spectre
 		~RenderSystemVK();
 		void CreateRenderContext(const RenderContextDesc& desc);
 
-		void CreateSwapChain(const SwapChainDesc& desc);
+		void CreateSwapChain();
 
 		void CreatePipeline(VulkanPipelinePtr pipeline);
 
-		void RecordCmd(std::function<void(VkCommandBuffer)> cmd);
+		void RecordDrawCommand();
 
 		void Draw();
 
 		void ReceateSwapchain( const SwapChainDesc& desc);
+
+		void SetDrawCommand(std::function<void(VkCommandBuffer)> cmd);
+
+		void SetRect(double width, double height);
+
+
 	private:
 		void CreateRenderPass();
 		void CreateFrameBuffer();
@@ -71,6 +77,8 @@ namespace Spectre
 		std::shared_ptr<VulkanSemaphore>		m_PresentComplete;
 
 		std::shared_ptr<VulkanGui>              m_GuiPtr;
+
+		std::function<void(VkCommandBuffer)>    m_DrawCommand;
 	};
 
 }

@@ -40,25 +40,23 @@ void Renderer::Resize(uint32_t width, uint32_t height)
 		SwapChainDesc swapChainDesc;
 		swapChainDesc.Width = width;
 		swapChainDesc.Height = height;
-		m_pRenderSystem->ReceateSwapchain(swapChainDesc);
 
-		RecordCommand();
+		m_pRenderSystem->SetRect(width, height);
 	}
 }
 
 
 void Renderer::Setup()
 {
-	
 	RenderContextDesc renderDesc{};
 	renderDesc.Window = m_Window;
 	m_pRenderSystem = new RenderSystemVK();
+
+	m_pRenderSystem->SetRect(m_Width, m_Height);
+
 	m_pRenderSystem->CreateRenderContext(renderDesc);
 
-	SwapChainDesc swapChainDesc;
-	swapChainDesc.Width = m_Width;
-	swapChainDesc.Height = m_Height;
-	m_pRenderSystem->CreateSwapChain(swapChainDesc);
+	m_pRenderSystem->CreateSwapChain();
 
 	m_Prepared = true;
 
@@ -102,13 +100,14 @@ void Renderer::ReadyScene()
 		m_ScenePtr->PrepareStageBuffer();
 		m_ScenePtr->RefreshGPUBuffer();
 
-		RecordCommand();
+		SetDrawCommandFunc();
+		m_pRenderSystem->RecordDrawCommand();
 	}
 }
 
-void Renderer::RecordCommand()
+void Renderer::SetDrawCommandFunc()
 {
-	m_pRenderSystem->RecordCmd([this](VkCommandBuffer cmdBuffer)
+	m_pRenderSystem->SetDrawCommand([this](VkCommandBuffer cmdBuffer)
 	{
 		VulkanPipelinePtr pCurPipeline = nullptr;
 		const std::vector<RenderBatch*>& batchs = m_ScenePtr->GetRenderBatchs();
@@ -142,7 +141,7 @@ void Renderer::RecordCommand()
 						i * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
 
 				}
-			}		
+			}
 		}
 	});
 }

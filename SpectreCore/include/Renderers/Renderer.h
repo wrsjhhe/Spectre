@@ -32,7 +32,7 @@ public:
 private:
 	void ReadyScene();
 
-	void RecordCommand();
+	void SetDrawCommandFunc();
 
 private:
 	RenderSystemVK* m_pRenderSystem = nullptr;

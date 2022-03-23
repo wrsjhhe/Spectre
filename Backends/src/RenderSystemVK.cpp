@@ -50,25 +50,27 @@ void RenderSystemVK::CreateRenderContext(const RenderContextDesc& desc)
 	m_ContextPtr->CalcSwapchainParamaters(surface);
 	
 	m_RenderComplete = VulkanSemaphore::CreateSemaphore();
+
+	CreateRenderPass();
 }
 
 
-void RenderSystemVK::CreateSwapChain(const SwapChainDesc& desc)
+void RenderSystemVK::CreateSwapChain()
 {
-	m_Width = desc.Width;
-	m_Height = desc.Height;
 
+	SwapChainDesc desc;
+	desc.Width = m_Width;
+	desc.Height = m_Height;
 	m_GuiPtr = std::make_shared<VulkanGui>(m_VulkanEnginePtr);
 	m_GuiPtr->Init("Fonts/Ubuntu-Regular.ttf", m_Width,m_Height);
 
 	m_SwapChain = std::make_shared<VulkanSwapChain>(*m_ContextPtr, desc);
 
-	CreateRenderPass();
-	CreateFrameBuffer();
 
+	CreateFrameBuffer();
 }
 
-void RenderSystemVK::RecordCmd(std::function<void(VkCommandBuffer)> cmdFn)
+void RenderSystemVK::RecordDrawCommand()
 {
 	VkClearValue clearValues[2];
 	clearValues[0].color = {
@@ -88,8 +90,7 @@ void RenderSystemVK::RecordCmd(std::function<void(VkCommandBuffer)> cmdFn)
 
 	auto cmds = VulkanEngine::GetInstance()->GetRenderCmd();
 	for (uint32_t i = 0; i < cmds.size(); ++i)
-	{
-		
+	{	
 		renderPassBeginInfo.framebuffer = m_FrameBuffers[i]->GetVkFrameBuffer();
 
 		VkViewport viewport = {};
@@ -115,7 +116,7 @@ void RenderSystemVK::RecordCmd(std::function<void(VkCommandBuffer)> cmdFn)
 			vkCmdBeginRenderPass(cmdBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
 			vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
-			cmdFn(cmdBuffer);
+			m_DrawCommand(cmdBuffer);
 
 			vkCmdEndRenderPass(cmdBuffer);		
 		});
@@ -215,7 +216,7 @@ void RenderSystemVK::ReceateSwapchain(const SwapChainDesc& desc)
 	m_SwapChain = std::make_shared<VulkanSwapChain>(*m_ContextPtr, _desc);
 	CreateFrameBuffer();
 
-	//Setup();
+	RecordDrawCommand();
 }
 
 void RenderSystemVK::DestorySwapchain()
@@ -223,6 +224,8 @@ void RenderSystemVK::DestorySwapchain()
 	m_FrameBuffers.clear();
 
 	m_SwapChain = nullptr;
+
+	vkDeviceWaitIdle(m_VulkanEnginePtr->GetVkDevice());
 }
 
 bool RenderSystemVK::UpdateUI()
@@ -267,4 +270,15 @@ bool RenderSystemVK::UpdateUI()
 	//	Setup();
 	//}
 	return hovered;
+}
+
+void Spectre::RenderSystemVK::SetDrawCommand(std::function<void(VkCommandBuffer)> cmd)
+{
+	m_DrawCommand = cmd;
+}
+
+void Spectre::RenderSystemVK::SetRect(double width, double height)
+{
+	m_Width = width;
+	m_Height = height;
 }
