@@ -142,6 +142,37 @@ HWND GLFWContext::GetWin32Window()
 
 void GLFWContext::InitEventMap()
 {
-	m_EventHandleMap[GLFW_KEY_ESCAPE] = KeyBoard_ESCAPE;
-	m_EventHandleMap[GLFW_KEY_SPACE] = KeyBoard_SPACE;
+	m_EventHandleMap = { 
+		{GLFW_KEY_SPACE,KeyBoard_SPACE} ,
+
+		{GLFW_KEY_A,KeyBoard_A} ,
+		{GLFW_KEY_B,KeyBoard_B} ,
+		{GLFW_KEY_C,KeyBoard_C} ,
+		{GLFW_KEY_D,KeyBoard_D} ,
+		{GLFW_KEY_E,KeyBoard_E} ,
+		{GLFW_KEY_F,KeyBoard_F} ,
+		{GLFW_KEY_G,KeyBoard_G} ,
+		{GLFW_KEY_H,KeyBoard_H} ,
+		{GLFW_KEY_I,KeyBoard_I} ,
+		{GLFW_KEY_J,KeyBoard_J} ,
+		{GLFW_KEY_K,KeyBoard_K} ,
+		{GLFW_KEY_L,KeyBoard_L} ,
+		{GLFW_KEY_M,KeyBoard_M} ,
+		{GLFW_KEY_N,KeyBoard_N} ,
+		{GLFW_KEY_O,KeyBoard_O} ,
+		{GLFW_KEY_P,KeyBoard_P} ,
+		{GLFW_KEY_Q,KeyBoard_Q} ,
+		{GLFW_KEY_R,KeyBoard_R} ,
+		{GLFW_KEY_S,KeyBoard_S} ,
+		{GLFW_KEY_T,KeyBoard_T} ,
+		{GLFW_KEY_U,KeyBoard_U} ,
+		{GLFW_KEY_V,KeyBoard_V} ,
+		{GLFW_KEY_W,KeyBoard_W} ,
+		{GLFW_KEY_X,KeyBoard_X} ,
+		{GLFW_KEY_Y,KeyBoard_Y} ,
+		{GLFW_KEY_Z,KeyBoard_Z} ,
+						 
+		{GLFW_KEY_ESCAPE,KeyBoard_ESCAPE} ,
+	};
+
 }

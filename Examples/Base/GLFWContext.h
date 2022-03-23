@@ -1,7 +1,7 @@
 #pragma once
 
 #include <functional>
-#include <map>
+#include <unordered_map>
 #include "Platform.h"
 #include "InputType.h"
 #if defined(SPE_PLATFORM_WINDOWS)
@@ -53,6 +53,6 @@ private:
 	void InitEventMap();
 private:
 	GLFWwindow* m_Window = nullptr;
-	std::map<int, KeyBoardType> m_EventHandleMap;
+	std::unordered_map<int, KeyBoardType> m_EventHandleMap;
 	std::unordered_map<KeyBoardType, std::vector<InputCallbackFunc>> m_Events;
 };

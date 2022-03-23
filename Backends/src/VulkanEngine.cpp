@@ -399,9 +399,7 @@ void VulkanEngine::CreateVkDevice()
     vkDeviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(deviceQueueCI.size());
     vkDeviceCreateInfo.pQueueCreateInfos = deviceQueueCI.data();
 
-    const auto& vkDeviceFeatures = m_Features;
-    VkPhysicalDeviceFeatures vkEnabledFeatures{};
-    vkDeviceCreateInfo.pEnabledFeatures = &vkEnabledFeatures;
+    vkDeviceCreateInfo.pEnabledFeatures = &m_Features;
 
     std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
     if (IsExtensionSupported(VK_KHR_MAINTENANCE1_EXTENSION_NAME))

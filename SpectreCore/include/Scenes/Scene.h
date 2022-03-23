@@ -30,7 +30,7 @@ struct RenderBatch
 	std::vector<Vertex> Vertices;
 	std::vector<uint32_t> Indices;
 
-	bool needupdate = false;
+	bool NeedUpdate = false;
 
 	VulkanPipelinePtr Pipeline;
 
@@ -47,6 +47,8 @@ public:
 
 	void AddMesh(MeshPtr pMesh);
 
+	void RemoveMesh(MeshPtr pMesh);
+
 	void PreparePipeline();
 
 	void PrepareStageBuffer();
@@ -61,7 +63,7 @@ public:
 
 private:
 	std::vector<RenderObject> m_PendingObjects;
-	std::vector<RenderObject> m_DeletedObjects;
+	std::vector<RenderObject> m_RemovingObjects;
 	std::vector<RenderObject> m_ModifyObjects;
 
 	//std::vector<RenderObject> m_PassObjects;
@@ -70,6 +72,8 @@ private:
 	std::unordered_map<size_t, VulkanPipelinePtr> m_MatPipelineMap;
 
 	bool m_NeedUpdate = false;
+
+	std::unordered_map<SpectreId, RenderBatch*> m_MeshInBatchCache;
 };
 
 END_NAMESPACE_SPECTRE

@@ -26,6 +26,16 @@ void Scene::AddMesh(MeshPtr pMesh)
 
 	m_NeedUpdate = true;
 }
+
+void Scene::RemoveMesh(MeshPtr pMesh)
+{
+	RenderObject removeObj;
+	removeObj.MeshPtr = pMesh;
+	m_RemovingObjects.push_back(removeObj);
+
+	m_NeedUpdate = true;
+}
+
 struct UBOData
 {
 	Matrix MVPMatrix;
@@ -63,10 +73,38 @@ void Scene::PreparePipeline()
 
 void Scene::PrepareStageBuffer()
 {
+	if (!m_RemovingObjects.empty())
+	{
+		for (auto& removingObj : m_RemovingObjects)
+		{
+			auto iter = m_MeshInBatchCache.find(removingObj.MeshPtr->Id());
+			if (iter != m_MeshInBatchCache.end())
+			{
+				RenderBatch* pBatch = iter->second;
+				for (uint32_t i = 0; i < pBatch->Objects.size(); ++i)
+				{
+					if (pBatch->Objects[i].MeshPtr->Id() == removingObj.MeshPtr->Id())
+					{
+						pBatch->Objects.erase(pBatch->Objects.begin() + i);
+						pBatch->NeedUpdate = true;
+						break;
+					}
+				}
+				m_MeshInBatchCache.erase(iter);
+			}
+		}
+		m_RemovingObjects.clear();
+	}
+
 	if (!m_PendingObjects.empty())
 	{
 		for (auto& pendingObj : m_PendingObjects)
 		{
+			auto iter = m_MeshInBatchCache.find(pendingObj.MeshPtr->Id());
+			if (iter != m_MeshInBatchCache.end())
+			{
+				continue;
+			}
 			RenderBatch* pPendingBatch = nullptr;
 			for (auto pBatch : m_PassBatchs)
 			{
@@ -82,34 +120,38 @@ void Scene::PrepareStageBuffer()
 				pPendingBatch->Pipeline = pendingObj.Pipeline;
 				m_PassBatchs.push_back(pPendingBatch);
 			}
-		
-			pPendingBatch->needupdate = true;
-			pendingObj.FirstVertex = pPendingBatch->Vertices.size();
-			pendingObj.FirstIndex = pPendingBatch->Indices.size();
-			auto pGeomtry = pendingObj.MeshPtr->GetBufferGeometry();
-
-			for (uint32_t i = 0;i < pGeomtry->VerticesCount();++i)
-			{
-				pPendingBatch->Vertices.push_back(pGeomtry->Vertices()[i]);
-			}
-
-			for (uint32_t i = 0; i < pGeomtry->IndicesCount(); ++i)
-			{
-				pPendingBatch->Indices.push_back(pGeomtry->Indices()[i]);
-			}
-
+			
+			pPendingBatch->NeedUpdate = true;
+			
+			m_MeshInBatchCache[pendingObj.MeshPtr->Id()] = pPendingBatch;
 			pPendingBatch->Objects.push_back(std::move(pendingObj));
 		}
 		m_PendingObjects.clear();
+	}
 
-		for (auto pBatch : m_PassBatchs)
+	for (auto pBatch : m_PassBatchs)
+	{
+		if (pBatch->NeedUpdate)
 		{
-			if (pBatch->needupdate == false)
+			pBatch->Vertices.clear();
+			pBatch->Indices.clear();
+
+			for (auto& obj : pBatch->Objects)
 			{
-				continue;
+				obj.FirstVertex = pBatch->Vertices.size();
+				obj.FirstIndex = pBatch->Indices.size();
+				auto pGeomtry = obj.MeshPtr->GetBufferGeometry();
+
+				for (uint32_t i = 0; i < pGeomtry->VerticesCount(); ++i)
+				{
+					pBatch->Vertices.push_back(pGeomtry->Vertices()[i]);
+				}
+
+				for (uint32_t i = 0; i < pGeomtry->IndicesCount(); ++i)
+				{
+					pBatch->Indices.push_back(pGeomtry->Indices()[i]);
+				}
 			}
-			uint32_t vertBufSize = pBatch->Vertices.size() * sizeof(Vertex);
-			uint32_t indexBufSize = pBatch->Indices.size() * sizeof(uint32_t);
 		}
 	}
 }
@@ -118,7 +160,7 @@ void Scene::RefreshGPUBuffer()
 {
 	for (auto pBatch : m_PassBatchs)
 	{
-		if (pBatch->needupdate == false)
+		if (pBatch->NeedUpdate == false)
 		{
 			continue;
 		}		
@@ -162,6 +204,8 @@ void Scene::RefreshGPUBuffer()
 		);
 
 		indirectStagingBuffer->CopyTo(pBatch->IndirectBuffer);
+
+		pBatch->NeedUpdate = false;
 	}
 	m_NeedUpdate = false;
 }

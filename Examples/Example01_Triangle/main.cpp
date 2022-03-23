@@ -78,11 +78,18 @@ public:
 		renderer.BindScene(&scene);
 		renderer.Resize(g_Width, g_Height);
 
-		context.AddKeyEvent(KeyBoard_SPACE, [&](void* window, int action) {
+		context.AddKeyEvent(KeyBoard_A, [&](void* window, int action) {
 			if (action == 1)
 			{
 				scene.AddMesh(pMesh2);
 			}		
+		});
+
+		context.AddKeyEvent(KeyBoard_D, [&](void* window, int action) {
+			if (action == 1)
+			{
+				scene.RemoveMesh(pMesh2);
+			}
 		});
 		
 		PerspectiveCamera camera(DegreesToRadians(75.f), (float)g_Width/ (float)g_Height, 0.1, 3000.0f);
@@ -120,7 +127,6 @@ public:
 
 			Matrix rMat = Matrix::CreateRotationZ(DegreesToRadians(90.0f) * elapsedTime);
 			pMesh1->Transform(rMat);
-			pMesh2->Transform(rMat);
 		}
 	}
 	

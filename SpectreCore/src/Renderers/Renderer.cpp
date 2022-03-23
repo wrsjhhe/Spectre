@@ -1,4 +1,5 @@
 #include "RenderSystemVK.h"
+#include "VulkanEngine.h"
 #include "Renderers/Renderer.h"
 
 USING_NAMESPACE(Spectre)
@@ -128,12 +129,20 @@ void Renderer::RecordCommand()
 			vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &pBatch->GPUBuffer.VertexBuffer->GetVkBuffer(), offsets);
 			vkCmdBindIndexBuffer(cmdBuffer, pBatch->GPUBuffer.IndexBuffer->GetVkBuffer(), 0, VK_INDEX_TYPE_UINT32);
 
-			for (uint32_t i = 0; i < pBatch->IndirectCommands.size(); ++i)
+			if (VulkanEngine::GetInstance()->GetVkPhysicalDeviceFeatures().multiDrawIndirect)
 			{
 				vkCmdDrawIndexedIndirect(cmdBuffer, pBatch->IndirectBuffer->GetVkBuffer(),
-					i * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
-
+					0, pBatch->IndirectCommands.size(), sizeof(VkDrawIndexedIndirectCommand));
 			}
+			else
+			{
+				for (uint32_t i = 0; i < pBatch->IndirectCommands.size(); ++i)
+				{
+					vkCmdDrawIndexedIndirect(cmdBuffer, pBatch->IndirectBuffer->GetVkBuffer(),
+						i * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
+
+				}
+			}		
 		}
 	});
 }
