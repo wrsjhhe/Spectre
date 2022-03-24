@@ -8,6 +8,11 @@
 
 BEGIN_NAMESPACE_SPECTRE
 
+struct CameraBuffer
+{
+	Matrix View;
+	Matrix Projection;
+};
 
 class RenderSystemVK;
 class VulkanPipeline;
@@ -34,6 +39,8 @@ private:
 
 	void SetDrawCommandFunc();
 
+	void PrepareCameraDes();
+
 private:
 	RenderSystemVK* m_pRenderSystem = nullptr;
 
@@ -45,6 +52,7 @@ private:
 	BufferMaterialPtr				  m_MaterialPtr = nullptr;
 	PerspectiveCamera*				  m_PerspectiveCameraPtr = nullptr;
 	Matrix                            m_MVPData;
+	CameraBuffer                      m_CameraBuffer;
 };
 
 END_NAMESPACE_SPECTRE

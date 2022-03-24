@@ -9,13 +9,13 @@ PerspectiveCamera::PerspectiveCamera(float fov, float aspect, float near, float 
 	m_Near(near),
 	m_Far(far)
 {
-	m_Projection = Matrix::CreatePerspectiveFieldOfView(m_Fov, aspect, m_Near, m_Far);
+	m_Projection = Matrix::CreatePerspectiveFieldOfView(m_Fov, m_Aspect, m_Near, m_Far);
 }
 
 
 void PerspectiveCamera::LookAt(const Vector3& pos,const Vector3& target, const Vector3& up)
 {
-	m_World = Matrix::CreateLookAt(pos, target, up);
+	m_View = Matrix::CreateLookAt(pos, target, up);
 	m_NeedUpdate = true;
 }
 
@@ -23,7 +23,7 @@ Matrix PerspectiveCamera::GetViewProjection()
 {
 	if (m_NeedUpdate)
 	{
-		m_ViewProjection = m_World * m_Projection;
+		m_ViewProjection = m_View * m_Projection;
 		m_NeedUpdate = false;
 	}
 

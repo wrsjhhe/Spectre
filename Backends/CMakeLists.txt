@@ -37,7 +37,20 @@ include_directories(${INTERFACEE_DIR})
 
 set(INC_VULKAN_DIR ./include/)
 include_directories(${INC_VULKAN_DIR})
-set(VULKAN_PUBLIC_HDRS 
+set(VULKAN_PUBLIC_HDRS
+${INC_VULKAN_DIR}VulkanCommon.h
+${INC_VULKAN_DIR}VulkanEngine.h
+${INC_VULKAN_DIR}VulkanSwapchain.h
+${INC_VULKAN_DIR}VulkanBuffer.h
+${INC_VULKAN_DIR}VulkanCommand.h
+${INC_VULKAN_DIR}VulkanImages.h
+${INC_VULKAN_DIR}VulkanRenderPass.h
+${INC_VULKAN_DIR}VulkanFrameBuffer.h
+${INC_VULKAN_DIR}VulkanSemaphore.h
+${INC_VULKAN_DIR}VulkanPipeline.h
+${INC_VULKAN_DIR}VulkanContext.h
+${INC_VULKAN_DIR}VulkanDescriptor.h
+${INC_VULKAN_DIR}VulkanGui.h
 ${INC_VULKAN_DIR}RenderSystemVK.h
 )
 
@@ -57,29 +70,14 @@ ${SRC_VULKAN_DIR}VulkanFrameBuffer.cpp
 ${SRC_VULKAN_DIR}VulkanSemaphore.cpp
 ${SRC_VULKAN_DIR}VulkanPipeline.cpp
 ${SRC_VULKAN_DIR}VulkanContext.cpp
-
+${SRC_VULKAN_DIR}VulkanDescriptor.cpp
 ${SRC_VULKAN_DIR}VulkanGui.cpp
 ${SRC_VULKAN_DIR}RenderSystemVK.cpp
 )
 
-set(VULKAN_PRIVATE_HDRS
-${INC_VULKAN_DIR}VulkanCommon.h
-${INC_VULKAN_DIR}VulkanEngine.h
-${INC_VULKAN_DIR}VulkanSwapchain.h
-${INC_VULKAN_DIR}VulkanBuffer.h
-${INC_VULKAN_DIR}VulkanCommand.h
-${INC_VULKAN_DIR}VulkanImages.h
-${INC_VULKAN_DIR}VulkanRenderPass.h
-${INC_VULKAN_DIR}VulkanFrameBuffer.h
-${INC_VULKAN_DIR}VulkanSemaphore.h
-${INC_VULKAN_DIR}VulkanPipeline.h
-${INC_VULKAN_DIR}VulkanContext.h
-
-${INC_VULKAN_DIR}VulkanGui.h
-${INC_VULKAN_DIR}RenderSystemVK.h
-)
 
 
-add_library (Backends STATIC ${PUBLIC_HDRS} ${VULKAN_PUBLIC_HDRS} ${VULKAN_PRIVATE_HDRS} ${VULKAN_SRCS} ${IMGUI_SRC})
+
+add_library (Backends STATIC ${PUBLIC_HDRS} ${VULKAN_PUBLIC_HDRS} ${VULKAN_SRCS} ${IMGUI_SRC})
 target_link_libraries(Backends PUBLIC SpectreCommon)
 target_link_libraries(Backends PUBLIC vulkan-1)

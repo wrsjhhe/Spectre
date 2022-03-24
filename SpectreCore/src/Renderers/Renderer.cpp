@@ -58,6 +58,11 @@ void Renderer::Setup()
 
 	m_pRenderSystem->CreateSwapChain();
 
+	m_CameraBuffer = {
+		m_PerspectiveCameraPtr->GetView(),
+		m_PerspectiveCameraPtr->GetProjection()
+	};
+
 	m_Prepared = true;
 
 }
@@ -144,4 +149,9 @@ void Renderer::SetDrawCommandFunc()
 			}
 		}
 	});
+}
+
+void Renderer::PrepareCameraDes()
+{
+
 }
