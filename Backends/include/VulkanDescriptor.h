@@ -6,7 +6,7 @@ BEGIN_NAMESPACE_SPECTRE
 class DescriptorAllocator
 {
 private:
-	const MaxSets = 1000;
+	const uint32_t MaxSets = 1000;
 
     const std::vector<std::pair<VkDescriptorType, float>> PoolSizes =
 	{
@@ -22,7 +22,7 @@ private:
 	};
 
 public:
-
+	void Allocate();
 	
 		
 
