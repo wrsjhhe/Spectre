@@ -32,6 +32,8 @@ public:
 
 	void CreateUniformBuffer(uint32_t  bufferSize);
 
+	void AddDescriptorSetLayout(VkDescriptorSetLayout layout);
+
 	std::shared_ptr<VulkanBuffer> GetUniformBuffer() { return m_MVPBuffer; }
 
 	void CreatePipelineInstance(const VulkanRenderPass& renderPass);
@@ -59,6 +61,8 @@ private:
 	VkDescriptorPool					m_VkDescriptorPool = VK_NULL_HANDLE;
 	VkDescriptorSetLayout				m_VkDescriptorSetLayout = VK_NULL_HANDLE;
 	VkDescriptorSet						m_VkDescriptorSet = VK_NULL_HANDLE;
+
+	std::vector<VkDescriptorSetLayout>  m_Layouts;
 
 	std::vector<VkVertexInputBindingDescription>			m_BindingDescriptions;
 	std::vector<VkVertexInputAttributeDescription>          m_AttributeDescriptions;

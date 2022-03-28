@@ -285,8 +285,8 @@ VulkanPipeline::VulkanPipeline()
 
 	VkPipelineLayoutCreateInfo pipeLayoutInfo{};
 	pipeLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipeLayoutInfo.setLayoutCount = 1;
-	pipeLayoutInfo.pSetLayouts = &m_VkDescriptorSetLayout;
+	pipeLayoutInfo.setLayoutCount = m_Layouts.size();
+	pipeLayoutInfo.pSetLayouts = m_Layouts.data();
 	vkCreatePipelineLayout(device, &pipeLayoutInfo, nullptr, &m_VkPipelineLayout);
 
 	VkPipelineCacheCreateInfo createInfo{};
@@ -388,6 +388,7 @@ void VulkanPipeline::CreateDescriptorSetLayout()
 	descSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 	descSetLayoutInfo.bindingCount = 1;
 	descSetLayoutInfo.pBindings = &layoutBinding;
+
 	vkCreateDescriptorSetLayout(device, &descSetLayoutInfo, nullptr, &m_VkDescriptorSetLayout);
 }
 
@@ -418,4 +419,9 @@ void VulkanPipeline::CreateUniformBuffer(uint32_t  bufferSize)
 	writeDescriptorSet.pBufferInfo = &MVPDescriptor;
 	writeDescriptorSet.dstBinding = 0;
 	vkUpdateDescriptorSets(device, 1, &writeDescriptorSet, 0, nullptr);
+}
+
+void VulkanPipeline::AddDescriptorSetLayout(VkDescriptorSetLayout layout)
+{
+	m_Layouts.push_back(layout);
 }

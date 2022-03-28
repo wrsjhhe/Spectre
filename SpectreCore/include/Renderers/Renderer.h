@@ -5,13 +5,20 @@
 #include "Materials/BufferMaterial.h"
 #include "NativeWindow.h"
 #include "VulkanPipeline.h"
+#include "VulkanDescriptor.h"
 
 BEGIN_NAMESPACE_SPECTRE
 
-struct CameraBuffer
+struct CameraMatrix
 {
 	Matrix View;
 	Matrix Projection;
+};
+
+struct CameraData
+{
+	VulkanBufferPtr Buffer;
+	VulkanDescriptorPtr Descriptor;
 };
 
 class RenderSystemVK;
@@ -39,9 +46,7 @@ private:
 
 	void SetDrawCommandFunc();
 
-	void PrepareCameraDes();
-
-	void CreateCameraUbo();
+	void CreateCameraUBO();
 
 private:
 	RenderSystemVK* m_pRenderSystem = nullptr;
@@ -54,7 +59,7 @@ private:
 	BufferMaterialPtr				  m_MaterialPtr = nullptr;
 	PerspectiveCamera*				  m_PerspectiveCameraPtr = nullptr;
 	Matrix                            m_MVPData;
-	CameraBuffer                      m_CameraBuffer;
+	CameraData                        m_CameraData;
 };
 
 END_NAMESPACE_SPECTRE

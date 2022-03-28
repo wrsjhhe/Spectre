@@ -58,11 +58,7 @@ void Renderer::Setup()
 
 	m_pRenderSystem->CreateSwapChain();
 
-	m_CameraBuffer = {
-		m_PerspectiveCameraPtr->GetView(),
-		m_PerspectiveCameraPtr->GetProjection()
-	};
-
+	CreateCameraUBO();
 	m_Prepared = true;
 
 }
@@ -151,12 +147,18 @@ void Renderer::SetDrawCommandFunc()
 	});
 }
 
-void Renderer::PrepareCameraDes()
+
+void Renderer::CreateCameraUBO()
 {
+	m_CameraData.Buffer = VulkanBuffer::Create(sizeof(CameraMatrix), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 
-}
+	VkDescriptorBufferInfo cameraDescriptor;
+	cameraDescriptor.buffer = m_CameraData.Buffer->GetVkBuffer();
+	cameraDescriptor.offset = 0;
+	cameraDescriptor.range = sizeof(CameraMatrix);
 
-void Renderer::CreateCameraUbo()
-{
-
+	m_CameraData.Descriptor = VulkanDescriptor::Create();
+	m_CameraData.Descriptor->BindBuffer(1, &cameraDescriptor, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
+	m_CameraData.Descriptor->Build();
 }

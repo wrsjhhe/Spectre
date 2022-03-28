@@ -50,7 +50,6 @@ public:
 		const char* const*	   ppInstanceExtensionNames = nullptr;
 	};
 public:
-	static VulkanEngine* m_EngineInstance;
 	static VulkanEngine* Create(const VulkanEngineCreateInfo& CI);
 	static VulkanEngine* GetInstance() 
 	{ 
@@ -88,6 +87,8 @@ private:
 	uint32_t FindQueueFamily(VkQueueFlags QueueFlags) const;
 	bool IsExtensionSupported(const char* ExtensionName) const;
 private:
+	static VulkanEngine* m_EngineInstance;
+
 	VulkanEngineCreateInfo					m_CI;
 	bool									m_DebugUtilsEnabled = false;
 	VkInstance								m_VkInstance = VK_NULL_HANDLE;
