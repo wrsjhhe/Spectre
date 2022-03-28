@@ -364,7 +364,7 @@ void VulkanPipeline::CreateDescriptorPool()
 	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
 	VkDescriptorPoolSize poolSize = {};
 	poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	poolSize.descriptorCount = DESCRIPTOR_TYPE_COUNT;
+	poolSize.descriptorCount = 1;
 
 	VkDescriptorPoolCreateInfo descriptorPoolInfo{};
 	descriptorPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -400,7 +400,7 @@ void VulkanPipeline::CreateUniformBuffer(uint32_t  bufferSize)
 	allocInfo.descriptorPool = m_VkDescriptorPool;
 	allocInfo.descriptorSetCount = 1;
 	allocInfo.pSetLayouts = &m_VkDescriptorSetLayout;
-	vkAllocateDescriptorSets(device, &allocInfo, &m_VkDescriptorSet);
+	auto ret = vkAllocateDescriptorSets(device, &allocInfo, &m_VkDescriptorSet);
 
 	m_MVPBuffer = VulkanBuffer::Create(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);

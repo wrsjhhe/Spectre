@@ -3,16 +3,16 @@
 layout (location = 0) in vec3 inPos;
 layout (location = 1) in vec3 inColor;
 
-layout (set = 0,binding = 0) uniform CameraBuffer
+layout (binding = 0) uniform CameraBuffer
 {
 	mat4 View;
 	mat4 Projection;
-}CameraData
+}CameraData;
 
-layout (binding = 0) uniform UBO 
+layout (binding = 1) uniform ModelBuffer 
 {
-	mat4 MVPMatrix;
-} ubo;
+	mat4 Transform;
+} ModelData;
 
 layout (location = 0) out vec3 outColor;
 
@@ -24,5 +24,5 @@ out gl_PerVertex
 void main() 
 {
 	outColor = inColor;
-	gl_Position = ubo.MVPMatrix* vec4(inPos.xyz, 1.0);
+	gl_Position = CameraData.Projection * CameraData.View * ModelData.Transform * vec4(inPos.xyz, 1.0);
 }

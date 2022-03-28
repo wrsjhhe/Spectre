@@ -41,6 +41,8 @@ private:
 
 	void PrepareCameraDes();
 
+	void CreateCameraUbo();
+
 private:
 	RenderSystemVK* m_pRenderSystem = nullptr;
 

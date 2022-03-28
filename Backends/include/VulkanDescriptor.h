@@ -24,7 +24,8 @@ private:
 public:
 	void Allocate();
 	
-		
+private:
+	VkDescriptorPool CreatePool();
 
 
 };

@@ -155,3 +155,8 @@ void Renderer::PrepareCameraDes()
 {
 
 }
+
+void Renderer::CreateCameraUbo()
+{
+
+}
