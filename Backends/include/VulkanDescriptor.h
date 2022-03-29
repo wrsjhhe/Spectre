@@ -88,24 +88,18 @@ private:
 	std::unordered_map<DescriptorLayoutInfo, VkDescriptorSetLayout, DescriptorLayoutHash> m_LayoutCache;
 };
 
-class VulkanDescriptor;
-typedef std::shared_ptr<VulkanDescriptor> VulkanDescriptorPtr;
-class VulkanDescriptor
+
+class VulkanDescriptorBuilder
 {
 public:
-	static VulkanDescriptorPtr Create();
+	void AddBind(uint32_t binding,VkDescriptorType type, VkShaderStageFlags stageFlags);
 
-	void BindBuffer(uint32_t binding, VkDescriptorBufferInfo* bufferInfo, 
-		VkDescriptorType type, VkShaderStageFlags stageFlags);
+	VkDescriptorSet Build(VkDescriptorBufferInfo* bufferInfo);
 
-	void Build();
-
-	VkDescriptorSetLayout GetVkDescriptorSetLayout() const { return m_Layout; }
+	VkDescriptorSetLayout GetOrCreateLayout();
 
 private:
 	std::vector<VkDescriptorSetLayoutBinding> m_Bindings;
-	std::vector<VkWriteDescriptorSet> m_Writes;
-	VkDescriptorSet m_Set = VK_NULL_HANDLE;
 	VkDescriptorSetLayout m_Layout = VK_NULL_HANDLE;
 };
 

@@ -4,7 +4,8 @@ USING_NAMESPACE(Spectre)
 
 Scene::Scene()
 {
-
+	CreateCameraDescriptor();
+	CreateModelDescriptor();
 }
 
 Scene::~Scene()
@@ -27,6 +28,11 @@ void Scene::AddMesh(MeshPtr pMesh)
 	m_NeedUpdate = true;
 }
 
+void Scene::AddCamera(PerspectiveCamera* pCamera)
+{
+	m_PerspectiveCameraPtr = pCamera;
+}
+
 void Scene::RemoveMesh(MeshPtr pMesh)
 {
 	RenderObject removeObj;
@@ -36,10 +42,7 @@ void Scene::RemoveMesh(MeshPtr pMesh)
 	m_NeedUpdate = true;
 }
 
-struct UBOData
-{
-	Matrix MVPMatrix;
-};
+
 void Scene::PreparePipeline()
 {
 	if (m_PendingObjects.empty())
@@ -62,13 +65,15 @@ void Scene::PreparePipeline()
 			VulkanPipelinePtr newPipeline = VulkanPipeline::Create();
 			newPipeline->CreateShaderModules({ pMaterial->GetVertexShader() }, { pMaterial->GetFragmentShader() });
 			newPipeline->SetVertexDescription(pMaterial->GetAttributes());
-			newPipeline->CreateUniformBuffer(sizeof(Matrix));
+			//newPipeline->CreateUniformBuffer(sizeof(Matrix));
+
+			newPipeline->AddDescriptorSetLayout(m_CameraDescBuilder.GetOrCreateLayout());
+			newPipeline->AddDescriptorSetLayout(m_ModelDescBuilder.GetOrCreateLayout());
 
 			pendingObj.Pipeline = newPipeline;
 			m_MatPipelineMap[matHash] = newPipeline;
 		}
 	}
-
 }
 
 void Scene::PrepareStageBuffer()
@@ -151,6 +156,15 @@ void Scene::PrepareStageBuffer()
 				{
 					pBatch->Indices.push_back(pGeomtry->Indices()[i]);
 				}
+
+				obj.ModelBuffer = VulkanBuffer::Create(sizeof(Matrix), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+					VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+
+				VkDescriptorBufferInfo descriptor;
+				descriptor.buffer = obj.ModelBuffer->GetVkBuffer();
+				descriptor.offset = 0;
+				descriptor.range = sizeof(Matrix);
+				obj.DescriptorSet = m_ModelDescBuilder.Build(&descriptor);
 			}
 		}
 	}
@@ -208,5 +222,36 @@ void Scene::RefreshGPUBuffer()
 		pBatch->NeedUpdate = false;
 	}
 	m_NeedUpdate = false;
+}
+
+void Scene::UpdateCamera()
+{
+	CameraMatrix matrix
+	{
+		m_PerspectiveCameraPtr->GetView(),
+		m_PerspectiveCameraPtr->GetProjection()
+	};
+
+	m_CameraData.Buffer->Map(&matrix, sizeof(CameraMatrix), 0);
+
+}
+
+void Scene::CreateCameraDescriptor()
+{
+	m_CameraData.Buffer = VulkanBuffer::Create(sizeof(CameraMatrix), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+
+	VkDescriptorBufferInfo cameraDescriptor;
+	cameraDescriptor.buffer = m_CameraData.Buffer->GetVkBuffer();
+	cameraDescriptor.offset = 0;
+	cameraDescriptor.range = sizeof(CameraMatrix);
+
+	m_CameraData.DescriptorSet = m_CameraDescBuilder.Build(&cameraDescriptor);
+	m_CameraDescBuilder.AddBind(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
+}
+
+void Scene::CreateModelDescriptor()
+{
+	m_ModelDescBuilder.AddBind(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
 }
 

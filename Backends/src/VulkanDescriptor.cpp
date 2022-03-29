@@ -150,12 +150,8 @@ size_t DescriptorLayoutCache::DescriptorLayoutInfo::Hash() const
 	return result;
 }
 
-VulkanDescriptorPtr VulkanDescriptor::Create()
-{
-	return std::make_shared<VulkanDescriptor>();
-}
 
-void VulkanDescriptor::BindBuffer(uint32_t binding, VkDescriptorBufferInfo* bufferInfo, VkDescriptorType type, VkShaderStageFlags stageFlags)
+void VulkanDescriptorBuilder::AddBind(uint32_t binding, VkDescriptorType type, VkShaderStageFlags stageFlags)
 {
 	VkDescriptorSetLayoutBinding newBinding{};
 
@@ -166,21 +162,46 @@ void VulkanDescriptor::BindBuffer(uint32_t binding, VkDescriptorBufferInfo* buff
 	newBinding.binding = binding;
 
 	m_Bindings.push_back(newBinding);
-
-	VkWriteDescriptorSet newWrite{};
-	newWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	newWrite.pNext = nullptr;
-
-	newWrite.descriptorCount = 1;
-	newWrite.descriptorType = type;
-	newWrite.pBufferInfo = bufferInfo;
-	newWrite.dstBinding = binding;
-
-	m_Writes.push_back(newWrite);
 }
 
-void VulkanDescriptor::Build()
+
+VkDescriptorSet VulkanDescriptorBuilder::Build(VkDescriptorBufferInfo* bufferInfo)
 {
+	m_Layout = GetOrCreateLayout();
+	std::vector<VkWriteDescriptorSet> writes;
+	for(auto& binding: m_Bindings)
+	{
+		VkWriteDescriptorSet newWrite{};
+		newWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		newWrite.pNext = nullptr;
+
+		newWrite.descriptorCount = 1;
+		newWrite.descriptorType = binding.descriptorType;
+		newWrite.pBufferInfo = bufferInfo;
+		newWrite.dstBinding = binding.binding;
+
+		writes.push_back(newWrite);
+	}
+	
+	VkDescriptorSet set = VK_NULL_HANDLE;
+	DescriptorAllocator::GetInstance()->Allocate(&set, m_Layout);
+
+	for (VkWriteDescriptorSet& w : writes) {
+		w.dstSet = set;
+	}
+
+	vkUpdateDescriptorSets(VulkanEngine::GetInstance()->GetVkDevice(), static_cast<uint32_t>(writes.size()), writes.data(), 0, nullptr);
+
+	return set;
+}
+
+VkDescriptorSetLayout VulkanDescriptorBuilder::GetOrCreateLayout()
+{
+	if (m_Layout != VK_NULL_HANDLE)
+	{
+		return m_Layout;
+	}
+
 	VkDescriptorSetLayoutCreateInfo layoutInfo{};
 	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 	layoutInfo.pNext = nullptr;
@@ -190,11 +211,5 @@ void VulkanDescriptor::Build()
 
 	m_Layout = DescriptorLayoutCache::GetInstance()->CreateDescriptorLayout(&layoutInfo);
 
-	DescriptorAllocator::GetInstance()->Allocate(&m_Set, m_Layout);
-
-	for (VkWriteDescriptorSet& w : m_Writes) {
-		w.dstSet = m_Set;
-	}
-
-	vkUpdateDescriptorSets(VulkanEngine::GetInstance()->GetVkDevice(), static_cast<uint32_t>(m_Writes.size()), m_Writes.data(), 0, nullptr);
+	return m_Layout;
 }

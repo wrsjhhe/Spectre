@@ -2,6 +2,7 @@
 #include "Materials/BufferMaterial.h"
 #include "Geometries/BufferGeometry.h"
 #include "Renderers/Renderer.h"
+#include "VulkanEngine.h"
 #include "Timer.h"
 #include "GLFWContext.h"
 #include "Cameras/PerspectiveCamera.h"
@@ -34,6 +35,12 @@ public:
 
 	void Run()
 	{
+		VulkanEngine::VulkanEngineCreateInfo engineCI;
+#ifdef VKB_DEBUG
+		engineCI.EnableValidation = true;
+#endif
+		VulkanEngine::Create(engineCI);
+
 		CreateContext(g_Width, g_Height);
 
 		std::vector<VertexAttribute> VertexAttrs = { VertexAttribute_Position, VertexAttribute_Color };
@@ -94,7 +101,7 @@ public:
 		
 		PerspectiveCamera camera(DegreesToRadians(75.f), (float)g_Width/ (float)g_Height, 0.1, 3000.0f);
 		camera.LookAt({ 0.f,0.f, 12.f }, { 0.f,0.f, 0.f }, { 0.f,1.f, 0.f });
-		renderer.BindCamera(&camera);
+		scene.AddCamera(&camera);
 
 		renderer.Setup();
 

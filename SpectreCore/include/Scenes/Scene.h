@@ -3,6 +3,8 @@
 #include "Object3D.h"
 #include "Objects/Mesh.h"
 #include "VulkanPipeline.h"
+#include "VulkanDescriptor.h"
+#include "Cameras/PerspectiveCamera.h"
 BEGIN_NAMESPACE_SPECTRE
 
 struct RenderObject 
@@ -13,6 +15,8 @@ struct RenderObject
 	uint32_t FirstVertex;
 
 	VulkanPipelinePtr Pipeline;
+	VkDescriptorSet DescriptorSet;
+	VulkanBufferPtr ModelBuffer;
 };
 
 struct MeshBuffer
@@ -37,6 +41,17 @@ struct RenderBatch
 	MeshBuffer GPUBuffer;
 };
 
+struct CameraMatrix
+{
+	Matrix View;
+	Matrix Projection;
+};
+
+struct CameraData
+{
+	VulkanBufferPtr Buffer;
+	VkDescriptorSet DescriptorSet;
+};
 
 class Scene : Object3D
 {
@@ -46,6 +61,8 @@ public:
 	virtual ~Scene();
 
 	void AddMesh(MeshPtr pMesh);
+
+	void AddCamera(PerspectiveCamera* pCamera);
 
 	void RemoveMesh(MeshPtr pMesh);
 
@@ -59,7 +76,14 @@ public:
 
 	const std::vector<RenderBatch*>& GetRenderBatchs() const { return m_PassBatchs; }
 
+	void UpdateCamera();
+
 	bool NeedUpdate() const { return m_NeedUpdate; }
+	CameraData									m_CameraData;
+private:
+	void CreateCameraDescriptor();
+
+	void CreateModelDescriptor();
 
 private:
 	std::vector<RenderObject> m_PendingObjects;
@@ -74,6 +98,12 @@ private:
 	bool m_NeedUpdate = false;
 
 	std::unordered_map<SpectreId, RenderBatch*> m_MeshInBatchCache;
+
+	
+	VulkanDescriptorBuilder						m_CameraDescBuilder;
+	VulkanDescriptorBuilder						m_ModelDescBuilder;
+
+	PerspectiveCamera*							m_PerspectiveCameraPtr = nullptr;
 };
 
 END_NAMESPACE_SPECTRE

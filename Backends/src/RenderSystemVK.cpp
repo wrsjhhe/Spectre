@@ -17,12 +17,7 @@ USING_NAMESPACE(Spectre)
 
 RenderSystemVK::RenderSystemVK() noexcept
 {
-
-	VulkanEngine::VulkanEngineCreateInfo engineCI;
-#ifdef VKB_DEBUG
-	engineCI.EnableValidation = true;
-#endif
-	m_VulkanEnginePtr = VulkanEngine::Create(engineCI);
+	m_VulkanEnginePtr = VulkanEngine::GetInstance();
 
 	m_ContextPtr = std::make_shared<VulkanContext>(m_VulkanEnginePtr);
 }

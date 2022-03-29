@@ -1,25 +1,13 @@
 #pragma once
 #include "SpectreApi.h"
 #include "Scenes/Scene.h"
-#include "Cameras/PerspectiveCamera.h"
-#include "Materials/BufferMaterial.h"
 #include "NativeWindow.h"
 #include "VulkanPipeline.h"
-#include "VulkanDescriptor.h"
+
 
 BEGIN_NAMESPACE_SPECTRE
 
-struct CameraMatrix
-{
-	Matrix View;
-	Matrix Projection;
-};
 
-struct CameraData
-{
-	VulkanBufferPtr Buffer;
-	VulkanDescriptorPtr Descriptor;
-};
 
 class RenderSystemVK;
 class VulkanPipeline;
@@ -33,7 +21,7 @@ public:
 
 	void BindScene(Scene* pScene);
 
-	void BindCamera(PerspectiveCamera* pCamera);
+	//void BindCamera(PerspectiveCamera* pCamera);
 
 	void Resize(uint32_t width, uint32_t height);
 
@@ -46,7 +34,7 @@ private:
 
 	void SetDrawCommandFunc();
 
-	void CreateCameraUBO();
+
 
 private:
 	RenderSystemVK* m_pRenderSystem = nullptr;
@@ -56,10 +44,8 @@ private:
 	bool                              m_Prepared = false;
 	NativeWindow					  m_Window;
 	Scene*							  m_ScenePtr = nullptr;
-	BufferMaterialPtr				  m_MaterialPtr = nullptr;
-	PerspectiveCamera*				  m_PerspectiveCameraPtr = nullptr;
 	Matrix                            m_MVPData;
-	CameraData                        m_CameraData;
+
 };
 
 END_NAMESPACE_SPECTRE

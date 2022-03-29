@@ -30,7 +30,7 @@ public:
 
 	void CreateShaderModules(const std::vector<std::string>& vertexShaders, const std::vector<std::string>& fragmentShaders);
 
-	void CreateUniformBuffer(uint32_t  bufferSize);
+	//void CreateUniformBuffer(uint32_t  bufferSize);
 
 	void AddDescriptorSetLayout(VkDescriptorSetLayout layout);
 
@@ -41,7 +41,7 @@ public:
 	VkPipeline GetVkPipeline() { return m_VkPipeline; }
 	VkPipelineLayout GetVkPipelineLayout() { return m_VkPipelineLayout; }
 
-	void BindDescriptorSets(const VkCommandBuffer& commandBuffer);
+	//void BindDescriptorSets(const VkCommandBuffer& commandBuffer);
 
 	void BindPipeline(const VkCommandBuffer& commandBuffer);
 
@@ -50,17 +50,17 @@ private:
 	VulkanPipeline();
 	VkShaderModule LoadSPIPVShader(const std::string& shaderCode, ShaderType type);
 
-	void CreateDescriptorPool();
-	void CreateDescriptorSetLayout();
+	//void CreateDescriptorPool();
+	//void CreateDescriptorSetLayout();
 
 
 private:
 	VkPipelineLayout					m_VkPipelineLayout = VK_NULL_HANDLE;
 	VkPipeline							m_VkPipeline = VK_NULL_HANDLE;
 	VkPipelineCache						m_VkPipelineCache = VK_NULL_HANDLE;
-	VkDescriptorPool					m_VkDescriptorPool = VK_NULL_HANDLE;
-	VkDescriptorSetLayout				m_VkDescriptorSetLayout = VK_NULL_HANDLE;
-	VkDescriptorSet						m_VkDescriptorSet = VK_NULL_HANDLE;
+	//VkDescriptorPool					m_VkDescriptorPool = VK_NULL_HANDLE;
+	//VkDescriptorSetLayout				m_VkDescriptorSetLayout = VK_NULL_HANDLE;
+	//VkDescriptorSet						m_VkDescriptorSet = VK_NULL_HANDLE;
 
 	std::vector<VkDescriptorSetLayout>  m_Layouts;
 
