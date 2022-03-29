@@ -16,16 +16,17 @@ Scene::~Scene()
 		pBatch = nullptr;
 	}
 	m_PassBatchs.clear();
+	m_CameraData.Buffer = nullptr;
 }
 
 
 void Scene::AddMesh(MeshPtr pMesh)
 {
-	RenderObject newObj;
-	newObj.MeshPtr = pMesh;
-	m_PendingObjects.push_back(newObj);
+	RenderObject* pNewObj = new RenderObject();
+	pNewObj->MeshPtr = pMesh;
+	m_PendingObjects.push_back(pNewObj);
 
-	m_NeedUpdate = true;
+	m_MeshBufferChanged = true;
 }
 
 void Scene::AddCamera(PerspectiveCamera* pCamera)
@@ -33,13 +34,11 @@ void Scene::AddCamera(PerspectiveCamera* pCamera)
 	m_PerspectiveCameraPtr = pCamera;
 }
 
-void Scene::RemoveMesh(MeshPtr pMesh)
+void Scene::RemoveMesh(SpectreId meshId)
 {
-	RenderObject removeObj;
-	removeObj.MeshPtr = pMesh;
-	m_RemovingObjects.push_back(removeObj);
+	m_RemovingObjects.push_back(meshId);
 
-	m_NeedUpdate = true;
+	m_MeshBufferChanged = true;
 }
 
 
@@ -52,13 +51,13 @@ void Scene::PreparePipeline()
 
 	for (auto& pendingObj : m_PendingObjects)
 	{
-		BufferMaterialPtr pMaterial = pendingObj.MeshPtr->GetMaterial();
+		BufferMaterialPtr pMaterial = pendingObj->MeshPtr->GetMaterial();
 		size_t matHash = pMaterial->GetHash();
 
 		auto iter = m_MatPipelineMap.find(matHash);
 		if (iter !=m_MatPipelineMap.end())
 		{
-			pendingObj.Pipeline = iter->second;
+			pendingObj->Pipeline = iter->second;
 		}
 		else
 		{
@@ -70,7 +69,7 @@ void Scene::PreparePipeline()
 			newPipeline->AddDescriptorSetLayout(m_CameraDescBuilder.GetOrCreateLayout());
 			newPipeline->AddDescriptorSetLayout(m_ModelDescBuilder.GetOrCreateLayout());
 
-			pendingObj.Pipeline = newPipeline;
+			pendingObj->Pipeline = newPipeline;
 			m_MatPipelineMap[matHash] = newPipeline;
 		}
 	}
@@ -82,20 +81,22 @@ void Scene::PrepareStageBuffer()
 	{
 		for (auto& removingObj : m_RemovingObjects)
 		{
-			auto iter = m_MeshInBatchCache.find(removingObj.MeshPtr->Id());
-			if (iter != m_MeshInBatchCache.end())
+			auto iterBatch = m_MeshInBatchCache.find(removingObj);
+			if (iterBatch != m_MeshInBatchCache.end())
 			{
-				RenderBatch* pBatch = iter->second;
+				RenderBatch* pBatch = iterBatch->second;
 				for (uint32_t i = 0; i < pBatch->Objects.size(); ++i)
 				{
-					if (pBatch->Objects[i].MeshPtr->Id() == removingObj.MeshPtr->Id())
+					auto pObj = pBatch->Objects[i];
+					if (pObj->MeshPtr->Id() == removingObj)
 					{
 						pBatch->Objects.erase(pBatch->Objects.begin() + i);
 						pBatch->NeedUpdate = true;
+						delete pObj;
 						break;
 					}
 				}
-				m_MeshInBatchCache.erase(iter);
+				m_MeshInBatchCache.erase(iterBatch);
 			}
 		}
 		m_RemovingObjects.clear();
@@ -105,7 +106,7 @@ void Scene::PrepareStageBuffer()
 	{
 		for (auto& pendingObj : m_PendingObjects)
 		{
-			auto iter = m_MeshInBatchCache.find(pendingObj.MeshPtr->Id());
+			auto iter = m_MeshInBatchCache.find(pendingObj->MeshPtr->Id());
 			if (iter != m_MeshInBatchCache.end())
 			{
 				continue;
@@ -113,7 +114,7 @@ void Scene::PrepareStageBuffer()
 			RenderBatch* pPendingBatch = nullptr;
 			for (auto pBatch : m_PassBatchs)
 			{
-				if (pBatch->Pipeline == pendingObj.Pipeline)
+				if (pBatch->Pipeline == pendingObj->Pipeline)
 				{
 					pPendingBatch = pBatch;
 					break;;
@@ -122,14 +123,15 @@ void Scene::PrepareStageBuffer()
 			if (pPendingBatch == nullptr)
 			{
 				pPendingBatch = new RenderBatch;
-				pPendingBatch->Pipeline = pendingObj.Pipeline;
+				pPendingBatch->Pipeline = pendingObj->Pipeline;
 				m_PassBatchs.push_back(pPendingBatch);
+
+			
 			}
 			
 			pPendingBatch->NeedUpdate = true;
-			
-			m_MeshInBatchCache[pendingObj.MeshPtr->Id()] = pPendingBatch;
-			pPendingBatch->Objects.push_back(std::move(pendingObj));
+			pPendingBatch->Objects.push_back(pendingObj);
+			m_MeshInBatchCache[pendingObj->MeshPtr->Id()] = pPendingBatch;
 		}
 		m_PendingObjects.clear();
 	}
@@ -143,9 +145,9 @@ void Scene::PrepareStageBuffer()
 
 			for (auto& obj : pBatch->Objects)
 			{
-				obj.FirstVertex = pBatch->Vertices.size();
-				obj.FirstIndex = pBatch->Indices.size();
-				auto pGeomtry = obj.MeshPtr->GetBufferGeometry();
+				obj->FirstVertex = pBatch->Vertices.size();
+				obj->FirstIndex = pBatch->Indices.size();
+				auto pGeomtry = obj->MeshPtr->GetBufferGeometry();
 
 				for (uint32_t i = 0; i < pGeomtry->VerticesCount(); ++i)
 				{
@@ -157,14 +159,17 @@ void Scene::PrepareStageBuffer()
 					pBatch->Indices.push_back(pGeomtry->Indices()[i]);
 				}
 
-				obj.ModelBuffer = VulkanBuffer::Create(sizeof(Matrix), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+				obj->ModelBuffer = VulkanBuffer::Create(sizeof(Matrix), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 					VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 
 				VkDescriptorBufferInfo descriptor;
-				descriptor.buffer = obj.ModelBuffer->GetVkBuffer();
+				descriptor.buffer = obj->ModelBuffer->GetVkBuffer();
 				descriptor.offset = 0;
 				descriptor.range = sizeof(Matrix);
-				obj.DescriptorSet = m_ModelDescBuilder.Build(&descriptor);
+				obj->DescriptorSet = m_ModelDescBuilder.Build(&descriptor);
+
+				Matrix mat;
+				obj->ModelBuffer->Map(&mat,sizeof(Matrix),0);
 			}
 		}
 	}
@@ -201,9 +206,9 @@ void Scene::RefreshGPUBuffer()
 			VkDrawIndexedIndirectCommand command;
 			command.firstInstance = 0;
 			command.instanceCount = 1;
-			command.firstIndex = obj.FirstIndex;
-			command.vertexOffset = obj.FirstVertex;
-			command.indexCount = obj.MeshPtr->GetBufferGeometry()->IndicesCount();
+			command.firstIndex = obj->FirstIndex;
+			command.vertexOffset = obj->FirstVertex;
+			command.indexCount = obj->MeshPtr->GetBufferGeometry()->IndicesCount();
 			pBatch->IndirectCommands.push_back(std::move(command));
 		}
 
@@ -221,7 +226,7 @@ void Scene::RefreshGPUBuffer()
 
 		pBatch->NeedUpdate = false;
 	}
-	m_NeedUpdate = false;
+	m_MeshBufferChanged = false;
 }
 
 void Scene::UpdateCamera()
@@ -236,6 +241,25 @@ void Scene::UpdateCamera()
 
 }
 
+void Scene::UpdateUBO()
+{
+	for (auto iter = m_MeshInBatchCache.begin();iter!=m_MeshInBatchCache.end();++iter)
+	{
+		auto& batch = iter->second;
+		for (auto o : batch->Objects)
+		{
+			auto pMesh = o->MeshPtr;
+			if (pMesh->MatrixWorldNeedsUpdate())
+			{
+				Matrix mat = pMesh->GetTransformMatrix();
+				o->ModelBuffer->Map(&mat, sizeof(Matrix), 0);
+				pMesh->m_MatrixWorldNeedsUpdate = false;
+			}
+		}
+	}
+
+}
+
 void Scene::CreateCameraDescriptor()
 {
 	m_CameraData.Buffer = VulkanBuffer::Create(sizeof(CameraMatrix), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
@@ -246,8 +270,10 @@ void Scene::CreateCameraDescriptor()
 	cameraDescriptor.offset = 0;
 	cameraDescriptor.range = sizeof(CameraMatrix);
 
-	m_CameraData.DescriptorSet = m_CameraDescBuilder.Build(&cameraDescriptor);
+
 	m_CameraDescBuilder.AddBind(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
+
+	m_CameraData.DescriptorSet = m_CameraDescBuilder.Build(&cameraDescriptor);
 }
 
 void Scene::CreateModelDescriptor()

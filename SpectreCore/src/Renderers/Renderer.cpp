@@ -61,40 +61,23 @@ void Renderer::Setup()
 	m_Prepared = true;
 
 }
-
+#include <thread>
 void Renderer::Render()
 {
 	ReadyScene();
 	m_ScenePtr->UpdateCamera();
-	//Test
-	//const std::vector<RenderBatch*>& batchs = m_ScenePtr->GetRenderBatchs();
-	//for (auto pBatch : batchs)
-	//{
-	//	//m_MVPData = m_PerspectiveCameraPtr->GetViewProjection();
 
-	//	for (auto& obj : pBatch->Objects)
-	//	{
-	//		auto m = obj.MeshPtr->GetTransformMatrix();
-	//		m_MVPData = m * m_MVPData;
-	//	}
-	//	auto& buffer = pBatch->Pipeline->GetUniformBuffer();
-	//	if (buffer->MapPointerCache != nullptr)
-	//	{
-	//		std::memcpy(buffer->MapPointerCache, &m_MVPData, sizeof(Matrix)/*buffer->GetTotalSize()*/);
-	//		buffer->Flush();
-	//	}
-	//	else
-	//	{
-	//		buffer->Map(&m_MVPData, sizeof(Matrix), 0, true);
-	//	}
-	//}
-
+	std::thread t([this]() {
+		m_ScenePtr->UpdateUBO();
+	});
+	//m_ScenePtr->UpdateUBO();
+	t.detach();
 	m_pRenderSystem->Draw();
 }
 
 void Renderer::ReadyScene()
 {
-	if (m_ScenePtr->NeedUpdate())
+	if (m_ScenePtr->NeedUpdateMeshBuffer())
 	{
 		m_ScenePtr->PreparePipeline();
 		m_ScenePtr->PrepareStageBuffer();
@@ -133,7 +116,7 @@ void Renderer::SetDrawCommandFunc()
 			for (uint32_t i = 0; i < pBatch->IndirectCommands.size(); ++i)
 			{
 				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pCurPipeline->GetVkPipelineLayout(), 1, 1,
-					&pBatch->Objects[i].DescriptorSet, 0, nullptr);
+					&pBatch->Objects[i]->DescriptorSet, 0, nullptr);
 				vkCmdDrawIndexedIndirect(cmdBuffer, pBatch->IndirectBuffer->GetVkBuffer(),
 					i * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
 

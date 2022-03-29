@@ -10,6 +10,7 @@ class Mesh;
 typedef std::shared_ptr<Mesh> MeshPtr;
 class Mesh : public Object3D
 {
+	friend class Scene;
 public:
 	DefineClass(Mesh)
 	static MeshPtr Create(BufferGeometry* pGeometry, BufferMaterialPtr pMaterial);

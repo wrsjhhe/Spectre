@@ -95,7 +95,7 @@ public:
 		context.AddKeyEvent(KeyBoard_D, [&](void* window, int action) {
 			if (action == 1)
 			{
-				scene.RemoveMesh(pMesh2);
+				scene.RemoveMesh(pMesh2->Id());
 			}
 		});
 		
@@ -132,8 +132,10 @@ public:
 			g_LastTime = currTime;
 			g_CurrTime = g_CurrTime + elapsedTime;
 
-			Matrix rMat = Matrix::CreateRotationZ(DegreesToRadians(90.0f) * elapsedTime);
-			pMesh1->Transform(rMat);
+			Matrix rMat1 = Matrix::CreateRotationZ(DegreesToRadians(90.0f) * elapsedTime);
+			Matrix rMat2 = Matrix::CreateRotationZ(DegreesToRadians(45.0f) * elapsedTime);
+			pMesh1->Transform(rMat1);
+			pMesh2->Transform(rMat2);
 		}
 	}
 	

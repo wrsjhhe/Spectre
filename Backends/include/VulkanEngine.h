@@ -39,6 +39,72 @@ private:
 	bool                                         m_OnRecording = false;
 };
 
+
+class DescriptorAllocator
+{
+private:
+	const uint32_t MaxSets = 1000;
+
+	const std::vector<std::pair<VkDescriptorType, float>> PoolSizes =
+	{
+		{ VK_DESCRIPTOR_TYPE_SAMPLER, 0.5f },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 2.f },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1.f }
+	};
+
+	struct PoolUseInfo
+	{
+		uint32_t Index = 0;
+
+	};
+
+public:
+	DescriptorAllocator(VkDevice device);
+	~DescriptorAllocator();
+
+	void Allocate(VkDescriptorSet* set, VkDescriptorSetLayout layout);
+private:
+	VkDescriptorPool CreatePool();
+
+private:
+	VkDevice         m_VkDevice;
+	VkDescriptorPool m_CurrentPool = VK_NULL_HANDLE;
+	std::vector<VkDescriptorPool> m_UsedPools;
+
+};
+
+class DescriptorLayoutCache
+{
+public:
+	DescriptorLayoutCache(VkDevice device);
+	~DescriptorLayoutCache();
+
+	VkDescriptorSetLayout CreateDescriptorLayout(VkDescriptorSetLayoutCreateInfo* info);
+
+	struct DescriptorLayoutInfo {
+
+		std::vector<VkDescriptorSetLayoutBinding> Bindings;
+
+		bool operator==(const DescriptorLayoutInfo& other) const;
+
+		size_t Hash() const;
+	};
+
+private:
+
+	struct DescriptorLayoutHash
+	{
+
+		std::size_t operator()(const DescriptorLayoutInfo& k) const
+		{
+			return k.Hash();
+		}
+	};
+	VkDevice  m_VkDevice;
+	std::unordered_map<DescriptorLayoutInfo, VkDescriptorSetLayout, DescriptorLayoutHash> m_LayoutCache;
+};
+
+
 class VulkanEngine
 {
 public:
@@ -73,7 +139,9 @@ public:
 	VulkanCommandPtr GetTransformCmd() { return m_TransformCmdPtr; }
 	std::vector<VulkanCommandPtr>   GetRenderCmd() { return m_RenderCmdPtrs; }
 	
-	
+	DescriptorAllocator& GetDescriptorAllocator() { return *m_DescriptorAllocator; }
+
+	DescriptorLayoutCache& GetDescriptorLayoutCache() { return *m_DescriptorLayoutCache; }
 
 private:
 	VulkanEngine(const VulkanEngineCreateInfo& CI);
@@ -83,6 +151,7 @@ private:
 	void CreateVkPhysicalDevice();
 	void CreateVkDevice();
 	void CreateCommands();
+	void CreateDescriptorAllocator();
 
 	uint32_t FindQueueFamily(VkQueueFlags QueueFlags) const;
 	bool IsExtensionSupported(const char* ExtensionName) const;
@@ -111,6 +180,8 @@ private:
 	VulkanCommandPtr                        m_TransformCmdPtr;
 	std::vector<VulkanCommandPtr>           m_RenderCmdPtrs;
 
+	std::shared_ptr<DescriptorAllocator>    m_DescriptorAllocator;
+	std::shared_ptr<DescriptorLayoutCache>	m_DescriptorLayoutCache;
 };
 
 

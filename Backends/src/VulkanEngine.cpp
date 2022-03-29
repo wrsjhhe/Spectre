@@ -84,6 +84,170 @@ void VulkanCommand::Reset()
 }
 
 
+DescriptorAllocator::DescriptorAllocator(VkDevice device):
+    m_VkDevice(device)
+{
+
+}
+
+DescriptorAllocator::~DescriptorAllocator()
+{
+	for (auto p : m_UsedPools)
+	{
+		vkDestroyDescriptorPool(m_VkDevice, p, nullptr);
+	}
+}
+
+void DescriptorAllocator::Allocate(VkDescriptorSet* set, VkDescriptorSetLayout layout)
+{
+	if (m_CurrentPool == VK_NULL_HANDLE)
+	{
+		m_CurrentPool = CreatePool();
+		m_UsedPools.push_back(m_CurrentPool);
+	}
+
+	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
+	VkDescriptorSetAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	allocInfo.descriptorPool = m_CurrentPool;
+	allocInfo.descriptorSetCount = 1;
+	allocInfo.pSetLayouts = &layout;
+	VkResult ret = vkAllocateDescriptorSets(device, &allocInfo, set);
+
+	if (ret == VK_ERROR_FRAGMENTED_POOL || ret == VK_ERROR_OUT_OF_POOL_MEMORY)
+	{
+		m_CurrentPool = CreatePool();
+		m_UsedPools.push_back(m_CurrentPool);
+
+		vkAllocateDescriptorSets(device, &allocInfo, set);
+	}
+}
+
+
+VkDescriptorPool DescriptorAllocator::CreatePool()
+{
+	std::vector<VkDescriptorPoolSize> sizes;
+	sizes.reserve(PoolSizes.size());
+	for (auto sz : PoolSizes) {
+		sizes.push_back({ sz.first, uint32_t(sz.second * MaxSets) });
+	}
+	VkDescriptorPoolCreateInfo poolInfo = {};
+	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+	poolInfo.maxSets = MaxSets;
+	poolInfo.poolSizeCount = (uint32_t)sizes.size();
+	poolInfo.pPoolSizes = sizes.data();
+
+	VkDescriptorPool descriptorPool;
+	vkCreateDescriptorPool(VulkanEngine::GetInstance()->GetVkDevice(), &poolInfo, nullptr, &descriptorPool);
+
+	return descriptorPool;
+}
+
+
+
+DescriptorLayoutCache::DescriptorLayoutCache(VkDevice device):
+    m_VkDevice(device)
+{
+
+}
+
+DescriptorLayoutCache::~DescriptorLayoutCache()
+{
+	for (auto pair : m_LayoutCache)
+	{
+		vkDestroyDescriptorSetLayout(m_VkDevice, pair.second, nullptr);
+	}
+}
+
+VkDescriptorSetLayout DescriptorLayoutCache::CreateDescriptorLayout(VkDescriptorSetLayoutCreateInfo* info)
+{
+	DescriptorLayoutInfo layoutinfo;
+	layoutinfo.Bindings.reserve(info->bindingCount);
+	bool isSorted = true;
+	int32_t lastBinding = -1;
+	for (uint32_t i = 0; i < info->bindingCount; i++) {
+		layoutinfo.Bindings.push_back(info->pBindings[i]);
+
+		//check that the bindings are in strict increasing order
+		if (static_cast<int32_t>(info->pBindings[i].binding) > lastBinding)
+		{
+			lastBinding = info->pBindings[i].binding;
+		}
+		else {
+			isSorted = false;
+		}
+	}
+	if (!isSorted)
+	{
+		std::sort(layoutinfo.Bindings.begin(), layoutinfo.Bindings.end(), [](VkDescriptorSetLayoutBinding& a, VkDescriptorSetLayoutBinding& b) {
+			return a.binding < b.binding;
+		});
+	}
+
+	auto it = m_LayoutCache.find(layoutinfo);
+	if (it != m_LayoutCache.end())
+	{
+		return (*it).second;
+	}
+	else {
+		VkDescriptorSetLayout layout;
+		vkCreateDescriptorSetLayout(VulkanEngine::GetInstance()->GetVkDevice(), info, nullptr, &layout);
+
+		m_LayoutCache[layoutinfo] = layout;
+		return layout;
+	}
+}
+
+
+bool DescriptorLayoutCache::DescriptorLayoutInfo::operator==(const DescriptorLayoutInfo& other) const
+{
+	if (other.Bindings.size() != Bindings.size())
+	{
+		return false;
+	}
+	else {
+		//compare each of the bindings is the same. Bindings are sorted so they will match
+		for (int i = 0; i < Bindings.size(); i++) {
+			if (other.Bindings[i].binding != Bindings[i].binding)
+			{
+				return false;
+			}
+			if (other.Bindings[i].descriptorType != Bindings[i].descriptorType)
+			{
+				return false;
+			}
+			if (other.Bindings[i].descriptorCount != Bindings[i].descriptorCount)
+			{
+				return false;
+			}
+			if (other.Bindings[i].stageFlags != Bindings[i].stageFlags)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+}
+
+size_t DescriptorLayoutCache::DescriptorLayoutInfo::Hash() const
+{
+	using std::size_t;
+	using std::hash;
+
+	size_t result = hash<size_t>()(Bindings.size());
+
+	for (const VkDescriptorSetLayoutBinding& b : Bindings)
+	{
+		//pack the binding data into a single int64. Not fully correct but its ok
+		size_t binding_hash = b.binding | b.descriptorType << 8 | b.descriptorCount << 16 | b.stageFlags << 24;
+
+		//shuffle the packed binding data and xor it with the main hash
+		result ^= hash<size_t>()(binding_hash);
+	}
+
+	return result;
+}
 
 
 static constexpr const char* ValidationLayerNames[] =
@@ -157,6 +321,7 @@ VulkanEngine::VulkanEngine(const VulkanEngineCreateInfo& ci):
     CreateVkPhysicalDevice();
     CreateVkDevice();
     CreateCommands();
+    CreateDescriptorAllocator();
 }
 
 VulkanEngine::~VulkanEngine()
@@ -164,6 +329,8 @@ VulkanEngine::~VulkanEngine()
 	m_TransformCmdPtr = nullptr;
 	m_RenderCmdPtrs.clear();
 	vkDestroyCommandPool(m_VkDevice, m_VkCommandPool, nullptr);
+    m_DescriptorAllocator = nullptr;
+    m_DescriptorLayoutCache = nullptr;
 	if (debug_utils_messenger != VK_NULL_HANDLE)
 	{
 		PFN_vkDestroyDebugUtilsMessengerEXT destroyMsgCallback =
@@ -456,6 +623,12 @@ void VulkanEngine::CreateCommands()
     {
         m_RenderCmdPtrs.push_back(std::make_shared<VulkanCommand>(m_VkDevice, m_VkCommandPool));
     }
+}
+
+void VulkanEngine::CreateDescriptorAllocator()
+{
+    m_DescriptorAllocator = std::make_shared<DescriptorAllocator>(m_VkDevice);
+    m_DescriptorLayoutCache = std::make_shared<DescriptorLayoutCache>(m_VkDevice);
 }
 
 uint32_t VulkanEngine::FindQueueFamily(VkQueueFlags QueueFlags) const

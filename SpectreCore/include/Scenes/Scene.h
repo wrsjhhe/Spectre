@@ -7,7 +7,7 @@
 #include "Cameras/PerspectiveCamera.h"
 BEGIN_NAMESPACE_SPECTRE
 
-struct RenderObject 
+struct RenderObject
 {
 	MeshPtr MeshPtr;
 
@@ -27,7 +27,15 @@ struct MeshBuffer
 
 struct RenderBatch
 {
-	std::vector<RenderObject> Objects;
+	~RenderBatch()
+	{
+		for (auto& o : Objects)
+		{
+			delete o;
+		}
+	}
+
+	std::vector<RenderObject*> Objects;
 	std::vector<VkDrawIndexedIndirectCommand> IndirectCommands;
 	VulkanBufferPtr IndirectBuffer;
 
@@ -64,7 +72,7 @@ public:
 
 	void AddCamera(PerspectiveCamera* pCamera);
 
-	void RemoveMesh(MeshPtr pMesh);
+	void RemoveMesh(SpectreId meshId);
 
 	void PreparePipeline();
 
@@ -78,7 +86,10 @@ public:
 
 	void UpdateCamera();
 
-	bool NeedUpdate() const { return m_NeedUpdate; }
+	bool NeedUpdateMeshBuffer() const { return m_MeshBufferChanged; }
+
+	void UpdateUBO();
+
 	CameraData									m_CameraData;
 private:
 	void CreateCameraDescriptor();
@@ -86,20 +97,19 @@ private:
 	void CreateModelDescriptor();
 
 private:
-	std::vector<RenderObject> m_PendingObjects;
-	std::vector<RenderObject> m_RemovingObjects;
-	std::vector<RenderObject> m_ModifyObjects;
+	std::vector<RenderObject*> m_PendingObjects;
+	std::vector<SpectreId>	   m_RemovingObjects;
+	std::vector<RenderObject*> m_ModifyObjects;
 
 	//std::vector<RenderObject> m_PassObjects;
 	std::vector<RenderBatch*> m_PassBatchs;
 
 	std::unordered_map<size_t, VulkanPipelinePtr> m_MatPipelineMap;
 
-	bool m_NeedUpdate = false;
+	bool m_MeshBufferChanged = false;
 
 	std::unordered_map<SpectreId, RenderBatch*> m_MeshInBatchCache;
 
-	
 	VulkanDescriptorBuilder						m_CameraDescBuilder;
 	VulkanDescriptorBuilder						m_ModelDescBuilder;
 

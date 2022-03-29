@@ -21,4 +21,5 @@ Mesh::~Mesh()
 void Mesh::Transform(const Matrix& mat)
 {
 	m_Transform *= mat;
+	m_MatrixWorldNeedsUpdate = true;
 }
