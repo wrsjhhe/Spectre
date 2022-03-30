@@ -3,7 +3,16 @@
 
 USING_NAMESPACE(Spectre)
 
+VulkanDescriptorSet::VulkanDescriptorSet(VkDescriptorSet set):
+	m_VkDescriptorSet(set)
+{
 
+}
+
+VulkanDescriptorSet::~VulkanDescriptorSet()
+{
+	VulkanEngine::GetInstance()->GetDescriptorAllocator().Free(&m_VkDescriptorSet);
+}
 
 void VulkanDescriptorBuilder::AddBind(uint32_t binding, VkDescriptorType type, VkShaderStageFlags stageFlags)
 {
@@ -19,7 +28,7 @@ void VulkanDescriptorBuilder::AddBind(uint32_t binding, VkDescriptorType type, V
 }
 
 
-VkDescriptorSet VulkanDescriptorBuilder::Build(VkDescriptorBufferInfo* bufferInfo)
+VulkanDescriptorSetPtr VulkanDescriptorBuilder::Build(VkDescriptorBufferInfo* bufferInfo)
 {
 	m_Layout = GetOrCreateLayout();
 	std::vector<VkWriteDescriptorSet> writes;
@@ -46,7 +55,7 @@ VkDescriptorSet VulkanDescriptorBuilder::Build(VkDescriptorBufferInfo* bufferInf
 
 	vkUpdateDescriptorSets(VulkanEngine::GetInstance()->GetVkDevice(), static_cast<uint32_t>(writes.size()), writes.data(), 0, nullptr);
 
-	return set;
+	return std::make_shared<VulkanDescriptorSet>(set);
 }
 
 VkDescriptorSetLayout VulkanDescriptorBuilder::GetOrCreateLayout()
@@ -67,3 +76,5 @@ VkDescriptorSetLayout VulkanDescriptorBuilder::GetOrCreateLayout()
 
 	return m_Layout;
 }
+
+

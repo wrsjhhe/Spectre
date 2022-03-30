@@ -94,35 +94,65 @@ DescriptorAllocator::~DescriptorAllocator()
 {
 	for (auto p : m_UsedPools)
 	{
-		vkDestroyDescriptorPool(m_VkDevice, p, nullptr);
+		vkDestroyDescriptorPool(m_VkDevice, p.first, nullptr);
 	}
 }
 
 void DescriptorAllocator::Allocate(VkDescriptorSet* set, VkDescriptorSetLayout layout)
 {
-	if (m_CurrentPool == VK_NULL_HANDLE)
-	{
-		m_CurrentPool = CreatePool();
-		m_UsedPools.push_back(m_CurrentPool);
-	}
-
 	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
+    bool needCreatePool = true;
+
 	VkDescriptorSetAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.descriptorPool = m_CurrentPool;
+	//allocInfo.descriptorPool = pool;
 	allocInfo.descriptorSetCount = 1;
 	allocInfo.pSetLayouts = &layout;
-	VkResult ret = vkAllocateDescriptorSets(device, &allocInfo, set);
 
-	if (ret == VK_ERROR_FRAGMENTED_POOL || ret == VK_ERROR_OUT_OF_POOL_MEMORY)
-	{
-		m_CurrentPool = CreatePool();
-		m_UsedPools.push_back(m_CurrentPool);
+    for (auto& [pool,sets] : m_UsedPools)
+    {
+        if (sets.size() < MaxSets)
+		{
+			allocInfo.descriptorPool = pool;
+			VkResult ret = vkAllocateDescriptorSets(device, &allocInfo, set);
 
-		vkAllocateDescriptorSets(device, &allocInfo, set);
-	}
+			if (ret == VK_ERROR_FRAGMENTED_POOL || ret == VK_ERROR_OUT_OF_POOL_MEMORY)
+			{
+                continue;
+			}
+            else
+			{
+                sets.push_back(*set);
+                needCreatePool = false;
+            }
+        }
+    }
+
+    if (needCreatePool)
+    {
+        auto pool = CreatePool();
+        m_UsedPools.push_back(std::pair(pool,std::vector<VkDescriptorSet>()));
+        Allocate(set,layout);
+    }
 }
 
+
+void DescriptorAllocator::Free(VkDescriptorSet* set)
+{
+	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
+    for (auto& [pool, sets] : m_UsedPools)
+    {
+        for (size_t i = 0; i < sets.size(); i++)
+        {
+			if (sets[i] == *set)
+			{
+				vkFreeDescriptorSets(device, pool, 1, set);
+                sets.erase(sets.begin() + i);
+                return;
+			}
+        }
+    }
+}
 
 VkDescriptorPool DescriptorAllocator::CreatePool()
 {

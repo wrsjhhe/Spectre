@@ -1,5 +1,6 @@
 #pragma once
 #include "VulkanCommon.h"
+
 BEGIN_NAMESPACE_SPECTRE
 
 
@@ -63,13 +64,14 @@ public:
 	~DescriptorAllocator();
 
 	void Allocate(VkDescriptorSet* set, VkDescriptorSetLayout layout);
+	void Free(VkDescriptorSet* set);
 private:
 	VkDescriptorPool CreatePool();
 
 private:
 	VkDevice         m_VkDevice;
 	VkDescriptorPool m_CurrentPool = VK_NULL_HANDLE;
-	std::vector<VkDescriptorPool> m_UsedPools;
+	std::vector<std::pair<VkDescriptorPool, std::vector<VkDescriptorSet>>> m_UsedPools;
 
 };
 

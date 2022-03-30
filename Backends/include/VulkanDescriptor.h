@@ -3,14 +3,26 @@
 
 BEGIN_NAMESPACE_SPECTRE
 
+class VulkanDescriptorSet
+{
+public:
+	VulkanDescriptorSet(VkDescriptorSet set);
+	~VulkanDescriptorSet();
 
+	VkDescriptorSet& GetVkSet() {
+		return m_VkDescriptorSet;
+	}
+private:
+	VkDescriptorSet m_VkDescriptorSet;
+};
 
+typedef std::shared_ptr<VulkanDescriptorSet> VulkanDescriptorSetPtr;
 class VulkanDescriptorBuilder
 {
 public:
 	void AddBind(uint32_t binding,VkDescriptorType type, VkShaderStageFlags stageFlags);
 
-	VkDescriptorSet Build(VkDescriptorBufferInfo* bufferInfo);
+	VulkanDescriptorSetPtr Build(VkDescriptorBufferInfo* bufferInfo);
 
 	VkDescriptorSetLayout GetOrCreateLayout();
 

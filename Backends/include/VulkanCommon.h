@@ -1,7 +1,9 @@
 #pragma once
 #include <stdint.h>
 #include <stdexcept>
-#include < stdlib.h >
+#include <vector>
+#include <map>
+#include <stdlib.h>
 #include "SpectreDef.h"
 #include "Platform.h"
 #include "LogManager.h"

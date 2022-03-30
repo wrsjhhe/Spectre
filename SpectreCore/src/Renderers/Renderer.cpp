@@ -67,11 +67,12 @@ void Renderer::Render()
 	ReadyScene();
 	m_ScenePtr->UpdateCamera();
 
-	std::thread t([this]() {
-		m_ScenePtr->UpdateUBO();
-	});
-	//m_ScenePtr->UpdateUBO();
-	t.detach();
+	//std::thread t([this]() {
+	//	m_ScenePtr->UpdateUBO();
+	//});
+	//t.detach();
+	m_ScenePtr->UpdateUBO();
+
 	m_pRenderSystem->Draw();
 }
 
@@ -104,7 +105,7 @@ void Renderer::SetDrawCommandFunc()
 			{
 				pCurPipeline = pBatch->Pipeline;
 				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pCurPipeline->GetVkPipelineLayout(), 0, 1, 
-					&m_ScenePtr->m_CameraData.DescriptorSet, 0, nullptr);
+					&m_ScenePtr->m_CameraData.DescriptorSet->GetVkSet(), 0, nullptr);
 				//pCurPipeline->BindDescriptorSets(cmdBuffer);
 				pCurPipeline->BindPipeline(cmdBuffer);
 			}
@@ -116,7 +117,7 @@ void Renderer::SetDrawCommandFunc()
 			for (uint32_t i = 0; i < pBatch->IndirectCommands.size(); ++i)
 			{
 				vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pCurPipeline->GetVkPipelineLayout(), 1, 1,
-					&pBatch->Objects[i]->DescriptorSet, 0, nullptr);
+					&pBatch->Objects[i]->DescriptorSet->GetVkSet(), 0, nullptr);
 				vkCmdDrawIndexedIndirect(cmdBuffer, pBatch->IndirectBuffer->GetVkBuffer(),
 					i * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
 

@@ -15,7 +15,7 @@ struct RenderObject
 	uint32_t FirstVertex;
 
 	VulkanPipelinePtr Pipeline;
-	VkDescriptorSet DescriptorSet;
+	VulkanDescriptorSetPtr DescriptorSet;
 	VulkanBufferPtr ModelBuffer;
 };
 
@@ -58,7 +58,7 @@ struct CameraMatrix
 struct CameraData
 {
 	VulkanBufferPtr Buffer;
-	VkDescriptorSet DescriptorSet;
+	VulkanDescriptorSetPtr DescriptorSet;
 };
 
 class Scene : Object3D
