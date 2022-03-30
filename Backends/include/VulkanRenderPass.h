@@ -1,8 +1,9 @@
 #pragma once
-
-#include <vector>
+#include "VulkanEngine.h"
 BEGIN_NAMESPACE_SPECTRE
 
+class VulkanRenderPass;
+typedef std::shared_ptr<VulkanRenderPass> VulkanRenderPassPtr;
 class VulkanRenderPass
 {
 public:

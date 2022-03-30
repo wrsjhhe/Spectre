@@ -19,35 +19,35 @@ RenderSystemVK::RenderSystemVK() noexcept
 {
 	m_VulkanEnginePtr = VulkanEngine::GetInstance();
 
-	m_ContextPtr = std::make_shared<VulkanContext>(m_VulkanEnginePtr);
+	//m_ContextPtr = std::make_shared<VulkanContext>(m_VulkanEnginePtr);
 }
 
 RenderSystemVK::~RenderSystemVK()
 {
 	m_GuiPtr->Destroy();
 }
-
-void RenderSystemVK::CreateRenderContext(const RenderContextDesc& desc)
-{
-	//创建Surface
-	VkSurfaceKHR surface = VK_NULL_HANDLE;
-	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
-	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-	surfaceCreateInfo.hinstance = GetModuleHandle(NULL);
-	surfaceCreateInfo.hwnd = (HWND)desc.Window.hWnd;
-	VK_CHECK(vkCreateWin32SurfaceKHR(m_VulkanEnginePtr->GetVkInstance(), &surfaceCreateInfo, nullptr, &surface), "Failed create vkSurface!");
-	
-	uint32_t surafceSupport = 0;
-	vkGetPhysicalDeviceSurfaceSupportKHR(m_VulkanEnginePtr->GetVkPhysicalDevice(), m_VulkanEnginePtr->GetGraphicQueue().QueueFamilyIndex, surface, &surafceSupport);
-	EXP_CHECK(surafceSupport, "Surface not support");
-
-
-	m_ContextPtr->CalcSwapchainParamaters(surface);
-	
-	m_RenderComplete = VulkanSemaphore::CreateSemaphore();
-
-	CreateRenderPass();
-}
+//
+//void RenderSystemVK::CreateRenderContext(const RenderContextDesc& desc)
+//{
+//	//创建Surface
+//	VkSurfaceKHR surface = VK_NULL_HANDLE;
+//	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
+//	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+//	surfaceCreateInfo.hinstance = GetModuleHandle(NULL);
+//	surfaceCreateInfo.hwnd = (HWND)desc.Window.hWnd;
+//	VK_CHECK(vkCreateWin32SurfaceKHR(m_VulkanEnginePtr->GetVkInstance(), &surfaceCreateInfo, nullptr, &surface), "Failed create vkSurface!");
+//	
+//	uint32_t surafceSupport = 0;
+//	vkGetPhysicalDeviceSurfaceSupportKHR(m_VulkanEnginePtr->GetVkPhysicalDevice(), m_VulkanEnginePtr->GetGraphicQueue().QueueFamilyIndex, surface, &surafceSupport);
+//	EXP_CHECK(surafceSupport, "Surface not support");
+//
+//
+//	//m_ContextPtr->CalcSwapchainParamaters(surface);
+//	
+//	m_RenderComplete = VulkanSemaphore::CreateSemaphore();
+//
+//	CreateRenderPass();
+//}
 
 
 void RenderSystemVK::CreateSwapChain()

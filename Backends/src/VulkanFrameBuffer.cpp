@@ -1,5 +1,3 @@
-#include "VulkanCommon.h"
-#include "VulkanEngine.h"
 #include "VulkanRenderPass.h"
 #include "VulkanFrameBuffer.h"
 

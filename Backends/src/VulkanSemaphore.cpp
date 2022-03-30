@@ -12,13 +12,9 @@ std::shared_ptr<VulkanSemaphore> VulkanSemaphore::CreateSemaphore()
 
 VulkanSemaphore::~VulkanSemaphore()
 {
-	Destory();
-}
-
-void VulkanSemaphore::Destory()
-{
 	vkDestroySemaphore(VulkanEngine::GetInstance()->GetVkDevice(), m_VkSemaphore, nullptr);
 }
+
 
 VulkanSemaphore::VulkanSemaphore()
 {

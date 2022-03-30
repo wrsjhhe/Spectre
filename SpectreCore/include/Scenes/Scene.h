@@ -92,9 +92,7 @@ public:
 
 	CameraData									m_CameraData;
 private:
-	void CreateCameraDescriptor();
 
-	void CreateModelDescriptor();
 
 private:
 	std::vector<RenderObject*> m_PendingObjects;

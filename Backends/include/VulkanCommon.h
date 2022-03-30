@@ -1,9 +1,5 @@
 #pragma once
-#include <stdint.h>
-#include <stdexcept>
-#include <vector>
-#include <map>
-#include <stdlib.h>
+
 #include "SpectreDef.h"
 #include "Platform.h"
 #include "LogManager.h"
@@ -28,6 +24,8 @@ BEGIN_NAMESPACE_SPECTRE
 
 const uint32_t  g_VkVersion = VK_API_VERSION_1_0;
 const uint32_t  g_ImageSize = 3;
+
+const VkSurfaceFormatKHR g_SurfaceFormat = { VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
 
 END_NAMESPACE_SPECTRE
 

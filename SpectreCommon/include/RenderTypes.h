@@ -73,11 +73,7 @@ typedef enum MemoryProperty
 	MemoryProperty_Flag_Max = 0x7fFFFFFF
 };
 
-struct SwapChainDesc
-{
-	uint32_t                  Width = 0;
-	uint32_t                  Height = 0;
-};
+
 
 
 END_NAMESPACE_SPECTRE

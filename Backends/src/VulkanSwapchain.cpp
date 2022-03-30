@@ -4,39 +4,67 @@
 #include "VulkanSwapchain.h"
 USING_NAMESPACE(Spectre)
 
-VulkanSwapChain::VulkanSwapChain(const VulkanContext& context, const SwapChainDesc& desc):
-	m_Context(context),
+static VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes)
+{
+	VkPresentModeKHR bestMode = VK_PRESENT_MODE_FIFO_KHR;
+
+	for (const auto& availablePresentMode : availablePresentModes) {
+		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
+			return availablePresentMode;
+		}
+		else if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+			bestMode = availablePresentMode;
+		}
+	}
+
+	return bestMode;
+}
+
+VulkanSwapChain::VulkanSwapChain(VkSurfaceKHR surface, const SwapChainDesc& desc):
 	m_Width(desc.Width),
 	m_Height(desc.Height)
 {
 	auto* pEngine = VulkanEngine::GetInstance();
 	VkPhysicalDevice physicalDevice = pEngine->GetVkPhysicalDevice();
 
-	m_ImageCount = g_ImageSize;
-	if (m_Context.m_VkSurfaceCapabilities.maxImageCount > 0 && m_ImageCount > m_Context.m_VkSurfaceCapabilities.maxImageCount)
-	{
-		m_ImageCount = m_Context.m_VkSurfaceCapabilities.maxImageCount;
-	}
-	uint32_t support = false;
+	VkSurfaceCapabilitiesKHR surfaceCapabilities;
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfaceCapabilities);
 
-	vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, pEngine->GetGraphicQueue().QueueFamilyIndex,m_Context.m_VkSurface,&support);
+	//—°‘ÒPresentMode
+	uint32_t presentModeCount;
+	vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, nullptr);
+	std::vector<VkPresentModeKHR> presentModes(presentModeCount);
+	if (presentModeCount != 0) {
+		vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, presentModes.data());
+	}
+
+	VkPresentModeKHR presentMode = chooseSwapPresentMode(presentModes);
+
+	m_ImageCount = g_ImageSize;
+	//if (m_Context.m_VkSurfaceCapabilities.maxImageCount > 0 && m_ImageCount > m_Context.m_VkSurfaceCapabilities.maxImageCount)
+	//{
+	//	m_ImageCount = m_Context.m_VkSurfaceCapabilities.maxImageCount;
+	//}
+	//uint32_t support = false;
+
+	//vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, pEngine->GetGraphicQueue().QueueFamilyIndex,m_Context.m_VkSurface,&support);
 
 	VkSwapchainCreateInfoKHR createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-	createInfo.surface = m_Context.m_VkSurface;
+	createInfo.surface = surface;
 
 	createInfo.minImageCount = m_ImageCount;
-	createInfo.imageFormat = m_Context.m_VkSurfaceFormat.format;
-	createInfo.imageColorSpace = m_Context.m_VkSurfaceFormat.colorSpace;
+	createInfo.imageFormat = g_SurfaceFormat.format;
+	createInfo.imageColorSpace = g_SurfaceFormat.colorSpace;
 
 	createInfo.imageExtent = { m_Width ,m_Height};
 	createInfo.imageArrayLayers = 1;
 	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	createInfo.preTransform = m_Context.m_VkSurfaceCapabilities.currentTransform;
+	createInfo.preTransform = surfaceCapabilities.currentTransform;
 	createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-	createInfo.presentMode = m_Context.m_VkPresentMode;
+	createInfo.presentMode = presentMode;
 	createInfo.clipped = VK_TRUE;
 
 	VK_CHECK(vkCreateSwapchainKHR(pEngine->GetVkDevice(), &createInfo, nullptr, &m_VkSwapChain), "Failed to create swap chain!");

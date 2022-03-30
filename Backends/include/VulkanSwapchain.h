@@ -2,12 +2,18 @@
 #include "NativeWindow.h"
 #include "VulkanImages.h"
 #include "RenderTypes.h"
-#include "VulkanContext.h"
 BEGIN_NAMESPACE_SPECTRE
 
-class VulkanSurface;
+struct SwapChainDesc
+{
+	uint32_t                  Width = 0;
+	uint32_t                  Height = 0;
+};
+
 class VulkanSemaphore;
 
+class VulkanSwapChain;
+typedef std::shared_ptr<VulkanSwapChain> VulkanSwapChainPtr;
 class VulkanSwapChain
 {
 public:
@@ -18,7 +24,7 @@ public:
 		SurfaceLost = -2,
 	};
 public:
-	VulkanSwapChain(const VulkanContext& context,const SwapChainDesc& desc);
+	VulkanSwapChain(VkSurfaceKHR surface,const SwapChainDesc& desc);
 	~VulkanSwapChain();
 
 	VkSwapchainKHR GetVkSwapChain() const { return m_VkSwapChain; }
@@ -30,13 +36,13 @@ public:
 
 	const VulkanImages& GetImages() const { return *m_Images; }
 
-	VkFormat GetSwapChainFormat() const { return m_Context.m_VkSwapChainFormat; }
+	//VkFormat GetSwapChainFormat() const { return m_Context.m_VkSwapChainFormat; }
 
 	uint32_t AcquireImageIndex(std::shared_ptr<VulkanSemaphore>& outSemaphore);
 
 	SwapStatus Present(VkQueue presentQueue, VkSemaphore* doneSemaphore);
 private:
-	const VulkanContext&							m_Context;
+	//const VulkanContext&							m_Context;
 	VkSwapchainKHR									m_VkSwapChain;
 	uint32_t										m_ImageCount;
 	std::shared_ptr<VulkanImages>					m_Images;

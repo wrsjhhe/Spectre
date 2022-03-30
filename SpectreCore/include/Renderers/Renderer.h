@@ -3,7 +3,8 @@
 #include "Scenes/Scene.h"
 #include "NativeWindow.h"
 #include "VulkanPipeline.h"
-
+#include "VulkanRenderPass.h"
+#include "VulkanSwapchain.h"
 
 BEGIN_NAMESPACE_SPECTRE
 
@@ -30,19 +31,27 @@ public:
 	void Render();
 
 private:
+	void CreateRenderPass();
+
+	void CreateSwapchain();
+
 	void ReadyScene();
 
 	void SetDrawCommandFunc();
 
-
+	void SetDrawCommand();
 
 private:
-	RenderSystemVK* m_pRenderSystem = nullptr;
+	RenderSystemVK*					  m_pRenderSystem = nullptr;
+	VkSurfaceKHR					  m_Surface = nullptr;
+
+	VulkanSwapChainPtr				  m_SwapChain;
+	VulkanRenderPassPtr               m_RenderPass;
 
 	uint32_t                          m_Width = 0;
 	uint32_t                          m_Height = 0;
 	bool                              m_Prepared = false;
-	NativeWindow					  m_Window;
+
 	Scene*							  m_ScenePtr = nullptr;
 	Matrix                            m_MVPData;
 

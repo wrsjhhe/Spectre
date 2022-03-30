@@ -33,7 +33,7 @@ namespace Spectre
 	public:
 		explicit RenderSystemVK() noexcept;
 		~RenderSystemVK();
-		void CreateRenderContext(const RenderContextDesc& desc);
+		//void CreateRenderContext(const RenderContextDesc& desc);
 
 		void CreateSwapChain();
 
@@ -61,7 +61,7 @@ namespace Spectre
 		uint32_t                                m_Width = 0;
 		uint32_t                                m_Height = 0;
 		VulkanEngine*							m_VulkanEnginePtr;
-		std::shared_ptr<VulkanContext>			m_ContextPtr;
+		//std::shared_ptr<VulkanContext>			m_ContextPtr;
 		std::shared_ptr<VulkanSwapChain>		m_SwapChain;
 
 		std::shared_ptr<VulkanImages>			m_DepthStencilImage;

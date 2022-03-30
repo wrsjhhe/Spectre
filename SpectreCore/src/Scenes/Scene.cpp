@@ -4,8 +4,18 @@ USING_NAMESPACE(Spectre)
 
 Scene::Scene()
 {
-	CreateCameraDescriptor();
-	CreateModelDescriptor();
+	m_CameraDescBuilder.AddBind(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
+	m_ModelDescBuilder.AddBind(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
+
+	m_CameraData.Buffer = VulkanBuffer::Create(sizeof(CameraMatrix), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+
+
+	VkDescriptorBufferInfo cameraDescriptor;
+	cameraDescriptor.buffer = m_CameraData.Buffer->GetVkBuffer();
+	cameraDescriptor.offset = 0;
+	cameraDescriptor.range = sizeof(CameraMatrix);
+	m_CameraData.DescriptorSet = m_CameraDescBuilder.Build(&cameraDescriptor);
 }
 
 Scene::~Scene()
@@ -259,25 +269,3 @@ void Scene::UpdateUBO()
 	}
 
 }
-
-void Scene::CreateCameraDescriptor()
-{
-	m_CameraData.Buffer = VulkanBuffer::Create(sizeof(CameraMatrix), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-
-	VkDescriptorBufferInfo cameraDescriptor;
-	cameraDescriptor.buffer = m_CameraData.Buffer->GetVkBuffer();
-	cameraDescriptor.offset = 0;
-	cameraDescriptor.range = sizeof(CameraMatrix);
-
-
-	m_CameraDescBuilder.AddBind(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
-
-	m_CameraData.DescriptorSet = m_CameraDescBuilder.Build(&cameraDescriptor);
-}
-
-void Scene::CreateModelDescriptor()
-{
-	m_ModelDescBuilder.AddBind(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
-}
-

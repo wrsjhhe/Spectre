@@ -2,6 +2,8 @@
 #include <memory>
 BEGIN_NAMESPACE_SPECTRE
 
+class VulkanSemaphore;
+typedef std::shared_ptr<VulkanSemaphore> VulkanSemaphorePtr;
 class VulkanSemaphore
 {
 public:
@@ -11,7 +13,6 @@ public:
 
 	VkSemaphore& GetVkSemaphore() { return m_VkSemaphore; }
 
-	void Destory();
 private:
 	VulkanSemaphore();
 private:
