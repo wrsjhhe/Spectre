@@ -118,10 +118,18 @@ public:
 		const char* const*	   ppInstanceExtensionNames = nullptr;
 	};
 public:
-	static VulkanEngine* Create(const VulkanEngineCreateInfo& CI);
 	static VulkanEngine* GetInstance() 
-	{ 
-		return m_EngineInstance; 
+	{
+		VulkanEngine::VulkanEngineCreateInfo engineCI;
+#ifdef VKB_DEBUG
+		engineCI.EnableValidation = true;
+#endif
+		if (m_EngineInstance == nullptr)
+			m_EngineInstance = new VulkanEngine(engineCI);
+
+
+		atexit(VulkanEngine::Destory);
+		return m_EngineInstance;
 	}
 	static void Destory();
 

@@ -50,20 +50,20 @@ RenderSystemVK::~RenderSystemVK()
 //}
 
 
-void RenderSystemVK::CreateSwapChain()
-{
-
-	SwapChainDesc desc;
-	desc.Width = m_Width;
-	desc.Height = m_Height;
-	m_GuiPtr = std::make_shared<VulkanGui>(m_VulkanEnginePtr);
-	m_GuiPtr->Init("Fonts/Ubuntu-Regular.ttf", m_Width,m_Height);
-
-	m_SwapChain = std::make_shared<VulkanSwapChain>(*m_ContextPtr, desc);
-
-
-	CreateFrameBuffer();
-}
+//void RenderSystemVK::CreateSwapChain()
+//{
+//
+//	SwapChainDesc desc;
+//	desc.Width = m_Width;
+//	desc.Height = m_Height;
+//	m_GuiPtr = std::make_shared<VulkanGui>(m_VulkanEnginePtr);
+//	m_GuiPtr->Init("Fonts/Ubuntu-Regular.ttf", m_Width,m_Height);
+//
+//	m_SwapChain = std::make_shared<VulkanSwapChain>(*m_ContextPtr, desc);
+//
+//
+//	CreateFrameBuffer();
+//}
 
 void RenderSystemVK::RecordDrawCommand()
 {
@@ -164,10 +164,10 @@ void RenderSystemVK::Draw()
 }
 
 
-void RenderSystemVK::CreateRenderPass()
-{
-	m_RenderPass = VulkanRenderPass::CreateCommonRenderPass(m_ContextPtr->m_VkSwapChainFormat);
-}
+//void RenderSystemVK::CreateRenderPass()
+//{
+//	m_RenderPass = VulkanRenderPass::CreateCommonRenderPass(m_ContextPtr->m_VkSwapChainFormat);
+//}
 
 void RenderSystemVK::CreateFrameBuffer()
 {
@@ -199,19 +199,19 @@ void RenderSystemVK::CreatePipeline(VulkanPipelinePtr pipeline)
 
 void RenderSystemVK::ReceateSwapchain(const SwapChainDesc& desc)
 {
-	SwapChainDesc _desc = desc;
-	vkDeviceWaitIdle(m_VulkanEnginePtr->GetVkDevice());
+	//SwapChainDesc _desc = desc;
+	//vkDeviceWaitIdle(m_VulkanEnginePtr->GetVkDevice());
 
-	DestorySwapchain();
-	m_ContextPtr->ReCalcSwapchainParamaters();
-	m_ContextPtr->CalcSwapChainExtent(_desc.Width, _desc.Height);
-	m_Width = _desc.Width;
-	m_Height = _desc.Height;
+	//DestorySwapchain();
+	//m_ContextPtr->ReCalcSwapchainParamaters();
+	//m_ContextPtr->CalcSwapChainExtent(_desc.Width, _desc.Height);
+	//m_Width = _desc.Width;
+	//m_Height = _desc.Height;
 
-	m_SwapChain = std::make_shared<VulkanSwapChain>(*m_ContextPtr, _desc);
-	CreateFrameBuffer();
+	//m_SwapChain = std::make_shared<VulkanSwapChain>(*m_ContextPtr, _desc);
+	//CreateFrameBuffer();
 
-	RecordDrawCommand();
+	//RecordDrawCommand();
 }
 
 void RenderSystemVK::DestorySwapchain()

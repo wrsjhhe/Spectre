@@ -5,6 +5,7 @@
 #include "VulkanPipeline.h"
 #include "VulkanRenderPass.h"
 #include "VulkanSwapchain.h"
+#include "VulkanFrameBuffer.h"
 
 BEGIN_NAMESPACE_SPECTRE
 
@@ -35,18 +36,21 @@ private:
 
 	void CreateSwapchain();
 
-	void ReadyScene();
+	void CreateFrameBuffer();
 
-	void SetDrawCommandFunc();
+	void ReadyScene();
 
 	void SetDrawCommand();
 
 private:
-	RenderSystemVK*					  m_pRenderSystem = nullptr;
 	VkSurfaceKHR					  m_Surface = nullptr;
 
 	VulkanSwapChainPtr				  m_SwapChain;
 	VulkanRenderPassPtr               m_RenderPass;
+	std::vector<VulkanFrameBufferPtr> m_FrameBuffers;
+	VulkanImagesPtr					  m_DepthStencilImage;
+	VulkanSemaphorePtr				  m_RenderComplete;
+	VulkanSemaphorePtr				  m_PresentComplete;
 
 	uint32_t                          m_Width = 0;
 	uint32_t                          m_Height = 0;

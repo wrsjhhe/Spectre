@@ -3,6 +3,8 @@
 #include "VulkanImages.h"
 BEGIN_NAMESPACE_SPECTRE
 
+class VulkanFrameBuffer;
+typedef std::shared_ptr<VulkanFrameBuffer> VulkanFrameBufferPtr;
 class VulkanFrameBuffer
 {
 public:

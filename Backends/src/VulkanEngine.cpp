@@ -325,16 +325,6 @@ static bool IsLayerAvailable(const std::vector<VkLayerProperties> layers, const 
 
 VulkanEngine* VulkanEngine::m_EngineInstance = nullptr;
 
-VulkanEngine* VulkanEngine::Create(const VulkanEngineCreateInfo& ci)
-{
-    if (m_EngineInstance == nullptr)
-        m_EngineInstance = new VulkanEngine(ci);
-
-
-    atexit(VulkanEngine::Destory);
-    return m_EngineInstance;
-}
-
 void VulkanEngine::Destory()
 {
     if (m_EngineInstance!=nullptr)

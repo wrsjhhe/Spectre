@@ -1,8 +1,8 @@
 #pragma once
-
 #include "SpectreDef.h"
 #include "Platform.h"
 #include "LogManager.h"
+
 #if defined(SPE_DEBUG)
 #	define VKB_DEBUG
 #endif

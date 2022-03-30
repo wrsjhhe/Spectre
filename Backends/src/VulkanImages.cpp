@@ -5,9 +5,6 @@
 
 USING_NAMESPACE(Spectre)
 
-
-
-
 std::shared_ptr<VulkanImages> VulkanImages::CreateSwapChainImage(const VulkanSwapChain& swapChain)
 {
 	auto* pEngine = VulkanEngine::GetInstance();
@@ -18,7 +15,7 @@ std::shared_ptr<VulkanImages> VulkanImages::CreateSwapChainImage(const VulkanSwa
 	pImage->m_ImageInfo.ImageAutoDestory = true;
 	pImage->m_ImageInfo.Width = swapChain.GetWidth();
 	pImage->m_ImageInfo.Height = swapChain.GetHeight();
-	pImage->m_ImageInfo.Format = swapChain.GetSwapChainFormat();
+	pImage->m_ImageInfo.Format = g_SurfaceFormat.format;
 	pImage->m_ImageInfo.AspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 
 	pImage->m_VkImages.resize(imageCount);
@@ -29,10 +26,10 @@ std::shared_ptr<VulkanImages> VulkanImages::CreateSwapChainImage(const VulkanSwa
 	return std::shared_ptr<VulkanImages>(pImage);
 }
 
-std::shared_ptr<VulkanImages> VulkanImages::CreateDepthStencilImage(uint32_t width,uint32_t height)
+std::shared_ptr<VulkanImages> VulkanImages::CreateDepthStencilImage(uint32_t width, uint32_t height)
 {
 	auto* pImage = new VulkanImages();
-	
+
 	pImage->m_ImageInfo.Count = 1;
 	pImage->m_ImageInfo.Width = width;
 	pImage->m_ImageInfo.Height = height;

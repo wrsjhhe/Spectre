@@ -1,7 +1,5 @@
-#include "VulkanCommon.h"
-#include "VulkanEngine.h"
-#include "VulkanSemaphore.h"
 #include "VulkanSwapchain.h"
+
 USING_NAMESPACE(Spectre)
 
 static VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes)

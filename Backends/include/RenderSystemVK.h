@@ -9,6 +9,7 @@
 #include "VulkanPipeline.h"
 #include "VulkanCommand.h"
 #include "Math/MathDef.h"
+#include "VulkanSwapchain.h"
 namespace Spectre
 {
 	struct RenderContextDesc
@@ -35,7 +36,7 @@ namespace Spectre
 		~RenderSystemVK();
 		//void CreateRenderContext(const RenderContextDesc& desc);
 
-		void CreateSwapChain();
+		//void CreateSwapChain();
 
 		void CreatePipeline(VulkanPipelinePtr pipeline);
 
@@ -51,7 +52,7 @@ namespace Spectre
 
 
 	private:
-		void CreateRenderPass();
+		//void CreateRenderPass();
 		void CreateFrameBuffer();
 
 		void DestorySwapchain();

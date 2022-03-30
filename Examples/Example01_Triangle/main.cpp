@@ -35,12 +35,6 @@ public:
 
 	void Run()
 	{
-		VulkanEngine::VulkanEngineCreateInfo engineCI;
-#ifdef VKB_DEBUG
-		engineCI.EnableValidation = true;
-#endif
-		VulkanEngine::Create(engineCI);
-
 		CreateContext(g_Width, g_Height);
 
 		std::vector<VertexAttribute> VertexAttrs = { VertexAttribute_Position, VertexAttribute_Color };

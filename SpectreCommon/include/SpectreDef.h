@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <functional>
 #define SPECTRE_ENGINE_VERSION 10000
 
 #define BEGIN_NAMESPACE(Name) \
@@ -22,5 +23,3 @@
 #if !defined(NDEBUG) || defined(DEBUG) || defined(_DEBUG)
 #	define SPE_DEBUG
 #endif
-
-#define _HAS_CXX17 1

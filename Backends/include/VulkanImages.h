@@ -1,4 +1,5 @@
 #pragma once
+#include <VulkanCommon.h>
 
 BEGIN_NAMESPACE_SPECTRE
 
@@ -17,7 +18,8 @@ struct VulkanImageInfo
 };
 
 class VulkanSwapChain;
-
+class VulkanImages;
+typedef std::shared_ptr<VulkanImages> VulkanImagesPtr;
 class VulkanImages
 {
 public:

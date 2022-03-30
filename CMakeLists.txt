@@ -6,6 +6,8 @@ cmake_minimum_required (VERSION 3.8)
 project ("Spectre")
 
 add_compile_definitions(RESOURCES_DIR=\"${CMAKE_SOURCE_DIR}/Resources/\")
+add_compile_definitions(_HAS_CXX17=1)
+add_compile_definitions(_HAS_CXX20=0)
 
 if (MSVC)
     set(CXX_STANDARD "/std:c++17")

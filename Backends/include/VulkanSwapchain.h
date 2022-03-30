@@ -1,7 +1,8 @@
 #pragma once
-#include "NativeWindow.h"
+#include "VulkanEngine.h"
 #include "VulkanImages.h"
-#include "RenderTypes.h"
+#include "VulkanSemaphore.h"
+
 BEGIN_NAMESPACE_SPECTRE
 
 struct SwapChainDesc
