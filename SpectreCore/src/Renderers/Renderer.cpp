@@ -1,4 +1,3 @@
-#include "RenderSystemVK.h"
 #include "VulkanEngine.h"
 #include "Renderers/Renderer.h"
 
@@ -42,10 +41,6 @@ void Renderer::Resize(uint32_t width, uint32_t height)
 {
 	m_Width = width;
 	m_Height = height;
-	if (m_Prepared)
-	{
-		
-	}
 }
 
 
