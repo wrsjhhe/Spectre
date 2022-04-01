@@ -17,6 +17,7 @@ struct RenderObject
 	VulkanPipelinePtr Pipeline;
 	VulkanDescriptorSetPtr DescriptorSet;
 	VulkanBufferPtr ModelBuffer;
+	VulkanBufferPtr MaterialBuffer;
 };
 
 struct MeshBuffer
@@ -59,6 +60,11 @@ struct CameraData
 {
 	VulkanBufferPtr Buffer;
 	VulkanDescriptorSetPtr DescriptorSet;
+};
+
+struct ModelData
+{
+	Matrix Transform;
 };
 
 class Scene : Object3D

@@ -6,16 +6,16 @@ Scene::Scene()
 {
 	m_CameraDescBuilder.AddBind(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
 	m_ModelDescBuilder.AddBind(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
+	m_ModelDescBuilder.AddBind(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT);
 
 	m_CameraData.Buffer = VulkanBuffer::Create(sizeof(CameraMatrix), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-
 
 	VkDescriptorBufferInfo cameraDescriptor;
 	cameraDescriptor.buffer = m_CameraData.Buffer->GetVkBuffer();
 	cameraDescriptor.offset = 0;
 	cameraDescriptor.range = sizeof(CameraMatrix);
-	m_CameraData.DescriptorSet = m_CameraDescBuilder.Build(&cameraDescriptor);
+	m_CameraData.DescriptorSet = m_CameraDescBuilder.Build({ &cameraDescriptor });
 }
 
 Scene::~Scene()
@@ -72,9 +72,9 @@ void Scene::PreparePipeline()
 		else
 		{
 			VulkanPipelinePtr newPipeline = VulkanPipeline::Create();
-			newPipeline->CreateShaderModules({ pMaterial->GetVertexShader() }, { pMaterial->GetFragmentShader() });
+			newPipeline->SetVertexShaders({ pMaterial->GetVertexShader() });
+			newPipeline->SetFragmentShaders({ pMaterial->GetFragmentShader() });
 			newPipeline->SetVertexDescription(pMaterial->GetAttributes());
-			//newPipeline->CreateUniformBuffer(sizeof(Matrix));
 
 			newPipeline->AddDescriptorSetLayout(m_CameraDescBuilder.GetOrCreateLayout());
 			newPipeline->AddDescriptorSetLayout(m_ModelDescBuilder.GetOrCreateLayout());
@@ -169,17 +169,27 @@ void Scene::PrepareStageBuffer()
 					pBatch->Indices.push_back(pGeomtry->Indices()[i]);
 				}
 
-				obj->ModelBuffer = VulkanBuffer::Create(sizeof(Matrix), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+				uint32_t materialBufferSize = obj->MeshPtr->GetMaterial()->GetBufferInfo().Size;
+				//uint32_t materialBufferSize = 64;
+				obj->ModelBuffer = VulkanBuffer::Create(sizeof(ModelData), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 					VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+				obj->MaterialBuffer = VulkanBuffer::Create(materialBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+					VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+				VkDescriptorBufferInfo descriptor1;
+				descriptor1.buffer = obj->ModelBuffer->GetVkBuffer();
+				descriptor1.offset = 0;
+				descriptor1.range = sizeof(ModelData);
 
-				VkDescriptorBufferInfo descriptor;
-				descriptor.buffer = obj->ModelBuffer->GetVkBuffer();
-				descriptor.offset = 0;
-				descriptor.range = sizeof(Matrix);
-				obj->DescriptorSet = m_ModelDescBuilder.Build(&descriptor);
+				VkDescriptorBufferInfo descriptor2;
+				descriptor2.buffer = obj->MaterialBuffer->GetVkBuffer();
+				descriptor2.offset = 0;
+				descriptor2.range = materialBufferSize;
+
+				obj->DescriptorSet = m_ModelDescBuilder.Build({ &descriptor1,&descriptor2 });
 
 				Matrix mat;
-				obj->ModelBuffer->Map(&mat,sizeof(Matrix),0);
+				obj->ModelBuffer->Map(&mat,sizeof(ModelData),0);
+				obj->MaterialBuffer->Map(obj->MeshPtr->GetMaterial()->GetBufferInfo().Buffer, materialBufferSize, 0);
 			}
 		}
 	}
@@ -262,7 +272,7 @@ void Scene::UpdateUBO()
 			if (pMesh->MatrixWorldNeedsUpdate())
 			{
 				Matrix mat = pMesh->GetTransformMatrix();
-				o->ModelBuffer->Map(&mat, sizeof(Matrix), 0);
+				o->ModelBuffer->Map(&mat);
 				pMesh->m_MatrixWorldNeedsUpdate = false;
 			}
 		}

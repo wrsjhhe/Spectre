@@ -153,6 +153,7 @@ public:
 
 	DescriptorLayoutCache& GetDescriptorLayoutCache() { return *m_DescriptorLayoutCache; }
 
+	VkPipelineCache& GetVkPipelineCache() { return m_VkPipelineCache; }
 private:
 	VulkanEngine(const VulkanEngineCreateInfo& CI);
 	~VulkanEngine();
@@ -162,6 +163,7 @@ private:
 	void CreateVkDevice();
 	void CreateCommands();
 	void CreateDescriptorAllocator();
+	void CreatePipelineCache();
 
 	uint32_t FindQueueFamily(VkQueueFlags QueueFlags) const;
 	bool IsExtensionSupported(const char* ExtensionName) const;
@@ -192,6 +194,8 @@ private:
 
 	std::shared_ptr<DescriptorAllocator>    m_DescriptorAllocator;
 	std::shared_ptr<DescriptorLayoutCache>	m_DescriptorLayoutCache;
+
+	VkPipelineCache							m_VkPipelineCache = VK_NULL_HANDLE;
 };
 
 

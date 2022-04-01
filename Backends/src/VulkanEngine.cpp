@@ -342,6 +342,7 @@ VulkanEngine::VulkanEngine(const VulkanEngineCreateInfo& ci):
     CreateVkDevice();
     CreateCommands();
     CreateDescriptorAllocator();
+    CreatePipelineCache();
 }
 
 VulkanEngine::~VulkanEngine()
@@ -351,6 +352,7 @@ VulkanEngine::~VulkanEngine()
 	vkDestroyCommandPool(m_VkDevice, m_VkCommandPool, nullptr);
     m_DescriptorAllocator = nullptr;
     m_DescriptorLayoutCache = nullptr;
+    vkDestroyPipelineCache(m_VkDevice, m_VkPipelineCache, nullptr);
 	if (debug_utils_messenger != VK_NULL_HANDLE)
 	{
 		PFN_vkDestroyDebugUtilsMessengerEXT destroyMsgCallback =
@@ -649,6 +651,13 @@ void VulkanEngine::CreateDescriptorAllocator()
 {
     m_DescriptorAllocator = std::make_shared<DescriptorAllocator>(m_VkDevice);
     m_DescriptorLayoutCache = std::make_shared<DescriptorLayoutCache>(m_VkDevice);
+}
+
+void VulkanEngine::CreatePipelineCache()
+{
+	VkPipelineCacheCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+	vkCreatePipelineCache(m_VkDevice, &createInfo, nullptr, &m_VkPipelineCache);
 }
 
 uint32_t VulkanEngine::FindQueueFamily(VkQueueFlags QueueFlags) const

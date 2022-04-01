@@ -4,12 +4,6 @@
 USING_NAMESPACE(Spectre)
 
 
-std::shared_ptr<BufferMaterial> BufferMaterial::Create()
-{
-	auto* pMat = new BufferMaterial;
-	return std::shared_ptr<BufferMaterial>(pMat);
-}
-
 void BufferMaterial::SetVertexShader(std::string vert)
 {
 	m_VertexShader = vert;
@@ -22,8 +16,9 @@ void BufferMaterial::SetFragmentShader(std::string frag)
 
 BufferMaterial::BufferMaterial()
 {
-
+	
 }
+
 
 size_t BufferMaterial::GetHash()
 {
@@ -36,7 +31,7 @@ size_t BufferMaterial::GetHash()
 
 BufferMaterial::~BufferMaterial()
 {
-
+	delete m_MaterialBuffer;
 }
 
 void BufferMaterial::DefineAttributes(const std::vector<VertexAttribute>& attrs)

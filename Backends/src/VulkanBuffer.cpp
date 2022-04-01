@@ -56,10 +56,14 @@ void VulkanBuffer::CopyTo(VulkanBufferPtr dstBuffer)
 void VulkanBuffer::Map(void* ptr, uint32_t size, uint32_t offset, bool keepMap)
 {
 	uint32_t mapSize = size;
+	if (mapSize == 0)
+	{
+		mapSize = m_TotalSize;
+	}
 	MapPointerCache = nullptr;
 	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
-	vkMapMemory(device, m_VkMemory, offset, size, 0, &MapPointerCache);
-	std::memcpy(MapPointerCache, ptr, size);
+	vkMapMemory(device, m_VkMemory, offset, mapSize, 0, &MapPointerCache);
+	std::memcpy(MapPointerCache, ptr, mapSize);
 	Flush();
 
 	if (!keepMap)

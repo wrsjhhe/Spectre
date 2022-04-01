@@ -22,7 +22,7 @@ class VulkanDescriptorBuilder
 public:
 	void AddBind(uint32_t binding,VkDescriptorType type, VkShaderStageFlags stageFlags);
 
-	VulkanDescriptorSetPtr Build(VkDescriptorBufferInfo* bufferInfo);
+	VulkanDescriptorSetPtr Build(std::vector<VkDescriptorBufferInfo*> bufferInfos);
 
 	VkDescriptorSetLayout GetOrCreateLayout();
 

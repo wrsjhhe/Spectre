@@ -28,20 +28,21 @@ void VulkanDescriptorBuilder::AddBind(uint32_t binding, VkDescriptorType type, V
 }
 
 
-VulkanDescriptorSetPtr VulkanDescriptorBuilder::Build(VkDescriptorBufferInfo* bufferInfo)
+VulkanDescriptorSetPtr VulkanDescriptorBuilder::Build(std::vector<VkDescriptorBufferInfo*> bufferInfos)
 {
+	EXP_CHECK(bufferInfos.size() == m_Bindings.size(), "bufferInfos's size need equal to bindinds's size");
 	m_Layout = GetOrCreateLayout();
 	std::vector<VkWriteDescriptorSet> writes;
-	for(auto& binding: m_Bindings)
+	for (uint32_t i = 0; i < m_Bindings.size(); ++i)
 	{
 		VkWriteDescriptorSet newWrite{};
 		newWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		newWrite.pNext = nullptr;
 
 		newWrite.descriptorCount = 1;
-		newWrite.descriptorType = binding.descriptorType;
-		newWrite.pBufferInfo = bufferInfo;
-		newWrite.dstBinding = binding.binding;
+		newWrite.descriptorType = m_Bindings[i].descriptorType;
+		newWrite.pBufferInfo = bufferInfos[i];
+		newWrite.dstBinding = m_Bindings[i].binding;
 
 		writes.push_back(newWrite);
 	}

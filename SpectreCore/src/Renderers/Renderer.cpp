@@ -63,9 +63,10 @@ void Renderer::Render()
 
 	m_ScenePtr->UpdateUBO();
 
+	VulkanSemaphorePtr presentComplete;
 	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
 	VulkanQueue queue = VulkanEngine::GetInstance()->GetGraphicQueue();
-	int32_t backBufferIndex = m_SwapChain->AcquireImageIndex(m_PresentComplete);
+	int32_t backBufferIndex = m_SwapChain->AcquireImageIndex(presentComplete);
 	if (backBufferIndex < 0)
 	{
 		SwapChainDesc _desc{m_Width,m_Height};
@@ -92,7 +93,7 @@ void Renderer::Render()
 
 	auto cmd = VulkanEngine::GetInstance()->GetRenderCmd();
 	cmd[backBufferIndex]->SignalSemaphore = { m_RenderComplete->GetVkSemaphore() };
-	cmd[backBufferIndex]->WaitSemaphore = { m_PresentComplete->GetVkSemaphore() };
+	cmd[backBufferIndex]->WaitSemaphore = { presentComplete->GetVkSemaphore() };
 	cmd[backBufferIndex]->WaitStageMask = { waitStageMask };
 
 	cmd[backBufferIndex]->Submit(queue, false);

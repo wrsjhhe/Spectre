@@ -50,15 +50,12 @@ private:
 	std::vector<VulkanFrameBufferPtr> m_FrameBuffers;
 	VulkanImagesPtr					  m_DepthStencilImage;
 	VulkanSemaphorePtr				  m_RenderComplete;
-	VulkanSemaphorePtr				  m_PresentComplete;
 
 	uint32_t                          m_Width = 0;
 	uint32_t                          m_Height = 0;
 	bool                              m_Prepared = false;
 
 	Scene*							  m_ScenePtr = nullptr;
-	Matrix                            m_MVPData;
-
 };
 
 END_NAMESPACE_SPECTRE

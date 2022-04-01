@@ -33,7 +33,7 @@ void BufferGeometry::SetVertices(const Vertex* vertices, uint32_t count)
 	m_VerticesCount = count;
 }
 
-void BufferGeometry::SetFaceIndex(const uint32_t* indices, uint32_t count)
+void BufferGeometry::SetIndices(const uint32_t* indices, uint32_t count)
 {
 	uint32_t size = sizeof(uint32_t) * count;
 	m_Indices = (uint32_t*)heap_alloc(sizeof(uint32_t) * count);

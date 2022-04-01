@@ -2,34 +2,39 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include "SpectreApi.h"
+#include "BufferMaterial.h"
+#include "Math/MathDef.h"
 BEGIN_NAMESPACE_SPECTRE
 
-class MeshBasicMaterial :public SpectreApi
+class MeshBasicMaterial;
+typedef std::shared_ptr<MeshBasicMaterial> MeshBasicMaterialPtr;
+class MeshBasicMaterial :public BufferMaterial
 {
+public:
+	struct ShaderVariable
+	{
+		alignas(16) int UserVextexColor;
+		alignas(16) float Color[3];
+		
+	};
+
 public:
 	DefineClass(MeshBasicMaterial)
 
-	std::string VertexShader;
-	std::string FragmentShader;
-
 	static std::shared_ptr<MeshBasicMaterial> Create();
+
+	void EnableVextexColor(bool enable);
+
+	void SetColor(Color rgb);
+
+	virtual MaterialBufferInfo GetBufferInfo() override;
 public:
 	
-	~MeshBasicMaterial();
+	virtual ~MeshBasicMaterial();
 
-	const std::vector<uint32_t>& GetVertexSPV() const;
-
-	const std::vector<uint32_t>& GetFragmentSPV() const;
-
-	void CompileSpv();
-
-private:
+protected:
 	MeshBasicMaterial();
-
-private:
-	std::vector<uint32_t> m_VertSpvCache;
-	std::vector<uint32_t> m_FragSpvCache;
+	MeshBasicMaterial(const MeshBasicMaterial&) = delete;
 };
 
 typedef std::shared_ptr<MeshBasicMaterial> MeshBasicMaterialPtr;

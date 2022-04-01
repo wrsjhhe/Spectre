@@ -189,30 +189,39 @@ void VulkanPipeline::SetVertexDescription(const std::vector<VertexAttribute>& Ve
 	m_VertexInputState.pVertexAttributeDescriptions = m_AttributeDescriptions.data();
 }
 
-void VulkanPipeline::CreateShaderModules(const std::vector<std::string>& vertexShaders,
-	const std::vector<std::string>& fragmentShaders)
+void VulkanPipeline::CreateShaderModules()
 {
 	uint32_t offset = 0;
-	m_ShaderStages.resize(vertexShaders.size() + fragmentShaders.size());
-	for (uint32_t i = offset; i < vertexShaders.size(); ++i)
+	m_ShaderStages.resize(m_VertexShaders.size() + m_FragmentShaders.size());
+	for (uint32_t i = offset; i < m_VertexShaders.size(); ++i)
 	{
 		m_ShaderStages[i] = {};
 		m_ShaderStages[i].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		m_ShaderStages[i].stage = VK_SHADER_STAGE_VERTEX_BIT;
-		m_ShaderStages[i].module = LoadSPIPVShader(vertexShaders[i],ShaderType_Vertex);
+		m_ShaderStages[i].module = LoadSPIPVShader(m_VertexShaders[i],ShaderType_Vertex);
 		m_ShaderStages[i].pName = "main";
 		++offset;
 	}
 	
-	for (uint32_t i = 0; i < fragmentShaders.size(); ++i)
+	for (uint32_t i = 0; i < m_FragmentShaders.size(); ++i)
 	{
 		m_ShaderStages[offset] = {};
 		m_ShaderStages[offset].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		m_ShaderStages[offset].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-		m_ShaderStages[offset].module = LoadSPIPVShader(fragmentShaders[i], ShaderType_Fragment);
+		m_ShaderStages[offset].module = LoadSPIPVShader(m_FragmentShaders[i], ShaderType_Fragment);
 		m_ShaderStages[offset].pName = "main";
 		++offset;
 	}
+}
+
+void VulkanPipeline::SetVertexShaders(const std::vector<std::string>& vertexShaders)
+{
+	m_VertexShaders = vertexShaders;
+}
+
+void VulkanPipeline::SetFragmentShaders(const std::vector<std::string>& fragmentShaders)
+{
+	m_FragmentShaders = fragmentShaders;
 }
 
 void VulkanPipeline::CreatePipelineInstance(const VulkanRenderPass& renderPass)
@@ -223,6 +232,9 @@ void VulkanPipeline::CreatePipelineInstance(const VulkanRenderPass& renderPass)
 		vkDestroyPipeline(device, m_VkPipeline, nullptr);
 		m_VkPipeline = nullptr;
 	}
+
+	CreateShaderModules();
+
 	VkPipelineLayoutCreateInfo pipeLayoutInfo{};
 	pipeLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	pipeLayoutInfo.setLayoutCount = m_Layouts.size();
@@ -253,13 +265,14 @@ void VulkanPipeline::CreatePipelineInstance(const VulkanRenderPass& renderPass)
 	pipelineCreateInfo.pViewportState = &m_ViewportState;
 	pipelineCreateInfo.pDepthStencilState = &m_DepthStencilState;
 	pipelineCreateInfo.pDynamicState = &dynamicState;
-	vkCreateGraphicsPipelines(device, m_VkPipelineCache, 1, &pipelineCreateInfo, nullptr, &m_VkPipeline);
+	vkCreateGraphicsPipelines(device, VulkanEngine::GetInstance()->GetVkPipelineCache(), 1, &pipelineCreateInfo, nullptr, &m_VkPipeline);
 
+	for (auto& shaderStage : m_ShaderStages)
+	{
+		vkDestroyShaderModule(device, shaderStage.module, nullptr);
+	}
 }
-//void VulkanPipeline::BindDescriptorSets(const VkCommandBuffer& commandBuffer)
-//{
-//	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 0, 1, &m_VkDescriptorSet, 0, nullptr);
-//}
+
 
 void VulkanPipeline::BindPipeline(const VkCommandBuffer& commandBuffer)
 {
@@ -269,28 +282,14 @@ void VulkanPipeline::BindPipeline(const VkCommandBuffer& commandBuffer)
 void VulkanPipeline::Destory()
 {
 	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
-	for (auto& shaderStage : m_ShaderStages)
-	{
-		vkDestroyShaderModule(device, shaderStage.module, nullptr);
-	}
 
 	vkDestroyPipelineLayout(device, m_VkPipelineLayout, nullptr);
 	vkDestroyPipeline(device, m_VkPipeline, nullptr);
-	vkDestroyPipelineCache(device, m_VkPipelineCache, nullptr);
-
-	//vkDestroyDescriptorSetLayout(device, m_VkDescriptorSetLayout, nullptr);
-	//vkDestroyDescriptorPool(device, m_VkDescriptorPool, nullptr);
 }
 
 VulkanPipeline::VulkanPipeline()
 {
-	//CreateDescriptorPool();
-	//CreateDescriptorSetLayout();
 	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
-
-	VkPipelineCacheCreateInfo createInfo{};
-	createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-	vkCreatePipelineCache(device, &createInfo, nullptr, &m_VkPipelineCache);
 
 	m_InputAssemblyState = {};
 	m_InputAssemblyState.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -357,68 +356,7 @@ VkShaderModule VulkanPipeline::LoadSPIPVShader(const std::string& shaderCode, Sh
 
 	return shaderModule;
 }
-//
-//void VulkanPipeline::CreateDescriptorPool()
-//{
-//	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
-//	VkDescriptorPoolSize poolSize = {};
-//	poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-//	poolSize.descriptorCount = 1;
-//
-//	VkDescriptorPoolCreateInfo descriptorPoolInfo{};
-//	descriptorPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-//	descriptorPoolInfo.poolSizeCount = 1;
-//	descriptorPoolInfo.pPoolSizes = &poolSize;
-//	descriptorPoolInfo.maxSets = 1;
-//	vkCreateDescriptorPool(device, &descriptorPoolInfo, nullptr, &m_VkDescriptorPool);
-//}
-//
-//void VulkanPipeline::CreateDescriptorSetLayout()
-//{
-//	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
-//	VkDescriptorSetLayoutBinding layoutBinding;
-//	layoutBinding.binding = 0;
-//	layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-//	layoutBinding.descriptorCount = 1;
-//	layoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-//	layoutBinding.pImmutableSamplers = nullptr;
-//
-//	VkDescriptorSetLayoutCreateInfo descSetLayoutInfo{};
-//	descSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-//	descSetLayoutInfo.bindingCount = 1;
-//	descSetLayoutInfo.pBindings = &layoutBinding;
-//
-//	vkCreateDescriptorSetLayout(device, &descSetLayoutInfo, nullptr, &m_VkDescriptorSetLayout);
-//}
-//
-//
-//void VulkanPipeline::CreateUniformBuffer(uint32_t  bufferSize)
-//{
-//	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
-//	VkDescriptorSetAllocateInfo allocInfo{};
-//	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-//	allocInfo.descriptorPool = m_VkDescriptorPool;
-//	allocInfo.descriptorSetCount = 1;
-//	allocInfo.pSetLayouts = &m_VkDescriptorSetLayout;
-//	auto ret = vkAllocateDescriptorSets(device, &allocInfo, &m_VkDescriptorSet);
-//
-//	m_MVPBuffer = VulkanBuffer::Create(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-//		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-//
-//	VkDescriptorBufferInfo MVPDescriptor;
-//	MVPDescriptor.buffer = m_MVPBuffer->GetVkBuffer();
-//	MVPDescriptor.offset = 0;
-//	MVPDescriptor.range = bufferSize;
-//
-//	VkWriteDescriptorSet writeDescriptorSet{};
-//	writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-//	writeDescriptorSet.dstSet = m_VkDescriptorSet;
-//	writeDescriptorSet.descriptorCount = 1;
-//	writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-//	writeDescriptorSet.pBufferInfo = &MVPDescriptor;
-//	writeDescriptorSet.dstBinding = 0;
-//	vkUpdateDescriptorSets(device, 1, &writeDescriptorSet, 0, nullptr);
-//}
+
 
 void VulkanPipeline::AddDescriptorSetLayout(VkDescriptorSetLayout layout)
 {

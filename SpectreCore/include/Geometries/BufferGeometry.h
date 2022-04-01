@@ -16,7 +16,7 @@ public:
 	//const std::vector<VertexAttribute>& VertexAttributes() const { return m_VertexAttrs; }
 
 	void SetVertices(const Vertex* vertices, uint32_t count);
-	void SetFaceIndex(const uint32_t* indices, uint32_t count);
+	void SetIndices(const uint32_t* indices, uint32_t count);
 
 	Vertex* Vertices() { return m_Vertices; }
 	uint32_t* Indices() { return m_Indices; }

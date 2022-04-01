@@ -4,16 +4,22 @@
 #include <vector>
 #include "SpectreApi.h"
 #include "RenderTypes.h"
+#include "VulkanEngine.h"
 
 BEGIN_NAMESPACE_SPECTRE
+
+struct MaterialBufferInfo
+{
+	uint32_t Size;
+	void* Buffer;
+};
+
 class BufferMaterial;
 typedef std::shared_ptr<BufferMaterial> BufferMaterialPtr;
 class BufferMaterial :public SpectreApi
 {
 public:
 	DefineClass(BufferMaterial)
-
-	static std::shared_ptr<BufferMaterial> Create();
 public:
 
 	void SetVertexShader(std::string vert);
@@ -23,21 +29,24 @@ public:
 	const std::string& GetFragmentShader()const { return m_FragmentShader; }
 
 	void DefineAttributes(const std::vector<VertexAttribute>& attrs);
-
 	const std::vector<VertexAttribute> GetAttributes() const { return m_Attributes; }
+
+	virtual MaterialBufferInfo GetBufferInfo() = 0;
 
 	size_t GetHash();
 
-	~BufferMaterial();
+	virtual ~BufferMaterial();
 
 
-private:
+protected:
 	BufferMaterial();
 
+	void* m_MaterialBuffer;
 private:
 	std::vector<VertexAttribute> m_Attributes;
 	std::string m_VertexShader;
 	std::string m_FragmentShader;
+
 };
 
 

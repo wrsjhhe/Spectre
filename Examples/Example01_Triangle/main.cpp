@@ -1,5 +1,5 @@
 #include "Scenes/Scene.h"
-#include "Materials/BufferMaterial.h"
+#include "Materials/MeshBasicMaterial.h"
 #include "Geometries/BufferGeometry.h"
 #include "Renderers/Renderer.h"
 #include "VulkanEngine.h"
@@ -39,39 +39,31 @@ public:
 
 		std::vector<VertexAttribute> VertexAttrs = { VertexAttribute_Position, VertexAttribute_Color };
 
-		BufferMaterialPtr pMat = BufferMaterial::Create();
-		pMat->SetVertexShader(FileUtils::ReadFile("Shaders/triangle.vert")) ;
-		pMat->SetFragmentShader(FileUtils::ReadFile("Shaders/triangle.frag"));
-		pMat->DefineAttributes(VertexAttrs);
+		MeshBasicMaterialPtr pMat1 = MeshBasicMaterial::Create();
+		pMat1->SetColor({ 84.f ,255.f ,159.f });
 		BufferGeometry* geometry1 = BufferGeometry::Create(VertexAttrs);
-		// 顶点数据
 		std::vector<Vertex> vertices1 = {
-			{{1.0f, 1.0f, 1.0f} ,    { 1.0f, 0.0f, 0.0f}},
-			{	{-1.0f,1.0f, 1.0f} , {    0.0f, 1.0f, 0.0f}},
-			{{	0.0f, -1.0f, 1.0f} ,{    0.0f, 0.0f, 1.0f}}
+			{{1.0f, 1.0f, 1.0f} ,    { 255.0f, 0.0f, 0.0f}},
+			{	{-1.0f,1.0f, 1.0f} , {    0.0f, 255.0f, 0.0f}},
+			{{	0.0f, -1.0f, 1.0f} ,{    0.0f, 0.0f, 255.0f}}
 		};
-
-		// 索引数据
 		std::vector<uint32_t> indices1 = { 0, 1, 2 };
 		geometry1->SetVertices(vertices1.data(), vertices1.size());
-		geometry1->SetFaceIndex(indices1.data(), indices1.size());
+		geometry1->SetIndices(indices1.data(), indices1.size());
+		MeshPtr pMesh1 = Mesh::Create(geometry1, pMat1);
 
-		MeshPtr pMesh1 = Mesh::Create(geometry1, pMat);
-
+		MeshBasicMaterialPtr pMat2 = MeshBasicMaterial::Create();
+		pMat2->EnableVextexColor(true);
 		BufferGeometry* geometry2 = BufferGeometry::Create(VertexAttrs);
-		// 顶点数据
 		std::vector<Vertex> vertices2 = {
-			{{10.0f, 10.0f, 0.0f} ,    { 1.0f, 0.0f, 0.0f}},
-			{	{-10.0f,10.0f, 0.0f} , {    0.0f, 1.0f, 0.0f}},
-			{{	0.0f, -10.0f, 0.0f} ,{    0.0f, 0.0f, 1.0f}}
+			{{10.0f, 10.0f, 0.0f} ,    { 255.0f, 0.0f, 0.0f}},
+			{	{-10.0f,10.0f, 0.0f} , {  0.0f, 255.0f, 0.0f}},
+			{{	0.0f, -10.0f, 0.0f} ,{    0.0f, 0.0f, 255.0f}}
 		};
-
-		// 索引数据
 		std::vector<uint32_t> indices2 = { 0, 1, 2 };
 		geometry2->SetVertices(vertices2.data(), vertices2.size());
-		geometry2->SetFaceIndex(indices2.data(), indices2.size());
-
-		MeshPtr pMesh2 = Mesh::Create(geometry2, pMat);
+		geometry2->SetIndices(indices2.data(), indices2.size());
+		MeshPtr pMesh2 = Mesh::Create(geometry2, pMat2);
 
 		Scene scene;
 		scene.AddMesh(pMesh1);
