@@ -43,9 +43,9 @@ public:
 		pMat1->SetColor({ 84.f ,255.f ,159.f });
 		BufferGeometry* geometry1 = BufferGeometry::Create(VertexAttrs);
 		std::vector<Vertex> vertices1 = {
-			{{1.0f, 1.0f, 1.0f} ,    { 255.0f, 0.0f, 0.0f}},
-			{	{-1.0f,1.0f, 1.0f} , {    0.0f, 255.0f, 0.0f}},
-			{{	0.0f, -1.0f, 1.0f} ,{    0.0f, 0.0f, 255.0f}}
+			{{1.0f, 1.0f, 1.0f} },
+			{	{-1.0f,1.0f, 1.0f} },
+			{{	0.0f, -1.0f, 1.0f} }
 		};
 		std::vector<uint32_t> indices1 = { 0, 1, 2 };
 		geometry1->SetVertices(vertices1.data(), vertices1.size());
@@ -67,6 +67,7 @@ public:
 
 		Scene scene;
 		scene.AddMesh(pMesh1);
+		scene.AddMesh(pMesh2);
 		renderer.Attach({ context.GetWindowHandle() });
 		renderer.BindScene(&scene);
 		renderer.Resize(g_Width, g_Height);

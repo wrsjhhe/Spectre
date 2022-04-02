@@ -64,7 +64,6 @@ void VulkanBuffer::Map(void* ptr, uint32_t size, uint32_t offset, bool keepMap)
 	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
 	vkMapMemory(device, m_VkMemory, offset, mapSize, 0, &MapPointerCache);
 	std::memcpy(MapPointerCache, ptr, mapSize);
-	Flush();
 
 	if (!keepMap)
 		UnMap();
@@ -96,11 +95,13 @@ void VulkanBuffer::Destroy()
 }
 
 
-void VulkanBuffer::Flush()
+void VulkanBuffer::Flush(uint64_t size, uint64_t offset)
 {
 	VkMappedMemoryRange mappedRange = {};
 	mappedRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
 	mappedRange.memory = m_VkMemory;
-	
+	mappedRange.size = size;
+	mappedRange.offset = offset;
+
 	vkFlushMappedMemoryRanges(VulkanEngine::GetInstance()->GetVkDevice(), 1, &mappedRange);
 }

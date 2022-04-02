@@ -11,13 +11,13 @@ struct RenderObject
 {
 	MeshPtr MeshPtr;
 
-	uint32_t FirstIndex;
-	uint32_t FirstVertex;
+	uint32_t FirstIndex = 0;
+	uint32_t FirstVertex = 0;
 
 	VulkanPipelinePtr Pipeline;
 	VulkanDescriptorSetPtr DescriptorSet;
-	VulkanBufferPtr ModelBuffer;
-	VulkanBufferPtr MaterialBuffer;
+
+	uint32_t UboOffset = 0;
 };
 
 struct MeshBuffer
@@ -39,6 +39,7 @@ struct RenderBatch
 	std::vector<RenderObject*> Objects;
 	std::vector<VkDrawIndexedIndirectCommand> IndirectCommands;
 	VulkanBufferPtr IndirectBuffer;
+	VulkanBufferPtr UBOBuffer;
 
 	std::vector<Vertex> Vertices;
 	std::vector<uint32_t> Indices;
@@ -48,6 +49,10 @@ struct RenderBatch
 	VulkanPipelinePtr Pipeline;
 
 	MeshBuffer GPUBuffer;
+
+	VulkanDescriptorSetPtr DescriptorSet;
+
+	uint32_t ObjectUboOffset = 0;
 };
 
 struct CameraMatrix

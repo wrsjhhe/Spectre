@@ -14,6 +14,7 @@ include_directories(${INC_DIR})
 set(PUBLIC_HDRS ${INC_DIR}SpectreDef.h
 				${INC_DIR}SpectreApi.h
 				${INC_DIR}Allocator.h
+				${INC_DIR}Alignment.h
 				${INC_DIR}Platform.h
 				${INC_DIR}Mutex.h
 				${INC_DIR}FormotString.h

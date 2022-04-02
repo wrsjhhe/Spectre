@@ -220,15 +220,15 @@ void Renderer::SetDrawCommand()
 				vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &pBatch->GPUBuffer.VertexBuffer->GetVkBuffer(), offsets);
 				vkCmdBindIndexBuffer(cmdBuffer, pBatch->GPUBuffer.IndexBuffer->GetVkBuffer(), 0, VK_INDEX_TYPE_UINT32);
 
-				for (uint32_t i = 0; i < pBatch->IndirectCommands.size(); ++i)
+			/*	for (uint32_t i = 0; i < pBatch->IndirectCommands.size(); ++i)
 				{
-					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pCurPipeline->GetVkPipelineLayout(), 1, 1,
-						&pBatch->Objects[i]->DescriptorSet->GetVkSet(), 0, nullptr);
-					vkCmdDrawIndexedIndirect(cmdBuffer, pBatch->IndirectBuffer->GetVkBuffer(),
-						i * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
+					uint32_t dynamicOffsets[2] = { pBatch->ObjectUboOffset * i ,pBatch->ObjectUboOffset * i };
 
-				}
-				/*if (VulkanEngine::GetInstance()->GetVkPhysicalDeviceFeatures().multiDrawIndirect)
+					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pCurPipeline->GetVkPipelineLayout(), 1, 1,
+						&pBatch->DescriptorSet->GetVkSet(), 2, dynamicOffsets);
+
+				}*/
+				if (!VulkanEngine::GetInstance()->GetVkPhysicalDeviceFeatures().multiDrawIndirect)
 				{
 					vkCmdDrawIndexedIndirect(cmdBuffer, pBatch->IndirectBuffer->GetVkBuffer(),
 						0, pBatch->IndirectCommands.size(), sizeof(VkDrawIndexedIndirectCommand));
@@ -237,11 +237,15 @@ void Renderer::SetDrawCommand()
 				{
 					for (uint32_t i = 0; i < pBatch->IndirectCommands.size(); ++i)
 					{
+						uint32_t dynamicOffsets[2] = { pBatch->ObjectUboOffset * i ,pBatch->ObjectUboOffset * i };
+
+						vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pCurPipeline->GetVkPipelineLayout(), 1, 1,
+							&pBatch->DescriptorSet->GetVkSet(), 2, dynamicOffsets);
 						vkCmdDrawIndexedIndirect(cmdBuffer, pBatch->IndirectBuffer->GetVkBuffer(),
 							i * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
 
 					}
-				}*/
+				}
 			}
 
 			vkCmdEndRenderPass(cmdBuffer);

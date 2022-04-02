@@ -31,7 +31,7 @@ public:
 
 	void UnMap();
 
-	void Flush();
+	void Flush(uint64_t size, uint64_t offset);
 
 	void Destroy();
 
