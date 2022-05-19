@@ -28,29 +28,47 @@ void VulkanDescriptorBuilder::AddBind(uint32_t binding, VkDescriptorType type, V
 }
 
 
-VulkanDescriptorSetPtr VulkanDescriptorBuilder::Build(std::vector<VkDescriptorBufferInfo*> bufferInfos)
+VulkanDescriptorSetPtr VulkanDescriptorBuilder::Build(std::vector<VkDescriptorBufferInfo*> bufferInfos, 
+	std::vector<VkDescriptorImageInfo*> imageInfos)
 {
-	EXP_CHECK(bufferInfos.size() == m_Bindings.size(), "bufferInfos's size need equal to bindinds's size");
+	EXP_CHECK(bufferInfos.size()+ imageInfos.size() <= m_Bindings.size(), "bufferInfos's size need equal to bindinds's size");
 	m_Layout = GetOrCreateLayout();
 	std::vector<VkWriteDescriptorSet> writes;
-	for (uint32_t i = 0; i < m_Bindings.size(); ++i)
+
+	uint32_t index = 0;
+	for (; index < bufferInfos.size(); ++index)
 	{
 		VkWriteDescriptorSet newWrite{};
 		newWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		newWrite.pNext = nullptr;
 
 		newWrite.descriptorCount = 1;
-		newWrite.descriptorType = m_Bindings[i].descriptorType;
-		newWrite.pBufferInfo = bufferInfos[i];
-		newWrite.dstBinding = m_Bindings[i].binding;
+		newWrite.descriptorType = m_Bindings[index].descriptorType;
+		newWrite.pBufferInfo = bufferInfos[index];
+		newWrite.dstBinding = m_Bindings[index].binding;
 
 		writes.push_back(newWrite);
 	}
 	
+	for (uint32_t i = 0;i < imageInfos.size();++i)
+	{
+		VkWriteDescriptorSet newWrite{};
+		newWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		newWrite.pNext = nullptr;
+
+		newWrite.descriptorCount = 1;
+		newWrite.descriptorType = m_Bindings[i+index].descriptorType;
+		newWrite.pImageInfo = imageInfos[i];
+		newWrite.dstBinding = m_Bindings[i + index].binding;;
+
+		writes.push_back(newWrite);
+	}
+
 	VkDescriptorSet set = VK_NULL_HANDLE;
 	VulkanEngine::GetInstance()->GetDescriptorAllocator().Allocate(&set, m_Layout);
 
-	for (VkWriteDescriptorSet& w : writes) {
+	for (VkWriteDescriptorSet& w : writes) 
+	{
 		w.dstSet = set;
 	}
 

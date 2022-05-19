@@ -4,6 +4,8 @@
 #include <memory>
 #include "BufferMaterial.h"
 #include "Math/MathDef.h"
+#include "VulkanTexture.h"
+#include "VulkanDescriptor.h"
 BEGIN_NAMESPACE_SPECTRE
 
 class MeshBasicMaterial;
@@ -13,13 +15,14 @@ class MeshBasicMaterial :public BufferMaterial
 public:
 	struct ShaderVariable
 	{
-		alignas(16) int UserVextexColor;
-		alignas(16) float Color[3];
-		
+		int MaterialParams0[4];
+		float Color[3];
 	};
 
 public:
 	DefineClass(MeshBasicMaterial)
+
+	virtual ~MeshBasicMaterial();
 
 	static std::shared_ptr<MeshBasicMaterial> Create();
 
@@ -27,15 +30,20 @@ public:
 
 	void SetColor(Color rgb);
 
-	virtual MaterialBufferInfo GetBufferInfo() override;
-public:
-	
-	virtual ~MeshBasicMaterial();
+	void SetTexture(const std::string& image);
+	VulkanTexturePtr GetTexture() const { return m_Texture; }
 
+	virtual MaterialBufferInfo GetBufferInfo() override;
+
+	virtual VulkanDescriptorBuilder GetDescriptorBuilder() const override;
+
+	virtual void CreateDescriptorSet() override;
 protected:
 	MeshBasicMaterial();
 	MeshBasicMaterial(const MeshBasicMaterial&) = delete;
+
+private:
+	VulkanTexturePtr            m_Texture;
 };
 
-typedef std::shared_ptr<MeshBasicMaterial> MeshBasicMaterialPtr;
 END_NAMESPACE_SPECTRE

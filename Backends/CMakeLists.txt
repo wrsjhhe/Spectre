@@ -42,15 +42,14 @@ ${INC_VULKAN_DIR}VulkanCommon.h
 ${INC_VULKAN_DIR}VulkanEngine.h
 ${INC_VULKAN_DIR}VulkanSwapchain.h
 ${INC_VULKAN_DIR}VulkanBuffer.h
-${INC_VULKAN_DIR}VulkanCommand.h
-${INC_VULKAN_DIR}VulkanImages.h
+${INC_VULKAN_DIR}VulkanImage.h
 ${INC_VULKAN_DIR}VulkanRenderPass.h
 ${INC_VULKAN_DIR}VulkanFrameBuffer.h
 ${INC_VULKAN_DIR}VulkanSemaphore.h
 ${INC_VULKAN_DIR}VulkanPipeline.h
 ${INC_VULKAN_DIR}VulkanDescriptor.h
 ${INC_VULKAN_DIR}VulkanGui.h
-
+${INC_VULKAN_DIR}VulkanTexture.h
 )
 
 # ==================================================================================================
@@ -62,14 +61,14 @@ ${SRC_VULKAN_DIR}VulkanCommon.cpp
 ${SRC_VULKAN_DIR}VulkanEngine.cpp
 ${SRC_VULKAN_DIR}VulkanSwapchain.cpp
 ${SRC_VULKAN_DIR}VulkanBuffer.cpp
-${SRC_VULKAN_DIR}VulkanCommand.cpp
-${SRC_VULKAN_DIR}VulkanImages.cpp
+${SRC_VULKAN_DIR}VulkanImage.cpp
 ${SRC_VULKAN_DIR}VulkanRenderPass.cpp
 ${SRC_VULKAN_DIR}VulkanFrameBuffer.cpp
 ${SRC_VULKAN_DIR}VulkanSemaphore.cpp
 ${SRC_VULKAN_DIR}VulkanPipeline.cpp
 ${SRC_VULKAN_DIR}VulkanDescriptor.cpp
 ${SRC_VULKAN_DIR}VulkanGui.cpp
+${SRC_VULKAN_DIR}VulkanTexture.cpp
 )
 
 

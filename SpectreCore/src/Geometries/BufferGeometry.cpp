@@ -5,10 +5,10 @@
 USING_NAMESPACE(Spectre)
 
 
-BufferGeometry* BufferGeometry::Create(const std::vector<VertexAttribute>& vertexAttrs)
+BufferGeometry* BufferGeometry::Create()
 {
 	BufferGeometry* pGeometry = new BufferGeometry();
-	pGeometry->m_VertexAttrs = vertexAttrs;
+	//pGeometry->m_VertexAttrs = Vertex::VertexAttributes;
 	return pGeometry;
 }
 

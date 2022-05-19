@@ -126,17 +126,21 @@ void Renderer::CreateFrameBuffer()
 	uint32_t fheight = m_Height;
 	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
 
-	m_DepthStencilImage = VulkanImages::CreateDepthStencilImage(m_Width, m_Height);
+	m_DepthStencilImage = VulkanImage::Create(m_Width, m_Height, VK_FORMAT_D24_UNORM_S8_UINT, VK_IMAGE_TILING_OPTIMAL,
+		VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+	m_DepthStencilImageView = VulkanImageView::Create(m_DepthStencilImage->GetVkImage(), VK_FORMAT_D24_UNORM_S8_UINT,
+		VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
+
 	std::vector<VkImageView> attachments;
 	attachments.resize(2);
-	attachments[1] = m_DepthStencilImage->GetVkImageViews()[0];
+	attachments[1] = m_DepthStencilImageView->GetVkImageView();
 
-	const std::vector<VkImageView>& backbufferViews = m_SwapChain->GetImages().GetVkImageViews();
+	const std::vector<VulkanImageViewPtr>& backbufferViews = m_SwapChain->GetImageView();
 
 	m_FrameBuffers.resize(backbufferViews.size());
 	for (uint32_t i = 0; i < m_FrameBuffers.size(); ++i)
 	{
-		attachments[0] = backbufferViews[i];
+		attachments[0] = backbufferViews[i]->GetVkImageView();
 		m_FrameBuffers[i] = VulkanFrameBuffer::CreateFrameBuffer(*m_RenderPass, attachments, m_Width, m_Height);
 	}
 }
@@ -220,32 +224,33 @@ void Renderer::SetDrawCommand()
 				vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &pBatch->GPUBuffer.VertexBuffer->GetVkBuffer(), offsets);
 				vkCmdBindIndexBuffer(cmdBuffer, pBatch->GPUBuffer.IndexBuffer->GetVkBuffer(), 0, VK_INDEX_TYPE_UINT32);
 
-			/*	for (uint32_t i = 0; i < pBatch->IndirectCommands.size(); ++i)
+				/*	if (!VulkanEngine::GetInstance()->GetVkPhysicalDeviceFeatures().multiDrawIndirect)
+					{
+						vkCmdDrawIndexedIndirect(cmdBuffer, pBatch->IndirectBuffer->GetVkBuffer(),
+							0, pBatch->IndirectCommands.size(), sizeof(VkDrawIndexedIndirectCommand));
+					}*/
+
+				for (uint32_t i = 0; i < pBatch->IndirectCommands.size(); ++i)
 				{
-					uint32_t dynamicOffsets[2] = { pBatch->ObjectUboOffset * i ,pBatch->ObjectUboOffset * i };
+
+					/*uint32_t dynamicOffsets[2] = { pBatch->ObjectUboOffset * i ,pBatch->ObjectUboOffset * i };
 
 					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pCurPipeline->GetVkPipelineLayout(), 1, 1,
-						&pBatch->DescriptorSet->GetVkSet(), 2, dynamicOffsets);
+						&pBatch->DescriptorSet->GetVkSet(), 2, dynamicOffsets);*/
+					uint32_t dynamicOffsets[1] = { pBatch->ObjectUboOffset * i };
 
-				}*/
-				if (!VulkanEngine::GetInstance()->GetVkPhysicalDeviceFeatures().multiDrawIndirect)
-				{
+					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pCurPipeline->GetVkPipelineLayout(), 1, 1,
+						&pBatch->DescriptorSet->GetVkSet(), 1, dynamicOffsets);
+					auto materialDes = pBatch->Objects[i]->MeshPtr->GetMaterial()->GetDescriptorSet()->GetVkSet();
+					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pCurPipeline->GetVkPipelineLayout(), 2, 1,
+						&materialDes, 0, nullptr);
+
+
 					vkCmdDrawIndexedIndirect(cmdBuffer, pBatch->IndirectBuffer->GetVkBuffer(),
-						0, pBatch->IndirectCommands.size(), sizeof(VkDrawIndexedIndirectCommand));
-				}
-				else
-				{
-					for (uint32_t i = 0; i < pBatch->IndirectCommands.size(); ++i)
-					{
-						uint32_t dynamicOffsets[2] = { pBatch->ObjectUboOffset * i ,pBatch->ObjectUboOffset * i };
+						i * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
 
-						vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pCurPipeline->GetVkPipelineLayout(), 1, 1,
-							&pBatch->DescriptorSet->GetVkSet(), 2, dynamicOffsets);
-						vkCmdDrawIndexedIndirect(cmdBuffer, pBatch->IndirectBuffer->GetVkBuffer(),
-							i * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
-
-					}
 				}
+				
 			}
 
 			vkCmdEndRenderPass(cmdBuffer);

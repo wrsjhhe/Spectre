@@ -160,7 +160,8 @@ void VulkanPipeline::SetVertexDescription(const std::vector<VertexAttribute>& Ve
 	std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
 
 	uint32_t stride = 0;
-	for (uint32_t i = 0; i < VertexAttributes.size(); ++i) {
+	for (uint32_t i = 0; i < VertexAttributes.size(); ++i) 
+	{
 		stride += VertexAttributeToSize(VertexAttributes[i]);
 	}
 

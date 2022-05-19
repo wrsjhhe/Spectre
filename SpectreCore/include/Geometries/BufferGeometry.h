@@ -2,7 +2,7 @@
 #include <vector>
 #include <memory>
 #include <RenderTypes.h>
-#include "Math/MathDef.h"
+#include "Math/Vertex.h"
 BEGIN_NAMESPACE_SPECTRE
 
 class BufferGeometry;
@@ -10,10 +10,9 @@ typedef std::shared_ptr<BufferGeometry> BufferGeometryPtr;
 class BufferGeometry
 {
 public:
-	static BufferGeometry* Create(const std::vector<VertexAttribute>& vertexAttrs);
+	static BufferGeometry* Create();
 public:
 	void SetVertexAttributes();
-	//const std::vector<VertexAttribute>& VertexAttributes() const { return m_VertexAttrs; }
 
 	void SetVertices(const Vertex* vertices, uint32_t count);
 	void SetIndices(const uint32_t* indices, uint32_t count);
@@ -30,7 +29,7 @@ private:
 	BufferGeometry();
 
 private:
-	std::vector<VertexAttribute> m_VertexAttrs;
+	//std::vector<VertexAttribute> m_VertexAttrs;
 
 	uint32_t			m_VerticesCount = 0;
 	Vertex*				m_Vertices = nullptr;

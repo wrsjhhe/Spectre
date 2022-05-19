@@ -53,7 +53,7 @@ inline void* aligned_realloc(void* block,size_t size, size_t align) noexcept
 
 inline void aligned_free(void* p) noexcept
 {
-#if defined(WIN32)
+#if defined(_WIN32) || defined(_WIN64)
     ::_aligned_free(p);
 #else
     ::free(p);

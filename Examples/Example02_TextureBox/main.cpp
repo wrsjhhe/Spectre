@@ -7,6 +7,8 @@
 #include "Cameras/PerspectiveCamera.h"
 #include <iomanip>
 
+
+
 using namespace Spectre;
 
 int g_Width = 1400;
@@ -33,28 +35,49 @@ public:
 	{
 		CreateContext(g_Width, g_Height);
 
-		std::vector<VertexAttribute> VertexAttrs = { VertexAttribute_Position, VertexAttribute_Color };
-
 		MeshBasicMaterialPtr pMat1 = MeshBasicMaterial::Create();
 		pMat1->SetColor({ 84.f ,255.f ,159.f });
-		BufferGeometry* geometry1 = BufferGeometry::Create(VertexAttrs);
+		pMat1->SetTexture("/images/wood.png");
+		BufferGeometry* geometry1 = BufferGeometry::Create();
+		
 		std::vector<Vertex> vertices1 = {
-			{{-1,-1,-1}},
-			{{-1,+1,-1}},
-			{{+1,+1,-1}},
-			{{+1,-1,-1}},
-			{{-1,-1,+1}},
-			{{-1,+1,+1}},
-			{{+1,+1,+1}},
-			{{+1,-1,+1}},
+			{{-1,-1,-1},{0,0,0},{0,1} },
+			{{-1,+1,-1},{0,0,0},{0,0} },
+			{{+1,+1,-1},{0,0,0},{1,0} },
+			{{+1,-1,-1},{0,0,0},{1,1} },
+
+			{{-1,-1,-1},{0,0,0},{0,1} },
+			{{-1,-1,+1},{0,0,0},{0,0} },
+			{{+1,-1,+1},{0,0,0},{1,0} },
+			{{+1,-1,-1},{0,0,0},{1,1} },
+
+			{{+1,-1,-1},{0,0,0},{0,1} },
+			{{+1,-1,+1},{0,0,0},{1,1} },
+			{{+1,+1,+1},{0,0,0},{1,0} },
+			{{+1,+1,-1},{0,0,0},{0,0} },
+
+			{{+1,+1,-1},{0,0,0},{0,1} },
+			{{+1,+1,+1},{0,0,0},{0,0} },
+			{{-1,+1,+1},{0,0,0},{1,0} },
+			{{-1,+1,-1},{0,0,0},{1,1} },
+
+			{{-1,+1,-1},{0,0,0},{1,0} },
+			{{-1,+1,+1},{0,0,0},{0,0} },
+			{{-1,-1,+1},{0,0,0},{0,1} },
+			{{-1,-1,-1},{0,0,0},{1,1} },
+
+			{{-1,-1,+1},{0,0,0},{1,1} },
+			{{+1,-1,+1},{0,0,0},{0,1} },
+			{{+1,+1,+1},{0,0,0},{0,0} },
+			{{-1,+1,+1},{0,0,0},{1,0} },
 		};
 		std::vector<uint32_t> indices1 = { 
-			2,0,1, 2,3,0,
-			4,6,5, 4,7,6,
-			0,7,4, 0,3,7,
-			1,0,4, 1,4,5,
-			1,5,2, 5,6,2,
-			3,6,7, 3,2,6 
+				2,0,1,    2,3,0,
+				4,6,5,    4,7,6,
+				8,10,9,   8,11,10,
+				12,14,13, 12,15,14,
+				16,18,17, 16,19,18,
+				20,21,22, 20,22,23
 		};
 		geometry1->SetVertices(vertices1.data(), vertices1.size());
 		geometry1->SetIndices(indices1.data(), indices1.size());
@@ -91,7 +114,7 @@ public:
 
 			filteredFrameTime = filteredFrameTime * (1.0 - filterScale) + filterScale * elapsedTime;
 			std::stringstream fpsCounterSS;
-			fpsCounterSS << "Sample01_Triangle -----";
+			fpsCounterSS << "Sample02_TextureBox -----";
 			fpsCounterSS << std::fixed << std::setprecision(1) << filteredFrameTime * 1000;
 			fpsCounterSS << " ms (" << 1.0 / filteredFrameTime << " fps)";
 			context.SetTitle(fpsCounterSS.str());
@@ -102,12 +125,9 @@ public:
 			g_CurrTime = g_CurrTime + elapsedTime;
 
 			Matrix rMat1 = Matrix::CreateRotationZ(DegreesToRadians(90.0f) * elapsedTime);
-			Matrix rMat2 = Matrix::CreateRotationZ(DegreesToRadians(45.0f) * elapsedTime);
 			pMesh1->Transform(rMat1);
 		}
 	}
-
-
 
 private:
 	GLFWContext context;

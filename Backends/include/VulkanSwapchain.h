@@ -1,6 +1,6 @@
 #pragma once
 #include "VulkanEngine.h"
-#include "VulkanImages.h"
+#include "VulkanImage.h"
 #include "VulkanSemaphore.h"
 
 BEGIN_NAMESPACE_SPECTRE
@@ -35,7 +35,9 @@ public:
 	uint32_t GetWidth() const { return m_Width; }
 	uint32_t GetHeight() const { return m_Height; }
 
-	const VulkanImages& GetImages() const { return *m_Images; }
+	//const std::vector<VulkanImagePtr>& GetImages() const { return m_Images; }
+
+	const std::vector<VulkanImageViewPtr> GetImageView() const { return m_SwapChainImageViews; }
 
 	//VkFormat GetSwapChainFormat() const { return m_Context.m_VkSwapChainFormat; }
 
@@ -46,12 +48,13 @@ private:
 	//const VulkanContext&							m_Context;
 	VkSwapchainKHR									m_VkSwapChain;
 	uint32_t										m_ImageCount;
-	std::shared_ptr<VulkanImages>					m_Images;
+	//std::vector<VulkanImagePtr>						m_Images;
 	uint32_t										m_Width;
 	uint32_t										m_Height;
 	uint32_t										m_SemaphoreIndex = 0;
 	std::vector<std::shared_ptr<VulkanSemaphore>>	m_ImageAcquiredSemaphore;
 	uint32_t										m_CurrentImageIndex;
+	std::vector<VulkanImageViewPtr>					m_SwapChainImageViews;
 };
 
 END_NAMESPACE_SPECTRE

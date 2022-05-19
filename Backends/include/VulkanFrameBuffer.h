@@ -1,9 +1,10 @@
 #pragma once
 #include "VulkanEngine.h"
-#include "VulkanImages.h"
+#include "VulkanImage.h"
 BEGIN_NAMESPACE_SPECTRE
 
 class VulkanFrameBuffer;
+class VulkanRenderPass;
 typedef std::shared_ptr<VulkanFrameBuffer> VulkanFrameBufferPtr;
 class VulkanFrameBuffer
 {
@@ -21,7 +22,7 @@ private:
 
 private:
 	VkFramebuffer						m_FrameBuffers;
-	std::shared_ptr<VulkanImages>		m_DepthStencilImage;
+	std::shared_ptr<VulkanImage>		m_DepthStencilImage;
 };
 
 END_NAMESPACE_SPECTRE

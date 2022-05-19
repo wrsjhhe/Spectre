@@ -1,13 +1,17 @@
 #include "Scenes/Scene.h"
 #include "Allocator.h"
 #include "Alignment.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+#include "VulkanImage.h"
+#include "FileUtils.h"
 USING_NAMESPACE(Spectre)
+
 
 Scene::Scene()
 {
 	m_CameraDescBuilder.AddBind(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
-	m_ModelDescBuilder.AddBind(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, VK_SHADER_STAGE_VERTEX_BIT);
-	m_ModelDescBuilder.AddBind(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, VK_SHADER_STAGE_FRAGMENT_BIT);
+	m_ModelDescBuilder.AddBind(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, VK_SHADER_STAGE_VERTEX_BIT);    //Ä£ÐÍ¾ØÕó
 
 	m_CameraData.Buffer = VulkanBuffer::Create(sizeof(CameraMatrix), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
@@ -79,6 +83,7 @@ void Scene::PreparePipeline()
 
 			newPipeline->AddDescriptorSetLayout(m_CameraDescBuilder.GetOrCreateLayout());
 			newPipeline->AddDescriptorSetLayout(m_ModelDescBuilder.GetOrCreateLayout());
+			newPipeline->AddDescriptorSetLayout(pMaterial->GetDescriptorBuilder().GetOrCreateLayout());
 
 			pendingObj->Pipeline = newPipeline;
 			m_MatPipelineMap[matHash] = newPipeline;
@@ -120,6 +125,8 @@ void Scene::PrepareStageBuffer()
 			auto iter = m_MeshInBatchCache.find(pendingObj->MeshPtr->Id());
 			if (iter != m_MeshInBatchCache.end())
 			{
+				delete pendingObj;
+				pendingObj = nullptr;
 				continue;
 			}
 			RenderBatch* pPendingBatch = nullptr;
@@ -159,15 +166,13 @@ void Scene::PrepareStageBuffer()
 			pBatch->Indices.clear();
 
 			uint64_t alignSize = VulkanEngine::GetInstance()->GetVkPhysicalDeviceProperties().limits.minUniformBufferOffsetAlignment;
-			uint32_t objCount = pBatch->Objects.size();
 			uint32_t matrixBufferSize = Spectre::Align(sizeof(ModelData), alignSize);
-			uint32_t materialBufferSize = Spectre::Align(pBatch->Objects[0]->MeshPtr->GetMaterial()->GetBufferInfo().Size, alignSize);
-			uint32_t modelBufferSize = matrixBufferSize + materialBufferSize;
-			pBatch->UBOBuffer = VulkanBuffer::Create(modelBufferSize * objCount, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+			uint32_t totalSize = matrixBufferSize * pBatch->Objects.size();
+			pBatch->UBOBuffer = VulkanBuffer::Create(totalSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-			char* stageUBOBuffer = (char*)Spectre::heap_alloc(modelBufferSize * objCount, alignSize);
+			char* stageUBOBuffer = (char*)Spectre::heap_alloc(totalSize, alignSize);
 			uint32_t uboOffset = 0;
-			pBatch->ObjectUboOffset = modelBufferSize;
+			pBatch->ObjectUboOffset = matrixBufferSize;
 			for (auto& obj : pBatch->Objects)
 			{
 				obj->FirstVertex = pBatch->Vertices.size();
@@ -188,39 +193,33 @@ void Scene::PrepareStageBuffer()
 
 				ModelData modelData;
 				std::memcpy(stageUBOBuffer + uboOffset, &modelData, sizeof(ModelData));
-				std::memcpy(stageUBOBuffer + uboOffset + matrixBufferSize,
-					obj->MeshPtr->GetMaterial()->GetBufferInfo().Buffer, 
-					obj->MeshPtr->GetMaterial()->GetBufferInfo().Size);
-				uboOffset += modelBufferSize;
+				/*	std::memcpy(stageUBOBuffer + uboOffset + matrixBufferSize,
+						obj->MeshPtr->GetMaterial()->GetBufferInfo().Buffer,
+						obj->MeshPtr->GetMaterial()->GetBufferInfo().Size);*/
+				uboOffset += matrixBufferSize;
+
+				obj->MeshPtr->GetMaterial()->CreateDescriptorSet();
 			}
 
-			VkDescriptorBufferInfo descriptor1;
-			descriptor1.buffer = pBatch->UBOBuffer->GetVkBuffer();
-			descriptor1.offset = 0;
-			descriptor1.range = sizeof(ModelData);
+			VkDescriptorBufferInfo descInfo1;
+			descInfo1.buffer = pBatch->UBOBuffer->GetVkBuffer();
+			descInfo1.offset = 0;
+			descInfo1.range = sizeof(ModelData);
 
-			VkDescriptorBufferInfo descriptor2;
-			descriptor2.buffer = pBatch->UBOBuffer->GetVkBuffer();
-			descriptor2.offset = matrixBufferSize;
-			descriptor2.range = materialBufferSize;
+			/*VkDescriptorBufferInfo descInfo2;
+			descInfo2.buffer = pBatch->UBOBuffer->GetVkBuffer();
+			descInfo2.offset = matrixBufferSize;
+			descInfo2.range = materialBufferSize;*/
 
-			pBatch->DescriptorSet = m_ModelDescBuilder.Build({ &descriptor1,&descriptor2 });
+			/*	auto texture = pBatch->Objects[0]->MeshPtr->GetMaterial()->GetTexture();
+				VkDescriptorImageInfo imageInfo;
+				imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				imageInfo.imageView = texture->GetImageView()->GetVkImageView();
+				imageInfo.sampler = texture->GetVkSampler();*/
+
+			pBatch->DescriptorSet = m_ModelDescBuilder.Build({ &descInfo1 });
 			pBatch->UBOBuffer->Map(stageUBOBuffer);
 
-			struct ShaderVariable
-			{
-				alignas(16) int UserVextexColor;
-				alignas(16) float Color[3];
-
-			};
-			struct Test
-			{
-				ModelData model;
-				ShaderVariable material;
-			};
-			
-			Test* a = (Test*)stageUBOBuffer;
-			Test* b = a + 1;
 			Spectre::aligned_free(stageUBOBuffer);
 		}
 	}

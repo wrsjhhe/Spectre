@@ -6,10 +6,8 @@
 #include "VulkanRenderPass.h"
 #include "VulkanSwapchain.h"
 #include "VulkanFrameBuffer.h"
-
+#include "VulkanImage.h"
 BEGIN_NAMESPACE_SPECTRE
-
-
 
 class RenderSystemVK;
 class VulkanPipeline;
@@ -48,7 +46,8 @@ private:
 	VulkanSwapChainPtr				  m_SwapChain;
 	VulkanRenderPassPtr               m_RenderPass;
 	std::vector<VulkanFrameBufferPtr> m_FrameBuffers;
-	VulkanImagesPtr					  m_DepthStencilImage;
+	VulkanImagePtr					  m_DepthStencilImage;
+	VulkanImageViewPtr                m_DepthStencilImageView;
 	VulkanSemaphorePtr				  m_RenderComplete;
 
 	uint32_t                          m_Width = 0;

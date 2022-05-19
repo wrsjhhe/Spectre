@@ -1,10 +1,9 @@
 #pragma once
-#include <string>
-#include <memory>
-#include <vector>
+
 #include "SpectreApi.h"
-#include "RenderTypes.h"
 #include "VulkanEngine.h"
+#include "VulkanDescriptor.h"
+#include "VulkanBuffer.h"
 
 BEGIN_NAMESPACE_SPECTRE
 
@@ -33,7 +32,13 @@ public:
 
 	virtual MaterialBufferInfo GetBufferInfo() = 0;
 
-	size_t GetHash();
+	virtual size_t GetHash();
+
+	virtual VulkanDescriptorBuilder GetDescriptorBuilder() const = 0;
+
+	virtual void CreateDescriptorSet() = 0;
+
+	virtual VulkanDescriptorSetPtr GetDescriptorSet() const { return m_DescriptorSet; }
 
 	virtual ~BufferMaterial();
 
@@ -42,10 +47,12 @@ protected:
 	BufferMaterial();
 
 	void* m_MaterialBuffer;
+	VulkanDescriptorSetPtr          m_DescriptorSet;
+	VulkanBufferPtr                 m_VulkanBuffer;
 private:
-	std::vector<VertexAttribute> m_Attributes;
-	std::string m_VertexShader;
-	std::string m_FragmentShader;
+	std::vector<VertexAttribute>	m_Attributes;
+	std::string						m_VertexShader;
+	std::string						m_FragmentShader;
 
 };
 

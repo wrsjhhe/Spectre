@@ -33,11 +33,9 @@ public:
 	{
 		CreateContext(g_Width, g_Height);
 
-		std::vector<VertexAttribute> VertexAttrs = { VertexAttribute_Position, VertexAttribute_Color };
-
 		MeshBasicMaterialPtr pMat1 = MeshBasicMaterial::Create();
 		pMat1->SetColor({ 84.f ,255.f ,159.f });
-		BufferGeometry* geometry1 = BufferGeometry::Create(VertexAttrs);
+		BufferGeometry* geometry1 = BufferGeometry::Create();
 		std::vector<Vertex> vertices1 = {
 			{{1.0f, 1.0f, 1.0f} },
 			{	{-1.0f,1.0f, 1.0f} },
@@ -50,7 +48,7 @@ public:
 
 		MeshBasicMaterialPtr pMat2 = MeshBasicMaterial::Create();
 		pMat2->EnableVextexColor(true);
-		BufferGeometry* geometry2 = BufferGeometry::Create(VertexAttrs);
+		BufferGeometry* geometry2 = BufferGeometry::Create();
 		std::vector<Vertex> vertices2 = {
 			{{10.0f, 10.0f, 0.0f} ,    { 255.0f, 0.0f, 0.0f}},
 			{	{-10.0f,10.0f, 0.0f} , {  0.0f, 255.0f, 0.0f}},

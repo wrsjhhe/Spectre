@@ -21,18 +21,18 @@ VulkanBuffer::VulkanBuffer(uint32_t size, VkBufferUsageFlagBits usage, VkMemoryP
 	bufferCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	bufferCI.size = m_TotalSize;
 	bufferCI.usage = (VkBufferUsageFlags)usage;
-	vkCreateBuffer(device, &bufferCI, nullptr, &m_VkbBuffer);
+	vkCreateBuffer(device, &bufferCI, nullptr, &m_VkBuffer);
 
 	VkMemoryRequirements memReqInfo;
 	VkMemoryAllocateInfo memAllocInfo{};
 	memAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 
-	vkGetBufferMemoryRequirements(device, m_VkbBuffer, &memReqInfo);
+	vkGetBufferMemoryRequirements(device, m_VkBuffer, &memReqInfo);
 	uint32_t memoryTypeIndex = VulkanEngine::GetInstance()->GetMemoryTypeIndex(memReqInfo.memoryTypeBits, (VkMemoryPropertyFlags)memoryFlags);
 	memAllocInfo.allocationSize = memReqInfo.size;
 	memAllocInfo.memoryTypeIndex = memoryTypeIndex;
 	vkAllocateMemory(device, &memAllocInfo, nullptr, &m_VkMemory);
-	vkBindBufferMemory(device, m_VkbBuffer, m_VkMemory, 0);
+	vkBindBufferMemory(device, m_VkBuffer, m_VkMemory, 0);
 }
 
 VulkanBuffer::~VulkanBuffer()
@@ -47,10 +47,33 @@ void VulkanBuffer::CopyTo(VulkanBufferPtr dstBuffer)
 	VkBufferCopy copyRegion = {};
 	copyRegion.size = m_TotalSize;
 	cmd->RecordCommond([&](VkCommandBuffer cmdBuffer) {
-		vkCmdCopyBuffer(cmdBuffer, m_VkbBuffer, dstBuffer->m_VkbBuffer, 1, &copyRegion);
+		vkCmdCopyBuffer(cmdBuffer, m_VkBuffer, dstBuffer->m_VkBuffer, 1, &copyRegion);
 	});
 
 	cmd->Submit(VulkanEngine::GetInstance()->GetGraphicQueue());
+}
+
+void VulkanBuffer::CopyToImage(VulkanImagePtr dstImage,uint32_t width, uint32_t height)
+{
+	auto cmd = VulkanEngine::GetInstance()->GetTransformCmd();
+
+	VkBufferImageCopy region = {};
+	region.bufferOffset = 0;
+	region.bufferRowLength = 0;
+	region.bufferImageHeight = 0;
+	region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	region.imageSubresource.mipLevel = 0;
+	region.imageSubresource.baseArrayLayer = 0;
+	region.imageSubresource.layerCount = 1;
+	region.imageOffset = { 0, 0, 0 };
+	region.imageExtent = {
+		width,
+		height,
+		1
+	};
+	cmd->RecordCommond([&](VkCommandBuffer cmdBuffer) {
+		vkCmdCopyBufferToImage(cmdBuffer, m_VkBuffer, dstImage->GetVkImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+	});
 }
 
 void VulkanBuffer::Map(void* ptr, uint32_t size, uint32_t offset, bool keepMap)
@@ -85,8 +108,8 @@ void VulkanBuffer::Destroy()
 
 	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
 
-	vkDestroyBuffer(device, m_VkbBuffer, nullptr);
-	m_VkbBuffer = VK_NULL_HANDLE;
+	vkDestroyBuffer(device, m_VkBuffer, nullptr);
+	m_VkBuffer = VK_NULL_HANDLE;
 
 	vkFreeMemory(device, m_VkMemory, nullptr);
 	m_VkMemory = VK_NULL_HANDLE;

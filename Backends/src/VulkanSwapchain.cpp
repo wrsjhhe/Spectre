@@ -67,7 +67,16 @@ VulkanSwapChain::VulkanSwapChain(VkSurfaceKHR surface, const SwapChainDesc& desc
 
 	VK_CHECK(vkCreateSwapchainKHR(pEngine->GetVkDevice(), &createInfo, nullptr, &m_VkSwapChain), "Failed to create swap chain!");
 
-	m_Images = VulkanImages::CreateSwapChainImage(*this);
+	std::vector<VkImage> swapChainImages;
+	swapChainImages.resize(m_ImageCount);
+	vkGetSwapchainImagesKHR(pEngine->GetVkDevice(), m_VkSwapChain, &m_ImageCount, swapChainImages.data());
+
+	m_SwapChainImageViews.resize(swapChainImages.size());
+	for (size_t i = 0; i < swapChainImages.size(); i++) 
+	{
+		m_SwapChainImageViews[i] = VulkanImageView::Create(swapChainImages[i], g_SurfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT);
+	}
+
 	m_ImageAcquiredSemaphore.resize(m_ImageCount);
 	for (uint32_t i = 0;i < m_ImageCount;++i)
 	{
@@ -77,7 +86,6 @@ VulkanSwapChain::VulkanSwapChain(VkSurfaceKHR surface, const SwapChainDesc& desc
 
 VulkanSwapChain::~VulkanSwapChain()
 {
-	m_Images = nullptr;
 	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
 
 	vkDestroySwapchainKHR(device, m_VkSwapChain, nullptr);

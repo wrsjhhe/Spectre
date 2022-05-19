@@ -5,6 +5,7 @@
 #include "VulkanPipeline.h"
 #include "VulkanDescriptor.h"
 #include "Cameras/PerspectiveCamera.h"
+
 BEGIN_NAMESPACE_SPECTRE
 
 struct RenderObject
@@ -15,7 +16,6 @@ struct RenderObject
 	uint32_t FirstVertex = 0;
 
 	VulkanPipelinePtr Pipeline;
-	VulkanDescriptorSetPtr DescriptorSet;
 
 	uint32_t UboOffset = 0;
 };
@@ -102,8 +102,6 @@ public:
 	void UpdateUBO();
 
 	CameraData									m_CameraData;
-private:
-
 
 private:
 	std::vector<RenderObject*> m_PendingObjects;

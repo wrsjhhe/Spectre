@@ -3,11 +3,11 @@
 #include "RenderTypes.h"
 #include "SpectreApi.h"
 #include "VulkanCommon.h"
+#include "VulkanImage.h"
 BEGIN_NAMESPACE_SPECTRE
 
 class VulkanBuffer;
 typedef std::shared_ptr<VulkanBuffer> VulkanBufferPtr;
-
 class VulkanBuffer:public SpectreApi
 {
 public:
@@ -21,11 +21,13 @@ public:
 
 	VkDeviceMemory& GetVkDeviceMemory() { return m_VkMemory; }
 
-	VkBuffer& GetVkBuffer() { return m_VkbBuffer; }
+	VkBuffer& GetVkBuffer() { return m_VkBuffer; }
 
 	uint64_t GetTotalSize()const { return m_TotalSize; }
 
 	void CopyTo(VulkanBufferPtr dstBuffer);
+
+	void CopyToImage(VulkanImagePtr dstImage, uint32_t width, uint32_t height);
 
 	void Map(void* ptr,uint32_t size = 0,uint32_t offset = 0,  bool keepMap = false);
 
@@ -43,7 +45,7 @@ public:
 private:
 	uint32_t                                     m_TotalSize = 0;
 	VkDeviceMemory				                 m_VkMemory = VK_NULL_HANDLE;
-	VkBuffer					                 m_VkbBuffer = VK_NULL_HANDLE;
+	VkBuffer					                 m_VkBuffer = VK_NULL_HANDLE;
 };
 
 
