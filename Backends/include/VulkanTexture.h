@@ -8,6 +8,7 @@ typedef std::shared_ptr<VulkanTexture> VulkanTexturePtr;
 class VulkanTexture
 {
 public:
+	static VulkanTexturePtr CreaetInvalid();
 	static VulkanTexturePtr Create2D(unsigned char* rgbData, int width, int height);
 
 	~VulkanTexture();

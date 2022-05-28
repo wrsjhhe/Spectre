@@ -193,9 +193,6 @@ void Scene::PrepareStageBuffer()
 
 				ModelData modelData;
 				std::memcpy(stageUBOBuffer + uboOffset, &modelData, sizeof(ModelData));
-				/*	std::memcpy(stageUBOBuffer + uboOffset + matrixBufferSize,
-						obj->MeshPtr->GetMaterial()->GetBufferInfo().Buffer,
-						obj->MeshPtr->GetMaterial()->GetBufferInfo().Size);*/
 				uboOffset += matrixBufferSize;
 
 				obj->MeshPtr->GetMaterial()->CreateDescriptorSet();
@@ -206,16 +203,6 @@ void Scene::PrepareStageBuffer()
 			descInfo1.offset = 0;
 			descInfo1.range = sizeof(ModelData);
 
-			/*VkDescriptorBufferInfo descInfo2;
-			descInfo2.buffer = pBatch->UBOBuffer->GetVkBuffer();
-			descInfo2.offset = matrixBufferSize;
-			descInfo2.range = materialBufferSize;*/
-
-			/*	auto texture = pBatch->Objects[0]->MeshPtr->GetMaterial()->GetTexture();
-				VkDescriptorImageInfo imageInfo;
-				imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-				imageInfo.imageView = texture->GetImageView()->GetVkImageView();
-				imageInfo.sampler = texture->GetVkSampler();*/
 
 			pBatch->DescriptorSet = m_ModelDescBuilder.Build({ &descInfo1 });
 			pBatch->UBOBuffer->Map(stageUBOBuffer);

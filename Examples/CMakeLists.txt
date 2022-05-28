@@ -10,6 +10,8 @@ set(BASE_SRC
 			 ./Base/InputType.h
 			 ./Base/GLFWContext.h
 			 ./Base/GLFWContext.cpp
+			 ./Base/ExampleBase.h
+			 ./Base/ExampleBase.cpp
 
 )
 

@@ -2,19 +2,16 @@
 #include "Materials/MeshBasicMaterial.h"
 #include "Geometries/BufferGeometry.h"
 #include "Renderers/Renderer.h"
-#include "Timer.h"
-#include "GLFWContext.h"
 #include "Cameras/PerspectiveCamera.h"
-#include <iomanip>
+#include "ExampleBase.h"
+#include "GLFWContext.h"
 
 using namespace Spectre;
 
 int g_Width = 1400;
 int g_Height = 900;
-double g_CurrTime = 0;
-double g_LastTime = 0;
 
-class Sample01_Triangle
+class Sample01_Triangle : public ExampleBase
 {
 public:
 	void CreateContext(int width, int height)
@@ -86,10 +83,8 @@ public:
 
 		renderer.Setup();
 
-		double filteredFrameTime = 0.0;
-		double filterScale = 0.2;
-		Timer timer;
-		g_LastTime = timer.GetElapsedTime();
+		InitFPS();
+
 		while (!context.Closed())
 		{
 			if (!context.Paused())
@@ -98,20 +93,13 @@ public:
 				continue;		
 			}
 			context.PollEvent();
-			double currTime = timer.GetElapsedTime();
-			double elapsedTime = currTime - g_LastTime;
 
-			filteredFrameTime = filteredFrameTime * (1.0 - filterScale) + filterScale * elapsedTime;
-			std::stringstream fpsCounterSS; 
-			fpsCounterSS << "Sample01_Triangle -----";
-			fpsCounterSS << std::fixed << std::setprecision(1) << filteredFrameTime * 1000;
-			fpsCounterSS << " ms (" << 1.0 / filteredFrameTime << " fps)";
-			context.SetTitle(fpsCounterSS.str());
+			static std::string fps;
+			static double elapsedTime;
+			UpdateFPS(fps, elapsedTime);
+			context.SetTitle(fps);
 
 			renderer.Render();
-
-			g_LastTime = currTime;
-			g_CurrTime = g_CurrTime + elapsedTime;
 
 			Matrix rMat1 = Matrix::CreateRotationZ(DegreesToRadians(90.0f) * elapsedTime);
 			Matrix rMat2 = Matrix::CreateRotationZ(DegreesToRadians(45.0f) * elapsedTime);

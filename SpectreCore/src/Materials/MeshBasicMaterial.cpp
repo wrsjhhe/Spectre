@@ -52,10 +52,8 @@ VulkanDescriptorBuilder MeshBasicMaterial::GetDescriptorBuilder() const
 	ShaderVariable* sv = reinterpret_cast<ShaderVariable*>(m_MaterialBuffer);
 	VulkanDescriptorBuilder builder;
 	builder.AddBind(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT);  //ÑÕÉ«
-	if (sv->MaterialParams0[1] == 1)
-	{
-		builder.AddBind(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);  //ÌùÍ¼
-	}
+	builder.AddBind(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);  //ÌùÍ¼
+	
 	return builder;
 }
 
@@ -74,19 +72,24 @@ void MeshBasicMaterial::CreateDescriptorSet()
 	descInfo.range = materialBufferSize;
 
 	ShaderVariable* sv = reinterpret_cast<ShaderVariable*>(m_MaterialBuffer);
-	if (sv->MaterialParams0[1] == 1)
-	{
-		VkDescriptorImageInfo imageInfo;
-		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		imageInfo.imageView = m_Texture->GetImageView()->GetVkImageView();
-		imageInfo.sampler = m_Texture->GetVkSampler();
+	VkDescriptorImageInfo imageInfo;
+	imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	imageInfo.imageView = m_Texture->GetImageView()->GetVkImageView();
+	imageInfo.sampler = m_Texture->GetVkSampler();
+	m_DescriptorSet = GetDescriptorBuilder().Build({ &descInfo }, { &imageInfo });
+	//if (sv->MaterialParams0[1] == 1)
+	//{
+	//	VkDescriptorImageInfo imageInfo;
+	//	imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	//	imageInfo.imageView = m_Texture->GetImageView()->GetVkImageView();
+	//	imageInfo.sampler = m_Texture->GetVkSampler();
 
-		m_DescriptorSet = GetDescriptorBuilder().Build({ &descInfo }, { &imageInfo });
-	}
-	else
-	{
-		m_DescriptorSet = GetDescriptorBuilder().Build({ &descInfo });
-	}
+	//	m_DescriptorSet = GetDescriptorBuilder().Build({ &descInfo }, { &imageInfo });
+	//}
+	//else
+	//{
+	//	m_DescriptorSet = GetDescriptorBuilder().Build({ &descInfo });
+	//}
 }
 
 MeshBasicMaterial::MeshBasicMaterial()

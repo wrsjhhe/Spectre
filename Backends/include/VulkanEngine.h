@@ -1,5 +1,6 @@
 #pragma once
 #include "VulkanCommon.h"
+#include "AtExit.h"
 
 BEGIN_NAMESPACE_SPECTRE
 
@@ -125,10 +126,12 @@ public:
 		engineCI.EnableValidation = true;
 #endif
 		if (m_EngineInstance == nullptr)
+		{
 			m_EngineInstance = new VulkanEngine(engineCI);
 
-
-		atexit(VulkanEngine::Destory);
+			AtExit::AddExitFunc(0, VulkanEngine::Destory);
+		}
+			
 		return m_EngineInstance;
 	}
 	static void Destory();

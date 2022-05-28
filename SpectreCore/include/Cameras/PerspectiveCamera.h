@@ -8,7 +8,7 @@ class PerspectiveCamera:public Camera
 public:
 	PerspectiveCamera(float fov,float aspect, float near,float far);
 
-	void LookAt(const Vector3& pos,const Vector3& target, const Vector3& up);
+	void LookAt(const Vector3& pos,const Vector3& target, const Vector3& up = { 0.f,1.f, 0.f });
 
 	Matrix GetViewProjection();
 

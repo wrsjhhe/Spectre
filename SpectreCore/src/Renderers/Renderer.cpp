@@ -224,19 +224,8 @@ void Renderer::SetDrawCommand()
 				vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &pBatch->GPUBuffer.VertexBuffer->GetVkBuffer(), offsets);
 				vkCmdBindIndexBuffer(cmdBuffer, pBatch->GPUBuffer.IndexBuffer->GetVkBuffer(), 0, VK_INDEX_TYPE_UINT32);
 
-				/*	if (!VulkanEngine::GetInstance()->GetVkPhysicalDeviceFeatures().multiDrawIndirect)
-					{
-						vkCmdDrawIndexedIndirect(cmdBuffer, pBatch->IndirectBuffer->GetVkBuffer(),
-							0, pBatch->IndirectCommands.size(), sizeof(VkDrawIndexedIndirectCommand));
-					}*/
-
 				for (uint32_t i = 0; i < pBatch->IndirectCommands.size(); ++i)
 				{
-
-					/*uint32_t dynamicOffsets[2] = { pBatch->ObjectUboOffset * i ,pBatch->ObjectUboOffset * i };
-
-					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pCurPipeline->GetVkPipelineLayout(), 1, 1,
-						&pBatch->DescriptorSet->GetVkSet(), 2, dynamicOffsets);*/
 					uint32_t dynamicOffsets[1] = { pBatch->ObjectUboOffset * i };
 
 					vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pCurPipeline->GetVkPipelineLayout(), 1, 1,

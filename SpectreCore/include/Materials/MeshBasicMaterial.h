@@ -43,7 +43,7 @@ protected:
 	MeshBasicMaterial(const MeshBasicMaterial&) = delete;
 
 private:
-	VulkanTexturePtr            m_Texture;
+	VulkanTexturePtr            m_Texture = VulkanTexture::CreaetInvalid();
 };
 
 END_NAMESPACE_SPECTRE

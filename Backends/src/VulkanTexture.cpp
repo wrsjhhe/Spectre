@@ -1,8 +1,27 @@
 #include "VulkanTexture.h"
 #include "VulkanBuffer.h"
 #include "VulkanEngine.h"
+#include "AtExit.h"
 
 USING_NAMESPACE(Spectre)
+
+static VulkanTexturePtr s_InvalidTexuture = nullptr;
+
+VulkanTexturePtr VulkanTexture::CreaetInvalid()
+{
+	if (s_InvalidTexuture == nullptr)
+	{
+		unsigned char data[4] = {'0','0', '0', '0'};
+		s_InvalidTexuture = VulkanTexture::Create2D(data,1,1);
+
+		AtExit::AddExitFunc(1,[]() {
+			s_InvalidTexuture = nullptr;
+		});
+
+	}
+
+	return s_InvalidTexuture;
+}
 
 VulkanTexturePtr VulkanTexture::Create2D(unsigned char* rgbData, int width, int height)
 {
