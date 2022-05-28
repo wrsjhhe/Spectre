@@ -73,14 +73,15 @@ public:
 		MeshBasicMaterialPtr pMatertal1 = MeshBasicMaterial::Create();
 		pMatertal1->SetColor({ 84.f ,255.f ,159.f });
 		pMatertal1->SetTexture("/images/wood1.png");
+		pMatertal1->SetDisplayMode(2);
 		BufferGeometry* pGeometry1 = BufferGeometry::Create();		
 		pGeometry1->SetVertices(vertices.data(), vertices.size());
 		pGeometry1->SetIndices(indices.data(), indices.size());
 		MeshPtr pMesh1 = Mesh::Create(pGeometry1, pMatertal1);
 
 		MeshBasicMaterialPtr pMatertal2 = MeshBasicMaterial::Create();
-		pMatertal2->SetColor({ 84.f ,255.f ,159.f });
 		pMatertal2->SetTexture("/images/wood2.png");
+		pMatertal2->SetDisplayMode(2);
 		BufferGeometry* pGeometry2 = BufferGeometry::Create();
 		pGeometry2->SetVertices(vertices.data(), vertices.size());
 		pGeometry2->SetIndices(indices.data(), indices.size());
@@ -95,6 +96,20 @@ public:
 		renderer.BindScene(&scene);
 		renderer.Resize(g_Width, g_Height);
 
+		context.AddKeyEvent(KeyBoard_Q, [&](void* window, int action) {
+			static bool k = true;
+		
+			if (action == 1)
+			{
+				k = !k;
+				int i = k ? 2 : 0;
+				pMesh1->GetMaterial()->SetColor({ 84.f ,255.f ,159.f });
+				pMesh1->GetMaterial()->SetDisplayMode(i);
+				pMesh1->GetMaterial()->Update();
+				pMesh2->GetMaterial()->SetDisplayMode(i);
+				pMesh2->GetMaterial()->Update();
+			}
+		});
 
 		PerspectiveCamera camera(DegreesToRadians(75.f), (float)g_Width / (float)g_Height, 0.1, 3000.0f);
 		camera.LookAt({ 0.f,-5.f, 10.f }, { 0.f,0.f, 0.f });

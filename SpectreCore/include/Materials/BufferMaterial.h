@@ -40,6 +40,8 @@ public:
 
 	virtual VulkanDescriptorSetPtr GetDescriptorSet() const { return m_DescriptorSet; }
 
+	virtual void Update(int k = 1) = 0;
+
 	virtual ~BufferMaterial();
 
 

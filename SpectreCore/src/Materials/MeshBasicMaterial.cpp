@@ -13,10 +13,12 @@ std::shared_ptr<MeshBasicMaterial> MeshBasicMaterial::Create()
 	return std::shared_ptr<MeshBasicMaterial>(pMat);
 }
 
-void MeshBasicMaterial::EnableVextexColor(bool enable)
+
+void MeshBasicMaterial::SetDisplayMode(int mode)
 {
 	ShaderVariable* sv = reinterpret_cast<ShaderVariable*>(m_MaterialBuffer);
-	sv->MaterialParams0[0] = enable?1:0;
+	memset(sv->MaterialParams0, 0, _countof(sv->MaterialParams0));
+	sv->MaterialParams0[0] = mode;
 }
 
 void MeshBasicMaterial::SetColor(Color rgb)
@@ -32,9 +34,6 @@ void MeshBasicMaterial::SetTexture(const std::string& image)
 	int texWidth, texHeight;
 	auto* pixels = FileUtils::ReadImageFile(image, &texWidth, &texHeight);
 	m_Texture = VulkanTexture::Create2D(pixels, texWidth, texHeight);
-
-	ShaderVariable* sv = reinterpret_cast<ShaderVariable*>(m_MaterialBuffer);
-	sv->MaterialParams0[1] = 1;
 }
 
 MaterialBufferInfo MeshBasicMaterial::GetBufferInfo()
@@ -77,19 +76,14 @@ void MeshBasicMaterial::CreateDescriptorSet()
 	imageInfo.imageView = m_Texture->GetImageView()->GetVkImageView();
 	imageInfo.sampler = m_Texture->GetVkSampler();
 	m_DescriptorSet = GetDescriptorBuilder().Build({ &descInfo }, { &imageInfo });
-	//if (sv->MaterialParams0[1] == 1)
-	//{
-	//	VkDescriptorImageInfo imageInfo;
-	//	imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-	//	imageInfo.imageView = m_Texture->GetImageView()->GetVkImageView();
-	//	imageInfo.sampler = m_Texture->GetVkSampler();
+}
 
-	//	m_DescriptorSet = GetDescriptorBuilder().Build({ &descInfo }, { &imageInfo });
-	//}
-	//else
-	//{
-	//	m_DescriptorSet = GetDescriptorBuilder().Build({ &descInfo });
-	//}
+void MeshBasicMaterial::Update(int k)
+{
+	if (m_VulkanBuffer != nullptr)
+	{
+		m_VulkanBuffer->Map(m_MaterialBuffer);
+	}
 }
 
 MeshBasicMaterial::MeshBasicMaterial()

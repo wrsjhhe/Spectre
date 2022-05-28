@@ -15,8 +15,11 @@ class MeshBasicMaterial :public BufferMaterial
 public:
 	struct ShaderVariable
 	{
-		int MaterialParams0[4];
-		float Color[3];
+		/// <summary>
+		/// index0,displaymode:0BaseColorMode,1VetexColorMode,2TextureMode
+		/// </summary>
+		int MaterialParams0[4] = {0};
+		float Color[3] = {255.f,255.f,255.f };
 	};
 
 public:
@@ -26,7 +29,11 @@ public:
 
 	static std::shared_ptr<MeshBasicMaterial> Create();
 
-	void EnableVextexColor(bool enable);
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="mode">0,BaseColorMode;1,VetexColorMode;2,TextureMode</param>
+	void SetDisplayMode(int mode);
 
 	void SetColor(Color rgb);
 
@@ -38,6 +45,8 @@ public:
 	virtual VulkanDescriptorBuilder GetDescriptorBuilder() const override;
 
 	virtual void CreateDescriptorSet() override;
+
+	virtual void Update(int k = 0) override;
 protected:
 	MeshBasicMaterial();
 	MeshBasicMaterial(const MeshBasicMaterial&) = delete;

@@ -15,19 +15,16 @@ layout (location = 0) out vec4 outFragColor;
 
 void main() 
 {
-	if(MaterialData.MaterialParams0[1] == 1)
+	if(MaterialData.MaterialParams0[0] == 0)
+	{
+		outFragColor = vec4(MaterialData.Color,1.0);
+	}
+	else if(MaterialData.MaterialParams0[0] == 1)
+	{
+		outFragColor = vec4(normalize(inColor),1.0);
+	}
+	else if(MaterialData.MaterialParams0[0] == 2)
 	{
 		outFragColor = texture(texSampler, fragTexCoord);
-	}
-	else
-	{
-		if(MaterialData.MaterialParams0[0] == 1)
-		{
-			outFragColor = vec4(normalize(inColor),1.0);
-		}
-		else if(MaterialData.MaterialParams0[0]  == 0)
-		{
-			outFragColor = vec4(MaterialData.Color,1.0);
-		}
 	}
 }
