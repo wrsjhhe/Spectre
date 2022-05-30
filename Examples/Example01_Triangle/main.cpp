@@ -31,7 +31,7 @@ public:
 		CreateContext(g_Width, g_Height);
 
 		MeshBasicMaterialPtr pMat1 = MeshBasicMaterial::Create();
-		pMat1->SetDisplayMode(2);
+		pMat1->SetDisplayMode(0);
 		pMat1->SetColor({ 84.f ,255.f ,159.f });
 		BufferGeometry* geometry1 = BufferGeometry::Create();
 		std::vector<Vertex> vertices1 = {
@@ -45,7 +45,7 @@ public:
 		MeshPtr pMesh1 = Mesh::Create(geometry1, pMat1);
 
 		MeshBasicMaterialPtr pMat2 = MeshBasicMaterial::Create();
-		pMat2->SetDisplayMode(2);
+		pMat2->SetDisplayMode(1);
 		BufferGeometry* geometry2 = BufferGeometry::Create();
 		std::vector<Vertex> vertices2 = {
 			{{10.0f, 10.0f, 0.0f} ,    { 255.0f, 0.0f, 0.0f}},

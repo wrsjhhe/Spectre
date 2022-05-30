@@ -76,7 +76,7 @@ void VulkanBuffer::CopyToImage(VulkanImagePtr dstImage,uint32_t width, uint32_t 
 	});
 }
 
-void VulkanBuffer::Map(void* ptr, uint32_t size, uint32_t offset, bool keepMap)
+void VulkanBuffer::Map(void* ptr, uint32_t size, uint32_t offset)
 {
 	uint32_t mapSize = size;
 	if (mapSize == 0)
@@ -87,9 +87,6 @@ void VulkanBuffer::Map(void* ptr, uint32_t size, uint32_t offset, bool keepMap)
 	VkDevice device = VulkanEngine::GetInstance()->GetVkDevice();
 	vkMapMemory(device, m_VkMemory, offset, mapSize, 0, &MapPointerCache);
 	std::memcpy(MapPointerCache, ptr, mapSize);
-
-	if (!keepMap)
-		UnMap();
 }
 
 void VulkanBuffer::UnMap()
@@ -98,6 +95,23 @@ void VulkanBuffer::UnMap()
 	MapPointerCache = nullptr;
 }
 
+
+void VulkanBuffer::Update(void* ptr, uint32_t size /*= 0*/, uint32_t offset /*= 0*/)
+{
+	if (MapPointerCache == nullptr)
+	{
+		Map(ptr, size, offset);
+	}
+	else
+	{
+		uint32_t mapSize = size;
+		if (mapSize == 0)
+		{
+			mapSize = m_TotalSize;
+		}
+		std::memcpy((char*)MapPointerCache+ offset, ptr, mapSize);
+	}
+}
 
 void VulkanBuffer::Destroy()
 {

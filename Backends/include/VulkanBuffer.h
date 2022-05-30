@@ -29,9 +29,11 @@ public:
 
 	void CopyToImage(VulkanImagePtr dstImage, uint32_t width, uint32_t height);
 
-	void Map(void* ptr,uint32_t size = 0,uint32_t offset = 0,  bool keepMap = false);
+	void Map(void* ptr,uint32_t size = 0,uint32_t offset = 0);
 
 	void UnMap();
+
+	void Update(void* ptr, uint32_t size = 0, uint32_t offset = 0);
 
 	void Flush(uint64_t size, uint64_t offset);
 

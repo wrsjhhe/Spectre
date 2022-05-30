@@ -106,8 +106,7 @@ public:
 				pMesh1->GetMaterial()->SetColor({ 84.f ,255.f ,159.f });
 				pMesh1->GetMaterial()->SetDisplayMode(i);
 				pMesh1->GetMaterial()->Update();
-				pMesh2->GetMaterial()->SetDisplayMode(i);
-				pMesh2->GetMaterial()->Update();
+				pMesh2->GetMaterial()->SetTexture(k?"/images/wood1.png": "/images/wood2.png");
 			}
 		});
 

@@ -33,7 +33,17 @@ void MeshBasicMaterial::SetTexture(const std::string& image)
 {
 	int texWidth, texHeight;
 	auto* pixels = FileUtils::ReadImageFile(image, &texWidth, &texHeight);
-	m_Texture = VulkanTexture::Create2D(pixels, texWidth, texHeight);
+	if (m_Texture == VulkanTexture::CreaetInvalid())
+	{
+		m_Texture = VulkanTexture::Create2D(pixels, texWidth, texHeight);
+		free(pixels);
+	}
+	else
+	{
+		m_Texture->Update(pixels);
+		free(pixels);
+	}
+
 }
 
 MaterialBufferInfo MeshBasicMaterial::GetBufferInfo()
@@ -70,7 +80,6 @@ void MeshBasicMaterial::CreateDescriptorSet()
 	descInfo.offset = 0;
 	descInfo.range = materialBufferSize;
 
-	ShaderVariable* sv = reinterpret_cast<ShaderVariable*>(m_MaterialBuffer);
 	VkDescriptorImageInfo imageInfo;
 	imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	imageInfo.imageView = m_Texture->GetImageView()->GetVkImageView();
@@ -82,7 +91,7 @@ void MeshBasicMaterial::Update(int k)
 {
 	if (m_VulkanBuffer != nullptr)
 	{
-		m_VulkanBuffer->Map(m_MaterialBuffer);
+		m_VulkanBuffer->Update(m_MaterialBuffer);
 	}
 }
 

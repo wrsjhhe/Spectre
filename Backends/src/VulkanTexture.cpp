@@ -36,12 +36,27 @@ VulkanTexture::~VulkanTexture()
 	vkDestroySampler(VulkanEngine::GetInstance()->GetVkDevice(), m_Sampler, nullptr);
 }
 
+void VulkanTexture::Update(unsigned char* rgbData)
+{
+	VkDeviceSize size = m_Width * m_Height * 4;
+
+	VulkanBufferPtr stageBuffer = VulkanBuffer::Create(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+	stageBuffer->Map(rgbData, static_cast<size_t>(size), 0);
+	TransitionImageLayout(m_Image->GetVkImage(), VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+	stageBuffer->CopyToImage(m_Image, m_Width, m_Height);
+	TransitionImageLayout(m_Image->GetVkImage(), VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+}
+
 void VulkanTexture::Create(unsigned char* rgbData, int width,int height)
 {
-	VkDeviceSize imageSize = width * height * 4;
-	VulkanBufferPtr stageBuffer = VulkanBuffer::Create(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+	m_Width = width;
+	m_Height = height;
+	VkDeviceSize size = m_Width * m_Height * 4;
+	VulkanBufferPtr stageBuffer = VulkanBuffer::Create(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-	stageBuffer->Map(rgbData, static_cast<size_t>(imageSize), 0);
+	stageBuffer->Map(rgbData, static_cast<size_t>(size), 0);
 
 	m_Image = VulkanImage::Create(width, height, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
 
@@ -50,8 +65,6 @@ void VulkanTexture::Create(unsigned char* rgbData, int width,int height)
 	TransitionImageLayout(m_Image->GetVkImage(), VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 	m_ImageView = VulkanImageView::Create(m_Image->GetVkImage(), VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
-
-
 }
 
 void VulkanTexture::TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)

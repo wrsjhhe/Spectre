@@ -274,7 +274,7 @@ void Scene::UpdateCamera()
 		m_PerspectiveCameraPtr->GetProjection()
 	};
 
-	m_CameraData.Buffer->Map(&matrix, sizeof(CameraMatrix), 0);
+	m_CameraData.Buffer->Update(&matrix, sizeof(CameraMatrix), 0);
 
 }
 
@@ -289,7 +289,7 @@ void Scene::UpdateUBO()
 			if (pMesh->MatrixWorldNeedsUpdate())
 			{
 				ModelData data{ pMesh->GetTransformMatrix() };
-				batch->UBOBuffer->Map(&data, sizeof(ModelData), o->UboOffset);
+				batch->UBOBuffer->Update(&data, sizeof(ModelData), o->UboOffset);
 				pMesh->m_MatrixWorldNeedsUpdate = false;
 			}
 		}
