@@ -104,7 +104,7 @@ MeshBasicMaterial::MeshBasicMaterial()
 	DefineAttributes(VertexAttrs);
 	m_MaterialBuffer = new ShaderVariable{
 		{0},
-		{255.f,255.f,255.f}
+		{0.f,0.f,0.f}
 	};
 
 }

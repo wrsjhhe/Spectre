@@ -111,7 +111,7 @@ public:
 		});
 
 		PerspectiveCamera camera(DegreesToRadians(75.f), (float)g_Width / (float)g_Height, 0.1, 3000.0f);
-		camera.LookAt({ 0.f,-5.f, 10.f }, { 0.f,0.f, 0.f });
+		camera.LookAt({ 0.f,-5.f, 5.f }, { 0.f,0.f, 0.f });
 		scene.AddCamera(&camera);
 
 		renderer.Setup();

@@ -19,7 +19,7 @@ public:
 		/// index0,displaymode:0BaseColorMode,1VetexColorMode,2TextureMode
 		/// </summary>
 		int MaterialParams0[4] = {0};
-		float Color[3] = {255.f,255.f,255.f };
+		float Color[3] = {0.f,0.f,0.f };
 	};
 
 public:

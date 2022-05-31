@@ -25,6 +25,6 @@ void main()
 	}
 	else if(MaterialData.MaterialParams0[0] == 2)
 	{
-		outFragColor = texture(texSampler, fragTexCoord);
+		outFragColor = normalize(texture(texSampler, fragTexCoord)+vec4(MaterialData.Color,1.0));
 	}
 }
