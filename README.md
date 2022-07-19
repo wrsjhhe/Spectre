@@ -8,7 +8,7 @@ The project is currently in its infancy, and the code is in an extremely unstabl
 - C++ 17
 - CMake3.2
 Linux and Android platforms are currently not supported.
-## Features
+## Task
 - [X] Automatic resource recycling
 - [X] Static Batching
 - [X] Decriptor magagement 
